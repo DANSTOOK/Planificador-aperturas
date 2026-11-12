@@ -157,7 +157,7 @@ async function filesToImgs(files) {
 
 /* ---------- Estado ---------- */
 let S = null;
-const ui = { subSel: {}, curSub: '', selPlat: null, storeTab: 'plats', editPlat: false, nextTask: null, q: '', homeFilter: 'todas', taskFilter: 'todos', open: new Set(), drafts: {}, pending: {}, focusComposer: null };
+const ui = { openCrono: false, openActs: false, subSel: {}, curSub: '', selPlat: null, storeTab: 'plats', editPlat: false, nextTask: null, q: '', homeFilter: 'todas', taskFilter: 'todos', open: new Set(), drafts: {}, pending: {}, focusComposer: null };
 
 let saveTimer = 0;
 function save() {
@@ -482,48 +482,54 @@ function homeCards() {
 }
 
 /* ---------- Vista: Tienda ---------- */
+/* Vista de la tienda, pensada para quien la abre por primera vez:
+   1) cómo va la tienda en una frase, 2) elige tu plataforma,
+   3) cronograma y movimientos guardados en secciones plegables. */
 function viewStore(st) {
   const s = stats(allTasks(st));
-  const completas = st.plataformas.filter(p => { const x = stats(p.tasks); return x.aplic && x.pct === 100; }).length;
   const plats = st.plataformas.slice().sort((a, b) => (a.ingreso || '9999').localeCompare(b.ingreso || '9999'));
-  return pageHead({
-    crumbs: [['Aperturas', '#/'], [st.nombre]],
-    title: `${esc(st.nombre)} <span class="cr-chip">CR ${esc(st.cr)}</span>`,
-    sub: `${ic('calendar')} Apertura el ${fmtDate(st.apertura, { weekday: 'long', day: 'numeric', month: 'long' })} ${dayTxt(st)}${st.apertura ? ` <span class="n-chip today" title="Día de hoy respecto a la apertura">Hoy es ${nTxt(nOf(todayISO(), st.apertura))}</span>` : ''}${st.notas ? ` <span class="dot-sep"></span> ${esc(st.notas)}` : ''}`,
-    actions: `<button class="btn" data-action="copy-summary" type="button" title="Copia un texto con el avance para pegarlo en Teams, correo o WhatsApp">${ic('copy')}Copiar resumen</button>
-      <button class="btn" data-action="edit-store" type="button">${ic('edit')}Editar</button>
-      ${menu([['export-store', 'send', 'Enviar avance (archivo)'], ['csv-store', 'table', 'Descargar en Excel'], ['-'], ['del-store', 'trash', 'Eliminar tienda', 'danger']])}`,
-  }) + `
-  ${tip('store4', 'Toca una plataforma para ver cómo va y abrir su check list.')}
-  <section class="overview">
-    <div class="ov-main">
-      <div class="ov-num"><span class="big">${s.pct}<small>%</small></span><span class="kpi-l">Avance general</span></div>
-      <div class="ov-bar">${stackBar(s, 'lg')}${legend(s)}</div>
+  const dA = st.apertura ? daysFrom(todayISO(), st.apertura) : null;
+  const cuando = dA == null ? 'Sin fecha de apertura' : dA > 1 ? `Abre en <b>${dA} días</b>` : dA === 1 ? 'Abre <b>mañana</b>' : dA === 0 ? 'Abre <b>hoy</b>' : `Abrió hace ${plural(-dA, 'día', 'días')}`;
+  const bloqTasks = st.plataformas.flatMap(p => p.tasks.filter(k => k.estado === 'bloqueado').map(k => ({ p, k })));
+  const acts = st.actividad.slice(0, 12);
+  return `
+  <nav class="crumbs" aria-label="Ruta"><a href="#/">Aperturas</a><span class="sep">${ic('chevron')}</span><span aria-current="page">${esc(st.nombre)}</span></nav>
+  <section class="sv-hero">
+    <img class="sv-img" src="assets/tienda.png" alt="">
+    <div class="sv-main">
+      <div class="sv-title">
+        <h1>${esc(st.nombre)}</h1><span class="cr-chip">CR ${esc(st.cr)}</span>
+      </div>
+      <p class="sv-when">${ic('calendar')}<span>${cuando}</span>${st.apertura ? `<span class="muted">· ${fmtDate(st.apertura, { weekday: 'long', day: 'numeric', month: 'long' })}</span><span class="n-chip today" title="Día de hoy respecto a la apertura">Hoy es ${nTxt(nOf(todayISO(), st.apertura))}</span>` : ''}</p>
+      <div class="sv-prog">
+        <span class="sv-pct">${s.pct}<small>%</small></span>
+        <div class="sv-bar">${stackBar(s, 'lg')}<p>${s.aplic ? `<b>${s.completado} de ${s.aplic}</b> pasos terminados en toda la tienda` : 'Aún no hay pasos'}</p></div>
+      </div>
+      ${bloqTasks.length ? `<button class="sv-alert" type="button" data-action="goto-blocked" data-pid="${esc(bloqTasks[0].p.pid)}" data-id="${esc(bloqTasks[0].k.id)}">${ic('alert')}<span><b>${bloqTasks.length === 1 ? 'Hay 1 paso bloqueado' : `Hay ${bloqTasks.length} pasos bloqueados`}</b> en ${[...new Set(bloqTasks.map(x => x.p.nombre))].join(', ')}</span><span class="sv-alert-go">Ver${ic('chevron')}</span></button>` : ''}
     </div>
-    <div class="ov-cells">
-      <div class="kpi"><span class="kpi-l">Pasos terminados</span><span class="kpi-v">${s.completado}<small>/${s.aplic}</small></span></div>
-      <div class="kpi"><span class="kpi-l">Plataformas completas</span><span class="kpi-v">${completas}<small>/${st.plataformas.length}</small></span></div>
-      <div class="kpi ${s.bloqueado ? 'is-alert' : ''}"><span class="kpi-l">Bloqueos</span><span class="kpi-v">${s.bloqueado}</span></div>
+    <div class="sv-actions">
+      <button class="btn" data-action="copy-summary" type="button" title="Copia un texto con el avance para pegarlo en Teams, correo o WhatsApp">${ic('copy')}Copiar resumen</button>
+      ${menu([['edit-store', 'edit', 'Editar datos de la tienda'], ['export-store', 'send', 'Enviar avance (archivo)'], ['csv-store', 'table', 'Descargar en Excel'], ['-'], ['del-store', 'trash', 'Eliminar tienda', 'danger']])}
     </div>
   </section>
-  <div class="store-layout">
-    <div class="col">
-      <section class="panel">
-        <div class="panel-head">
-          <div class="seg" role="tablist" aria-label="Vista">${[['plats', 'Plataformas'], ['crono', 'Cronograma']].map(([k, l]) => `<button type="button" role="tab" aria-selected="${ui.storeTab === k}" class="${ui.storeTab === k ? 'is-active' : ''}" data-action="store-tab" data-v="${k}">${l}</button>`).join('')}</div>
-          <span class="muted">${ui.storeTab === 'crono' ? 'Del ingreso de cada plataforma a la apertura' : 'Toca una plataforma para ver su detalle'}</span>
-          <button class="link-btn push" data-action="edit-store" type="button">Agregar o quitar</button>
-        </div>
-        ${ui.storeTab === 'crono' ? gantt(st) : platGrid(st, plats)}
-      </section>
+
+  <section class="sv-step">
+    <div class="sv-step-head">
+      <span class="sv-num">1</span>
+      <div><h2>Elige tu plataforma</h2><p>Toca la tuya para ver sus pasos y marcar lo que ya terminaste.</p></div>
+      <button class="link-btn push" data-action="edit-store" type="button">${ic('plus')}Agregar o quitar</button>
     </div>
-    <aside class="col">
-      <section class="panel">
-        <div class="panel-head"><h2>Actividad</h2><span class="muted">${plural(st.actividad.length, 'movimiento', 'movimientos')}</span></div>
-        <div class="feed">${st.actividad.length ? `<ol>${st.actividad.slice(0, 40).map(a => { const p = a.pid && getPlat(st, a.pid); const who = a.autor.split(' · ')[0]; return `<li><span class="avatar sm" style="--c:${p ? safeColor(p.color) : 'var(--faint)'}">${esc(initials(who))}</span><div><p><b>${esc(who)}</b> ${esc(a.texto)}</p><small>${p ? `${esc(p.nombre)} · ` : ''}<time title="${fmtDateTime(a.fecha)}">${rel(a.fecha)}</time></small></div></li>`; }).join('')}</ol>` : '<div class="empty sm"><p>Sin movimientos todavía.</p></div>'}</div>
-      </section>
-    </aside>
-  </div>`;
+    ${plats.length ? `<div class="plat-tiles">${plats.map(p => platTile(st, p)).join('')}</div>` : '<div class="panel empty sm"><p>Esta tienda aún no tiene plataformas. Usa “Agregar o quitar”.</p></div>'}
+  </section>
+
+  <details class="sv-more" ${ui.openCrono ? 'open' : ''} data-toggle="openCrono">
+    <summary>${ic('calendar')}<span><b>Cronograma</b><small>Cuándo entra cada plataforma hasta la apertura</small></span>${ic('chevron', 'chev')}</summary>
+    <div class="sv-more-body">${gantt(st)}</div>
+  </details>
+  <details class="sv-more" ${ui.openActs ? 'open' : ''} data-toggle="openActs">
+    <summary>${ic('clock')}<span><b>Últimos movimientos</b><small>${st.actividad.length ? `Lo más reciente: ${esc(trunc(st.actividad[0].texto, 70))}` : 'Sin movimientos todavía'}</small></span>${ic('chevron', 'chev')}</summary>
+    <div class="sv-more-body"><ul class="acts">${acts.map(a => { const p = a.pid && getPlat(st, a.pid); const who = a.autor.split(' · ')[0]; return `<li>${p ? sw(p.color) : '<i class="sw" style="--c:var(--faint)"></i>'}<span class="act-txt"><b>${esc(who)}</b> ${esc(trunc(a.texto, 90))}</span><time title="${fmtDateTime(a.fecha)}">${rel(a.fecha)}</time></li>`; }).join('') || '<li class="muted">Sin movimientos todavía.</li>'}</ul></div>
+  </details>`;
 }
 const initials = n => String(n || '?').replace(/\(.*?\)/g, '').trim().split(/\s+/).map(w => w[0] || '').slice(0, 2).join('').toUpperCase() || '?';
 
@@ -536,43 +542,18 @@ function platIcon(p) {
   return ic(name, 'pt-svg');
 }
 
-/* Plataformas como cuadros; al tocar uno se muestra su detalle debajo. */
-function platGrid(st, plats) {
-  if (!plats.length) return '<div class="empty sm"><p>Esta tienda aún no tiene plataformas.</p></div>';
-  const sel = plats.find(p => p.pid === ui.selPlat);
-  return `<div class="plat-tiles">${plats.map(p => platTile(st, p, p === sel)).join('')}</div>${sel ? platDetail(st, sel) : ''}`;
-}
-function platTile(st, p, selected) {
+/* Cada plataforma es un cuadro que abre directo su check list. */
+function platTile(st, p) {
   const s = stats(p.tasks); const ps = platState(st, p);
-  return `<button class="plat-tile ${selected ? 'is-sel' : ''}" type="button" data-action="toggle-plat" data-pid="${esc(p.pid)}" aria-expanded="${selected}" style="--c:${safeColor(p.color)}" title="${esc(p.nombre)}: ${s.pct}%">
-    ${s.bloqueado ? `<span class="flag pt-flag" title="${plural(s.bloqueado, 'paso bloqueado', 'pasos bloqueados')}">${ic('alert')}${s.bloqueado}</span>` : ''}
+  const showState = ['danger', 'info', 'warn', 'done'].includes(ps.cls);
+  return `<a class="plat-tile" href="${platHref(st, p)}" style="--c:${safeColor(p.color)}" title="Abrir el check list de ${esc(p.nombre)}">
     <span class="pt-ic">${platIcon(p)}</span>
     <span class="pt-name">${esc(p.nombre)}</span>
     <span class="pt-pct">${s.pct}<small>%</small></span>
     ${bar(s.pct)}
-    <span class="state ${ps.cls}">${ps.label}</span>
-  </button>`;
-}
-function platDetail(st, p) {
-  const s = stats(p.tasks);
-  const bloq = p.tasks.filter(k => k.estado === 'bloqueado');
-  const sigue = p.tasks.find(k => k.estado === 'proceso') || p.tasks.find(k => k.estado === 'pendiente');
-  return `<div class="pl-detail" style="--c:${safeColor(p.color)}">
-      <div class="pd-head">
-        <span class="pt-ic sm">${platIcon(p)}</span>
-        <div><h3>${esc(p.nombre)}</h3><span class="muted">${s.completado} de ${plural(s.aplic, 'paso terminado', 'pasos terminados')}</span></div>
-        <a class="btn btn-primary pl-open" href="${platHref(st, p)}">Abrir check list${ic('chevron')}</a>
-      </div>
-      <dl class="pl-facts">
-        <div><dt>Ingreso</dt><dd>${p.ingreso ? `${fmtDate(p.ingreso)} ${nChip(p.ingreso, st.apertura)}` : 'Sin fecha'}</dd></div>
-        <div><dt>Responsable</dt><dd>${esc(p.responsable) || 'Sin asignar'}</dd></div>
-        <div><dt>Avance</dt><dd>${s.pct}%</dd></div>
-      </dl>
-      ${s.total ? `<div class="pl-bar">${stackBar(s)}${legend(s)}</div>` : ''}
-      ${p.subs.length ? `<div class="pl-block"><p class="pl-block-h">Subdepartamentos</p><ul class="pl-subs">${p.subs.map(sb => { const x = stats(subTasks(p, sb.id)); return `<li><span class="pl-sub-name"><b>${esc(sb.nombre)}</b>${sb.rol ? `<small>${esc(sb.rol)}</small>` : ''}</span><span class="pl-prog">${x.aplic ? `<span class="num">${x.pct}%</span>${bar(x.pct)}<span class="c-count">${x.completado}/${x.aplic}</span>` : '<span class="muted pl-nosteps">Sin pasos todavía</span>'}</span></li>`; }).join('')}</ul></div>` : ''}
-      ${bloq.length ? `<div class="pl-block"><p class="pl-block-h is-alert">${ic('alert')}${bloq.length === 1 ? 'Paso bloqueado' : 'Pasos bloqueados'}</p><ul class="pl-blocked">${bloq.map(k => `<li>${esc(k.titulo)}</li>`).join('')}</ul></div>` : ''}
-      ${sigue && !bloq.includes(sigue) ? `<p class="pl-next"><span>Sigue:</span> ${esc(sigue.titulo)}</p>` : ''}
-    </div>`;
+    <span class="pt-count">${s.aplic ? `${s.completado} de ${s.aplic} pasos` : 'Sin pasos'}</span>
+    ${showState ? `<span class="state ${ps.cls}">${ps.cls === 'danger' ? `${ic('alert')}${plural(s.bloqueado, 'bloqueado', 'bloqueados')}` : ps.label}</span>` : '<span class="pt-open">Abrir</span>'}
+  </a>`;
 }
 function gantt(st) {
   const t = todayISO();
@@ -879,7 +860,7 @@ main.addEventListener('click', async e => {
     case 'set-status': return setStatus(st, p, k, el.dataset.v);
     case 'edit-plat': ui.editPlat = !ui.editPlat; return render();
     case 'toggle-plat': ui.selPlat = ui.selPlat === el.dataset.pid ? null : el.dataset.pid; render(); $('.pl-detail', main)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return;
-    case 'store-tab': ui.storeTab = el.dataset.v; return render();
+    case 'goto-blocked': { const gp = getPlat(st, el.dataset.pid); const gk = gp?.tasks.find(x => x.id === el.dataset.id); if (gk) { ui.subSel[gp.pid] = gk.sub || ''; ui.open.add(gk.id); ui.taskFilter = 'todos'; } location.hash = platHref(st, gp); return; }
     case 'sel-sub': ui.subSel[p.pid] = el.dataset.sid; ui.open.clear(); ui.taskFilter = 'todos'; return render();
     case 'goto-task': {
       const gk = p.tasks.find(x => x.id === el.dataset.id); if (gk) ui.subSel[p.pid] = gk.sub || '';
@@ -927,6 +908,7 @@ main.addEventListener('click', async e => {
   }
 });
 
+main.addEventListener('toggle', e => { const d = e.target; if (d.matches?.('details[data-toggle]')) ui[d.dataset.toggle] = d.open; }, true);
 main.addEventListener('change', async e => {
   const el = e.target.closest('[data-change]'); if (!el) return;
   const a = el.dataset.change; const { st, p, k } = ctx(el);
