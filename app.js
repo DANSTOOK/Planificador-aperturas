@@ -473,9 +473,10 @@ function homeCards() {
         ${s.bloqueado ? `<span class="flag" title="${plural(s.bloqueado, 'paso bloqueado', 'pasos bloqueados')}">${ic('alert')}${s.bloqueado}</span>` : ''}
       </div>
       <div class="tile-id"><h3 class="tile-name">${esc(st.nombre)}</h3><span class="tile-cr">CR ${esc(st.cr)}</span></div>
-      <div class="tile-prog"><span class="tile-pct">${s.pct}<small>%</small></span>${stackBar(s)}</div>
-      <div class="tile-plats">${st.plataformas.map(p => { const x = stats(p.tasks); return `<span class="tp" style="--c:${safeColor(p.color)}" title="${esc(p.nombre)}: ${x.pct}%"><i style="width:${x.pct}%"></i></span>`; }).join('')}</div>
-      <div class="tile-foot">${ic('calendar')}<span>${fmtShort(st.apertura)}</span>${dayTxt(st)}</div>
+      <div class="tile-stats">
+        <div class="ts"><span class="ts-l">Avance</span><span class="ts-v ${s.aplic && s.pct === 100 ? 'is-done' : ''}">${s.pct}<small>%</small></span></div>
+        <div class="ts ts-date"><span class="ts-l">Apertura</span><span class="ts-v">${st.apertura ? fmtShort(st.apertura) : '—'}</span>${dayTxt(st)}</div>
+      </div>
     </a>`).join('')}
     <button class="store-tile tile-new" data-action="new-store" type="button" style="--i:${rows.length}">${ic('plus')}<span>Nueva tienda</span></button>
   </div>`;

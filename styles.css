@@ -338,6 +338,25 @@ a.store-tile:hover .tile-foot { background: color-mix(in srgb, #e82127 5%, var(-
 .tile-new:hover { transform: translateY(-4px); background: var(--surface); }
 .tile-new .ic { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
 .tile-new:hover .ic { transform: rotate(90deg) scale(1.15); }
+/* Pie de la tarjeta: solo avance y fecha de apertura */
+.tile-id { margin-top: 2px; }
+.tile-stats { margin: auto -18px -18px; display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); background: var(--surface-2); transition: background .25s; }
+.ts { padding: 13px 18px 14px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ts + .ts { border-left: 1px solid var(--line); }
+.ts-l { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.ts-v { font-size: 30px; font-weight: 700; letter-spacing: -.035em; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--ink); }
+.ts-v small { font-size: 15px; font-weight: 600; color: var(--muted); margin-left: 1px; letter-spacing: 0; }
+.ts-v.is-done { color: var(--st-done); }
+.ts-date .ts-v { font-size: 21px; letter-spacing: -.02em; margin-top: 4px; }
+.ts-date .days { font-size: 12px; }
+a.store-tile:hover .tile-stats { background: color-mix(in srgb, #e82127 5%, var(--surface-2)); }
+@media (max-width: 560px) {
+  .tile-stats { margin: auto -12px -12px; }
+  .ts { padding: 10px 12px; }
+  .ts-v { font-size: 22px; }
+  .ts-date .ts-v { font-size: 16px; margin-top: 2px; }
+  .ts-date .days { display: none; }
+}
 @keyframes tile-in { from { opacity: 0; transform: translateY(14px) scale(.98); } }
 @keyframes tile-shine { from { left: -60%; opacity: 1; } to { left: 130%; opacity: 1; } }
 @keyframes store-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
