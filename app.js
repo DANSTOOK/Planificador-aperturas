@@ -467,7 +467,7 @@ function homeCards() {
   });
   if (S.tiendas.length && !rows.length) return `<div class="panel empty">${ic('search', 'empty-ic')}<h3>Sin resultados</h3><p>Ninguna tienda coincide con la búsqueda o el filtro.</p></div>`;
   return `<div class="store-grid">
-    ${rows.map(({ st, s }) => `<a class="store-tile" href="${storeHref(st)}" title="Abrir ${esc(st.nombre)}">
+    ${rows.map(({ st, s }, i) => `<a class="store-tile" href="${storeHref(st)}" title="Abrir ${esc(st.nombre)}" style="--i:${i}">
       <div class="tile-top">
         <span class="tile-ic"><img src="assets/tienda.png" alt=""></span>
         ${s.bloqueado ? `<span class="flag" title="${plural(s.bloqueado, 'paso bloqueado', 'pasos bloqueados')}">${ic('alert')}${s.bloqueado}</span>` : ''}
@@ -477,7 +477,7 @@ function homeCards() {
       <div class="tile-plats">${st.plataformas.map(p => { const x = stats(p.tasks); return `<span class="tp" style="--c:${safeColor(p.color)}" title="${esc(p.nombre)}: ${x.pct}%"><i style="width:${x.pct}%"></i></span>`; }).join('')}</div>
       <div class="tile-foot">${ic('calendar')}<span>${fmtShort(st.apertura)}</span>${dayTxt(st)}</div>
     </a>`).join('')}
-    <button class="store-tile tile-new" data-action="new-store" type="button">${ic('plus')}<span>Nueva tienda</span></button>
+    <button class="store-tile tile-new" data-action="new-store" type="button" style="--i:${rows.length}">${ic('plus')}<span>Nueva tienda</span></button>
   </div>`;
 }
 
