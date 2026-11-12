@@ -150,7 +150,7 @@ async function filesToImgs(files) {
 
 /* ---------- Estado ---------- */
 let S = null;
-const ui = { openPlats: new Set(), editPlat: false, nextTask: null, q: '', homeFilter: 'todas', taskFilter: 'todos', open: new Set(), drafts: {}, pending: {}, focusComposer: null };
+const ui = { selPlat: null, storeTab: 'plats', editPlat: false, nextTask: null, q: '', homeFilter: 'todas', taskFilter: 'todos', open: new Set(), drafts: {}, pending: {}, focusComposer: null };
 
 let saveTimer = 0;
 function save() {
@@ -352,6 +352,11 @@ const ICONS = {
   x: '<path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/>',
   layers: '<path d="m12 3.5 8.5 4.5-8.5 4.5L3.5 8z"/><path d="m3.5 12.5 8.5 4.5 8.5-4.5"/>',
   clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  wrench: '<path d="M14.7 6.3a4 4 0 0 0-5.2 5.2L4 17l3 3 5.5-5.5a4 4 0 0 0 5.2-5.2l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+  briefcase: '<rect x="3.5" y="7.5" width="17" height="12" rx="2"/><path d="M9 7.5V5.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3.5 12.5h17"/>',
+  tag: '<path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1 1 0 0 1 0 1.4l-7.4 7.4a1 1 0 0 1-1.4 0z"/><circle cx="8" cy="8" r="1.4"/>',
+  monitor: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/>',
+  truck: '<path d="M3 6.5h11v9H3zM14 9.5h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17" cy="17.5" r="1.7"/>',
   clip: '<path d="m19.5 11.5-7.6 7.6a4.6 4.6 0 0 1-6.5-6.5l7.6-7.6a3.1 3.1 0 0 1 4.4 4.4l-7.6 7.6a1.5 1.5 0 0 1-2.2-2.2l7-7"/>',
   check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
   list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r=".9" fill="currentColor"/><circle cx="4.8" cy="12" r=".9" fill="currentColor"/><circle cx="4.8" cy="17.5" r=".9" fill="currentColor"/>',
@@ -473,12 +478,12 @@ function viewStore(st) {
   <div class="store-layout">
     <div class="col">
       <section class="panel">
-        <div class="panel-head"><h2>Plataformas</h2><span class="muted">Toca una para ver su detalle</span><button class="link-btn push" data-action="edit-store" type="button">Agregar o quitar</button></div>
-        <div class="plat-list">${plats.map(p => platRow(st, p)).join('') || '<div class="empty sm"><p>Esta tienda aún no tiene plataformas.</p></div>'}</div>
-      </section>
-      <section class="panel">
-        <div class="panel-head"><h2>Cronograma</h2><span class="muted">Del ingreso de cada plataforma a la apertura</span></div>
-        ${gantt(st)}
+        <div class="panel-head">
+          <div class="seg" role="tablist" aria-label="Vista">${[['plats', 'Plataformas'], ['crono', 'Cronograma']].map(([k, l]) => `<button type="button" role="tab" aria-selected="${ui.storeTab === k}" class="${ui.storeTab === k ? 'is-active' : ''}" data-action="store-tab" data-v="${k}">${l}</button>`).join('')}</div>
+          <span class="muted">${ui.storeTab === 'crono' ? 'Del ingreso de cada plataforma a la apertura' : 'Toca una plataforma para ver su detalle'}</span>
+          <button class="link-btn push" data-action="edit-store" type="button">Agregar o quitar</button>
+        </div>
+        ${ui.storeTab === 'crono' ? gantt(st) : platGrid(st, plats)}
       </section>
     </div>
     <aside class="col">
@@ -490,34 +495,53 @@ function viewStore(st) {
   </div>`;
 }
 const initials = n => String(n || '?').replace(/\(.*?\)/g, '').trim().split(/\s+/).map(w => w[0] || '').slice(0, 2).join('').toUpperCase() || '?';
-/* Cada plataforma es una fila sencilla; al tocarla se despliega su detalle
-   y el botón para abrir su check list. */
-function platRow(st, p) {
+
+/* Ícono que representa a cada plataforma (por id o por nombre) */
+function platIcon(p) {
+  const k = norm(`${p.pid} ${p.nombre}`);
+  const name = /mtto|conserv|manten/.test(k) ? 'wrench' : /\badm|administ/.test(k) ? 'briefcase'
+    : /\bcom\b|comerc|mercad/.test(k) ? 'tag' : /\bti\b|sistem|tecnolog/.test(k) ? 'monitor'
+    : /cedis|logist|abasto/.test(k) ? 'truck' : 'layers';
+  return ic(name, 'pt-svg');
+}
+
+/* Plataformas como cuadros; al tocar uno se muestra su detalle debajo. */
+function platGrid(st, plats) {
+  if (!plats.length) return '<div class="empty sm"><p>Esta tienda aún no tiene plataformas.</p></div>';
+  const sel = plats.find(p => p.pid === ui.selPlat);
+  return `<div class="plat-tiles">${plats.map(p => platTile(st, p, p === sel)).join('')}</div>${sel ? platDetail(st, sel) : ''}`;
+}
+function platTile(st, p, selected) {
   const s = stats(p.tasks); const ps = platState(st, p);
-  const open = ui.openPlats.has(p.pid);
+  return `<button class="plat-tile ${selected ? 'is-sel' : ''}" type="button" data-action="toggle-plat" data-pid="${esc(p.pid)}" aria-expanded="${selected}" style="--c:${safeColor(p.color)}" title="${esc(p.nombre)}: ${s.pct}%">
+    ${s.bloqueado ? `<span class="flag pt-flag" title="${plural(s.bloqueado, 'paso bloqueado', 'pasos bloqueados')}">${ic('alert')}${s.bloqueado}</span>` : ''}
+    <span class="pt-ic">${platIcon(p)}</span>
+    <span class="pt-name">${esc(p.nombre)}</span>
+    <span class="pt-pct">${s.pct}<small>%</small></span>
+    ${bar(s.pct)}
+    <span class="state ${ps.cls}">${ps.label}</span>
+  </button>`;
+}
+function platDetail(st, p) {
+  const s = stats(p.tasks);
   const bloq = p.tasks.filter(k => k.estado === 'bloqueado');
   const sigue = p.tasks.find(k => k.estado === 'proceso') || p.tasks.find(k => k.estado === 'pendiente');
-  const detail = !open ? '' : `<div class="pl-detail" id="pl-${esc(p.pid)}">
+  return `<div class="pl-detail" style="--c:${safeColor(p.color)}">
+      <div class="pd-head">
+        <span class="pt-ic sm">${platIcon(p)}</span>
+        <div><h3>${esc(p.nombre)}</h3><span class="muted">${s.completado} de ${plural(s.aplic, 'paso terminado', 'pasos terminados')}</span></div>
+        <a class="btn btn-primary pl-open" href="${platHref(st, p)}">Abrir check list${ic('chevron')}</a>
+      </div>
       <dl class="pl-facts">
         <div><dt>Ingreso</dt><dd>${p.ingreso ? fmtDate(p.ingreso) : 'Sin fecha'}</dd></div>
         <div><dt>Responsable</dt><dd>${esc(p.responsable) || 'Sin asignar'}</dd></div>
-        <div><dt>Pasos</dt><dd>${s.completado} de ${s.aplic} terminados</dd></div>
+        <div><dt>Avance</dt><dd>${s.pct}%</dd></div>
       </dl>
       ${s.total ? `<div class="pl-bar">${stackBar(s)}${legend(s)}</div>` : ''}
       ${p.subs.length ? `<div class="pl-block"><p class="pl-block-h">Subdepartamentos</p><ul class="pl-subs">${p.subs.map(sb => { const x = stats(subTasks(p, sb.id)); return `<li><span class="pl-sub-name"><b>${esc(sb.nombre)}</b>${sb.rol ? `<small>${esc(sb.rol)}</small>` : ''}</span><span class="pl-prog">${x.aplic ? `<span class="num">${x.pct}%</span>${bar(x.pct)}<span class="c-count">${x.completado}/${x.aplic}</span>` : '<span class="muted pl-nosteps">Sin pasos todavía</span>'}</span></li>`; }).join('')}</ul></div>` : ''}
       ${bloq.length ? `<div class="pl-block"><p class="pl-block-h is-alert">${ic('alert')}${bloq.length === 1 ? 'Paso bloqueado' : 'Pasos bloqueados'}</p><ul class="pl-blocked">${bloq.map(k => `<li>${esc(k.titulo)}</li>`).join('')}</ul></div>` : ''}
       ${sigue && !bloq.includes(sigue) ? `<p class="pl-next"><span>Sigue:</span> ${esc(sigue.titulo)}</p>` : ''}
-      <a class="btn btn-primary pl-open" href="${platHref(st, p)}">Abrir check list de ${esc(p.nombre)}${ic('chevron')}</a>
     </div>`;
-  return `<div class="pl-item ${open ? 'is-open' : ''}" style="--c:${safeColor(p.color)}">
-    <button class="pl-row" type="button" data-action="toggle-plat" data-pid="${esc(p.pid)}" aria-expanded="${open}" aria-controls="pl-${esc(p.pid)}">
-      <span class="pl-name">${sw(p.color, 'lg')}<span><b>${esc(p.nombre)}</b>${p.subs.length ? `<small>${plural(p.subs.length, 'subdepartamento', 'subdepartamentos')}</small>` : ''}</span></span>
-      <span class="pl-prog"><span class="num">${s.pct}%</span>${bar(s.pct)}</span>
-      <span class="pl-state"><span class="state ${ps.cls}">${ps.label}</span></span>
-      ${ic('chevron', 'chev')}
-    </button>
-    ${detail}
-  </div>`;
 }
 function gantt(st) {
   const t = todayISO();
@@ -802,7 +826,8 @@ main.addEventListener('click', async e => {
     case 'toggle-open': ui.open.has(k.id) ? ui.open.delete(k.id) : ui.open.add(k.id); return render();
     case 'set-status': return setStatus(st, p, k, el.dataset.v);
     case 'edit-plat': ui.editPlat = !ui.editPlat; return render();
-    case 'toggle-plat': { const id = el.dataset.pid; ui.openPlats.has(id) ? ui.openPlats.delete(id) : ui.openPlats.add(id); return render(); }
+    case 'toggle-plat': ui.selPlat = ui.selPlat === el.dataset.pid ? null : el.dataset.pid; render(); $('.pl-detail', main)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return;
+    case 'store-tab': ui.storeTab = el.dataset.v; return render();
     case 'goto-task': {
       ui.taskFilter = 'todos'; ui.open.add(el.dataset.id); render();
       const li = $(`[data-task="${CSS.escape(el.dataset.id)}"]`, main); li?.scrollIntoView({ block: 'center', behavior: 'smooth' }); return;
@@ -1287,7 +1312,7 @@ document.addEventListener('keydown', e => {
   else if (e.key.toLowerCase() === 'n' && route().view === 'home') { e.preventDefault(); openStoreDlg(); }
   else if (e.key.toLowerCase() === 'n' && route().view === 'plat') { e.preventDefault(); $('.quick-add input')?.focus(); }
 });
-window.addEventListener('hashchange', () => { ui.taskFilter = 'todos'; ui.editPlat = false; render(); });
+window.addEventListener('hashchange', () => { ui.taskFilter = 'todos'; ui.editPlat = false; ui.selPlat = null; render(); });
 window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.set('kv', 'state', S).catch(() => {}); });
 
 /* ---------- Inicio ---------- */
