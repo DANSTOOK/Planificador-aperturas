@@ -4,6 +4,12 @@ Cada versión publicada tiene su etiqueta (`vX.Y.Z`) y su release en GitHub con 
 
 Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El texto de esa sección se usa como notas del release.
 
+## [Sin publicar]
+
+- Comercial: nuevo subdepartamento **Food Service** (Equipo FV) con 3 pasos y plazos N-5, N-2 y N-10.
+- Plantillas con responsable y plazo relativo a la apertura (`Paso | Responsable | N-5`); la fecha límite se calcula sola.
+- Tiendas y plataformas en cuadros con icono; cronograma en su propia pestaña; inicio más compacto.
+
 ## [1.0.0] - 2026-11-11
 
 Primera versión para pruebas con usuarios.

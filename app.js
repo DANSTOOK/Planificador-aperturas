@@ -44,7 +44,7 @@ const PALETTE = ['#137b5f', '#2563eb', '#c2410c', '#7c3aed', '#0891b2', '#b91c1c
 /* Plantillas de ejemplo: se editan en la vista Plantillas */
 /* Cada plataforma tiene pasos generales (plantilla) y, si se requiere,
    subdepartamentos con su rol y su propio check list (subs). */
-const CATALOG_VERSION = 4;
+const CATALOG_VERSION = 5;
 const TI_STEPS = [
   'Alta de tienda en la plataforma ServiceNow (se requiere el número de Retek; solicitarlo a Sadot o Admin)',
   'Alta de los equipos de comunicación (switch, router y AP) y alta de la segmentación de la tienda',
@@ -64,6 +64,12 @@ const TI_STEPS = [
   'Validación de activaciones Spin',
   'Validación y reenvío de promociones y precios'
 ];
+/* Food Service (Comercial). dias = días antes de la apertura (N-5 = 5 días antes). */
+const FV_SUB = { id: 'com-fv', nombre: 'Food Service', rol: 'Equipo FV', plantilla: [
+  { titulo: 'Habilitación de termos y utensilios FV (membranas, condimenteros, portavasos, etc.)', responsable: 'Equipo FV', dias: 5 },
+  { titulo: 'Validar que las recetas de las bebidas estén activas y descarguen el agua que utiliza la tienda para evitar merma de agua en tienda', responsable: 'Equipo FV', dias: 2 },
+  { titulo: 'Validar con Caffenio las máquinas con las que empezará la tienda a vender', responsable: 'Equipo FV/Caffenio', dias: 10 },
+] };
 const DEFAULT_CATALOG = [
   { id: 'mtto', nombre: 'Conservación (Mtto)', color: '#a16207', plantilla: ['Refrigeradores y enfriadores instalados y probados', 'Aire acondicionado funcionando', 'Iluminación interior y exterior', 'Instalación eléctrica y regulador revisados', 'Instalación hidráulica sin fugas'], subs: [] },
   { id: 'adm', nombre: 'Administrativo', color: '#7c3aed', plantilla: ['Alta de la tienda (CR) en sistemas administrativos', 'Fondo de caja asignado', 'Alta del personal en nómina', 'Documentación y permisos en tienda'], subs: [] },
@@ -73,6 +79,7 @@ const DEFAULT_CATALOG = [
     { id: 'com-ejecucion', nombre: 'Ejecución Comercial', rol: 'Coordinador Ejecución Comercial', plantilla: [] },
     { id: 'com-mercadeo', nombre: 'Mercadeo', rol: 'Practicante Mercadeo', plantilla: [] },
     { id: 'com-procesos', nombre: 'Procesos Comerciales', rol: '', plantilla: [] },
+    FV_SUB,
   ] },
   { id: 'ti', nombre: 'TI', color: '#2563eb', plantilla: TI_STEPS, subs: [] },
 ];
@@ -176,20 +183,33 @@ function newTask(titulo, extra = {}) {
   const now = Date.now();
   return { id: uid('k'), sub: '', titulo, descripcion: '', responsable: '', limite: '', estado: 'pendiente', imagenes: [], historial: [], creado: now, actualizado: now, ...extra };
 }
+/* Paso de plantilla: texto simple o { titulo, responsable, dias }.
+   dias = días antes de la apertura ("N-5"); la fecha límite se calcula sola. */
+const tplStep = x => typeof x === 'string' ? { titulo: x, responsable: '', dias: null } : { titulo: x.titulo || '', responsable: x.responsable || '', dias: Number.isFinite(x.dias) ? x.dias : null };
+function taskFromTpl(x, apertura, extra = {}) {
+  const t = tplStep(x);
+  return newTask(t.titulo, { responsable: t.responsable, diasN: t.dias, limite: apertura && t.dias != null ? addDays(apertura, -t.dias) : '', ...extra });
+}
+const tplToLine = x => { const t = tplStep(x); if (!t.responsable && t.dias == null) return t.titulo; return `${t.titulo} | ${t.responsable} | ${t.dias != null ? `N-${t.dias}` : ''}`.replace(/\s*\|\s*$/, ''); };
+function lineToTpl(line) {
+  const [titulo, responsable = '', plazo = ''] = line.split('|').map(x => x.trim());
+  const m = /^N\s*-\s*(\d+)$/i.exec(plazo);
+  return responsable || m ? { titulo, responsable, dias: m ? Number(m[1]) : null } : titulo;
+}
 function newSub(cs, plantilla = true) {
   return { id: cs.id || uid('s'), nombre: cs.nombre, rol: cs.rol || '', responsable: cs.responsable || '', editado: Date.now(), _tasks: plantilla ? (cs.plantilla || []) : [] };
 }
-function newStorePlat(cat, { ingreso = '', responsable = '', plantilla = true } = {}) {
-  const p = { pid: cat.id, nombre: cat.nombre, color: cat.color, ingreso, responsable, editado: Date.now(), subs: [], tasks: plantilla ? (cat.plantilla || []).map(t => newTask(t)) : [] };
-  (cat.subs || []).forEach(cs => addSubTo(p, cs, plantilla));
+function newStorePlat(cat, { ingreso = '', responsable = '', plantilla = true, apertura = '' } = {}) {
+  const p = { pid: cat.id, nombre: cat.nombre, color: cat.color, ingreso, responsable, editado: Date.now(), subs: [], tasks: plantilla ? (cat.plantilla || []).map(t => taskFromTpl(t, apertura)) : [] };
+  (cat.subs || []).forEach(cs => addSubTo(p, cs, plantilla, apertura));
   return p;
 }
-function addSubTo(p, cs, plantilla = true) {
+function addSubTo(p, cs, plantilla = true, apertura = '') {
   const s = newSub(cs, plantilla);
   if (p.subs.some(x => x.id === s.id)) s.id = uid('s');
   const steps = s._tasks; delete s._tasks;
   p.subs.push(s);
-  p.tasks.push(...steps.map(t => newTask(t, { sub: s.id })));
+  p.tasks.push(...steps.map(t => taskFromTpl(t, apertura, { sub: s.id })));
   return s;
 }
 function normalizeStore(st) {
@@ -205,7 +225,7 @@ function seedState() {
   const t = todayISO();
   const st = { id: uid('t'), nombre: 'OXXO Ameyalli', cr: '50AME', apertura: addDays(t, 24), notas: 'Tienda de ejemplo: edítala o elimínala', creado: Date.now(), editado: Date.now(), plataformas: [], actividad: [], borrados: [] };
   const off = { mtto: -20, adm: -12, ti: -4, com: 5 };
-  st.plataformas = DEFAULT_CATALOG.map(c => newStorePlat(c, { ingreso: addDays(t, off[c.id] ?? 0) }));
+  st.plataformas = DEFAULT_CATALOG.map(c => newStorePlat(c, { ingreso: addDays(t, off[c.id] ?? 0), apertura: st.apertura }));
   const mark = (pid, states, sub = '') => st.plataformas.find(p => p.pid === pid).tasks.filter(k => k.sub === sub).forEach((k, i) => { if (states[i]) k.estado = states[i]; });
   mark('mtto', ['completado', 'completado', 'completado', 'proceso']);
   mark('adm', ['completado', 'proceso']);
@@ -651,7 +671,7 @@ function taskItem(st, p, k, n) {
   const meta = [
     doneBy && `<span class="ok">${ic('check')}${esc(doneBy.autor.split(' · ')[0])}, ${fmtShort(toISO(new Date(doneBy.fecha)))}</span>`,
     k.responsable && `<span>${ic('user')}${esc(k.responsable)}</span>`,
-    k.limite && k.estado !== 'completado' && `<span class="${late ? 'late' : ''}">${ic('calendar')}${late ? 'Venció ' : ''}${fmtShort(k.limite)}</span>`,
+    k.limite && k.estado !== 'completado' && `<span class="${late ? 'late' : ''}">${ic('calendar')}${late ? 'Venció ' : ''}${fmtShort(k.limite)}${k.diasN != null ? ` · N-${k.diasN}` : ''}</span>`,
   ].filter(Boolean).join('');
   const isNext = ui.nextTask === k && ui.taskFilter !== 'terminados';
   const tickLabel = k.estado === 'completado' ? 'Quitar la marca de terminado' : 'Marcar como terminado';
@@ -743,7 +763,7 @@ function viewTemplates() {
       </div>
       <div class="tpl-body">
         <label class="tpl-block"><span class="tb-label">Pasos generales <em>${(c.plantilla || []).length}</em></span>
-          <textarea data-change="cat-steps" rows="5" placeholder="Un paso por línea">${esc((c.plantilla || []).join('\n'))}</textarea></label>
+          <textarea data-change="cat-steps" rows="5" placeholder="Un paso por línea">${esc((c.plantilla || []).map(tplToLine).join('\n'))}</textarea></label>
         <div class="tpl-block"><span class="tb-label">Subdepartamentos <em>${(c.subs || []).length}</em></span>
           ${(c.subs || []).map(s => `<div class="tpl-sub" data-tsub="${esc(s.id)}">
             <div class="tpl-sub-head">
@@ -751,7 +771,7 @@ function viewTemplates() {
               <input class="tpl-sub-rol" value="${esc(s.rol)}" data-change="tsub-rol" aria-label="Rol" placeholder="Rol que lo atiende">
               <button class="icon-btn danger" type="button" data-action="del-tsub" title="Quitar subdepartamento" aria-label="Quitar subdepartamento">${ic('x')}</button>
             </div>
-            <textarea data-change="tsub-steps" rows="3" placeholder="Pasos de ${esc(s.nombre)}, uno por línea" aria-label="Pasos de ${esc(s.nombre)}">${esc(s.plantilla.join('\n'))}</textarea>
+            <textarea data-change="tsub-steps" rows="3" placeholder="Pasos de ${esc(s.nombre)}, uno por línea" aria-label="Pasos de ${esc(s.nombre)}">${esc(s.plantilla.map(tplToLine).join('\n'))}</textarea>
           </div>`).join('')}
           <button class="link-btn" type="button" data-action="add-tsub">${ic('plus')}Agregar subdepartamento</button>
         </div>
@@ -818,8 +838,8 @@ main.addEventListener('click', async e => {
     }
     case 'load-tpl': {
       const c = S.catalogo.find(x => x.id === p.pid);
-      p.tasks.push(...c.plantilla.map(t => newTask(t)));
-      c.subs.filter(cs => !p.subs.some(x => x.id === cs.id)).forEach(cs => addSubTo(p, cs, true));
+      p.tasks.push(...c.plantilla.map(t => taskFromTpl(t, st.apertura)));
+      c.subs.filter(cs => !p.subs.some(x => x.id === cs.id)).forEach(cs => addSubTo(p, cs, true, st.apertura));
       log(st, p.pid, `Cargó la plantilla de ${p.nombre}`); return commit();
     }
     case 'new-task-full': return openTaskDlg(st, p);
@@ -896,13 +916,13 @@ main.addEventListener('change', async e => {
   if (!c) return;
   if (a === 'cat-color') { c.color = safeColor(el.value); }
   if (a === 'cat-name') { const v = el.value.trim(); if (!v) { el.value = c.nombre; return; } c.nombre = v; }
-  const lines = v => v.split('\n').map(s => s.replace(/^\s*[-•*\d.)]+\s*/, '').trim()).filter(Boolean);
-  if (a === 'cat-steps') c.plantilla = lines(el.value);
+  const lines = v => v.split('\n').map(s => s.replace(/^\s*(?:[-•*]|\d+[.)])\s*/, '').trim()).filter(Boolean);
+  if (a === 'cat-steps') c.plantilla = lines(el.value).map(lineToTpl);
   const ts = c.subs?.find(x => x.id === el.closest('[data-tsub]')?.dataset.tsub);
   if (ts) {
     if (a === 'tsub-name') { const v = el.value.trim(); if (!v) { el.value = ts.nombre; return; } ts.nombre = v; }
     if (a === 'tsub-rol') ts.rol = el.value.trim();
-    if (a === 'tsub-steps') ts.plantilla = lines(el.value);
+    if (a === 'tsub-steps') ts.plantilla = lines(el.value).map(lineToTpl);
   }
   commit();
 });
@@ -999,7 +1019,13 @@ $('#storeForm').addEventListener('submit', e => {
     const withTasks = removed.filter(p => p.tasks.length);
     if (withTasks.length && !confirm(`Se quitarán ${withTasks.map(p => p.nombre).join(', ')} con todos sus pasos y comentarios. ¿Continuar?`)) { e.preventDefault(); return; }
     removed.forEach(p => { dropImgs(p.tasks.flatMap(taskImages)); log(st, null, `Quitó la plataforma ${p.nombre}`); });
-    if (st.apertura !== data.apertura) log(st, null, `Cambió la apertura: ${fmtDate(st.apertura)} → ${fmtDate(data.apertura)}`);
+    if (st.apertura !== data.apertura) {
+      log(st, null, `Cambió la apertura: ${fmtDate(st.apertura)} → ${fmtDate(data.apertura)}`);
+      allTasks(st).forEach(k => {
+        if (k.diasN == null || !data.apertura) return;
+        if (!k.limite || (st.apertura && k.limite === addDays(st.apertura, -k.diasN))) k.limite = addDays(data.apertura, -k.diasN);
+      });
+    }
     Object.assign(st, data, { editado: Date.now() });
   } else {
     st = { id: uid('t'), ...data, creado: Date.now(), editado: Date.now(), plataformas: [], actividad: [], borrados: [] };
@@ -1014,7 +1040,7 @@ $('#storeForm').addEventListener('submit', e => {
       p.ingreso = r.ingreso; p.responsable = r.responsable; return p;
     }
     const cat = S.catalogo.find(c => c.id === r.pid) || { id: r.pid, nombre: r.nombre, color: r.color, plantilla: [] };
-    p = newStorePlat(cat, { ingreso: r.ingreso, responsable: r.responsable, plantilla: loadTpl });
+    p = newStorePlat(cat, { ingreso: r.ingreso, responsable: r.responsable, plantilla: loadTpl, apertura: st.apertura });
     if (editingStore) log(st, p.pid, `Agregó la plataforma ${p.nombre}`);
     return p;
   });
@@ -1122,7 +1148,7 @@ $('#subForm').addEventListener('submit', e => {
       cs = { id: uid('s'), ...data, plantilla: [] };
       if (cat && f.guardar.checked) { cat.subs.push({ id: cs.id, nombre: cs.nombre, rol: cs.rol, plantilla: [] }); }
     }
-    const s = addSubTo(p, cs, !!m && f.cargar.checked);
+    const s = addSubTo(p, cs, !!m && f.cargar.checked, st.apertura);
     p.editado = Date.now();
     log(st, p.pid, `Agregó el subdepartamento ${s.nombre}${s.rol ? ` (${s.rol})` : ''}`);
     toast(`${s.nombre} agregado. Escribe sus pasos en su cuadro “Agrega un paso”.`);
@@ -1320,17 +1346,31 @@ window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.s
   await DB.init();
   let s = await DB.get('kv', 'state').catch(() => null);
   if (!s || !Array.isArray(s.tiendas)) s = seedState();
-  const soloEjemplo = s.tiendas.every(t => (t.notas || '').startsWith('Tienda de ejemplo'));
+  const soloEjemplo = s.tiendas.every(t => (t.notas || '').startsWith('Tienda de ejemplo') && t.cr === '50AME' && t.nombre === 'OXXO Ameyalli');
   if ((s.version || 1) < CATALOG_VERSION && soloEjemplo) s = seedState();
   if ((s.version || 1) < 3) {
     // Plataformas: Conservación, Administrativo, Comercial (con sus subdepartamentos) y TI
     const old = ['exp', 'con', 'mto', 'ti', 'tel', 'seg', 'ope', 'log', 'com', 'cedis', 'mtto', 'adm'];
-    s.catalogo = [...structuredClone(DEFAULT_CATALOG), ...(s.catalogo || []).filter(c => !old.includes(c.id))]; s.version = CATALOG_VERSION;
+    s.catalogo = [...structuredClone(DEFAULT_CATALOG), ...(s.catalogo || []).filter(c => !old.includes(c.id))]; s.version = 3;
   }
   if ((s.version || 1) < 4) {
     // Check list real de TI (solo la plantilla; las tiendas ya creadas conservan sus pasos)
     const ti = (s.catalogo || []).find(c => c.id === 'ti'); if (ti) ti.plantilla = [...TI_STEPS];
-    s.version = CATALOG_VERSION;
+    s.version = 4;
+  }
+  if ((s.version || 1) < 5) {
+    // Food Service en Comercial: plantilla y tiendas existentes
+    const com = (s.catalogo || []).find(c => c.id === 'com');
+    if (com) { com.subs ||= []; if (!com.subs.some(x => x.id === FV_SUB.id)) com.subs.push(structuredClone(FV_SUB)); }
+    (s.tiendas || []).forEach(t => {
+      normalizeStore(t);
+      const p = t.plataformas.find(x => x.pid === 'com');
+      if (p && !p.subs.some(x => x.id === FV_SUB.id)) {
+        addSubTo(p, FV_SUB, true, t.apertura);
+        t.actividad.unshift({ fecha: Date.now(), autor: 'Sistema', pid: 'com', texto: 'Agregó el subdepartamento Food Service con su check list' });
+      }
+    });
+    s.version = 5;
   }
   S = s;
   if (!Array.isArray(S.catalogo)) S.catalogo = structuredClone(DEFAULT_CATALOG);

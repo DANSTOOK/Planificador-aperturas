@@ -58,6 +58,8 @@ La barra muestra además lo que está en proceso (azul) y bloqueado (rojo).
 
 En **Plantillas** se define el check list base de cada plataforma (un paso por línea), su nombre, su color y sus subdepartamentos con su rol y sus pasos. Al dar de alta una tienda se cargan esos pasos en cada plataforma seleccionada. Los pasos que trae de fábrica son **ejemplos**: ajústalos a lo que maneja cada área. Cambiar una plantilla no modifica las tiendas ya creadas.
 
+Cada línea puede llevar responsable y plazo separados por `|`, contando días antes de la apertura: `Validar recetas de bebidas | Equipo FV | N-2`. Al crear la tienda, la fecha límite se calcula sola (apertura menos 2 días) y se recalcula si cambia la fecha de apertura, salvo que alguien la haya ajustado a mano.
+
 ## Trabajo entre plataformas (sinergia)
 
 - **Tu nombre y plataforma** (abajo a la izquierda) aparecen en cada comentario y cambio.
