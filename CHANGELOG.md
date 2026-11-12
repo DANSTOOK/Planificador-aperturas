@@ -8,6 +8,8 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 
 - Comercial: nuevo subdepartamento **Food Service** (Equipo FV) con 3 pasos y plazos N-5, N-2 y N-10.
 - Plantillas con responsable y plazo relativo a la apertura (`Paso | Responsable | N-5`); la fecha límite se calcula sola.
+- Plazos **N-#** en toda la app: N es el día de apertura (N-5 = 5 días antes, N+2 = 2 después). Se pueden capturar en el paso, en la captura rápida (`Paso | Responsable | N-5`) y en el ingreso de cada plataforma; la tienda muestra "Hoy es N-18" y el cronograma marca semanas en N.
+- En plataformas con subdepartamentos, cada uno abre su propio check list (se elige en sus cuadros) para no mezclar pasos.
 - Tiendas y plataformas en cuadros con icono; cronograma en su propia pestaña; inicio más compacto.
 
 ## [1.0.0] - 2026-11-11

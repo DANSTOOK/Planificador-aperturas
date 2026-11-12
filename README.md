@@ -36,6 +36,16 @@ Tiendas
 - En la tarjeta de la plataforma (vista de tienda), en el resumen y en Excel se ve el avance de cada subdepartamento.
 - En *Mi plataforma* (tu nombre, abajo a la izquierda) puedes elegir también tu subdepartamento; así aparece en tus comentarios.
 
+## Plazos N-#
+
+**N** es el día de apertura de la tienda. **N-5** son 5 días antes y **N+2**, 2 días después. Se puede usar en:
+
+- **Ingreso de cada plataforma** al dar de alta o editar la tienda (casilla N-# junto a la fecha).
+- **Plazo de cada paso** en la ventana del paso, o en la captura rápida escribiendo `Paso | Responsable | N-5`.
+- **Plantillas**, para que cada tienda nueva calcule sus fechas.
+
+La tienda muestra en qué día N va ("Hoy es N-18"), cada fecha aparece con su N y el cronograma marca las semanas en N. Si cambia la fecha de apertura, las fechas capturadas en N se recalculan.
+
 ## Cada paso del check list
 
 - **Estatus**: ⏳ Pendiente, 🔄 En proceso, ⛔ Bloqueado, ✅ Completado o ➖ No aplica. La casilla lo marca como completado de un clic; al abrir el paso aparecen botones grandes con cada estatus y su significado.

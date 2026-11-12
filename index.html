@@ -52,7 +52,7 @@
         </div>
         <div class="dlg-sub">
           <h3>Plataformas y fecha de ingreso</h3>
-          <p>Según el cronograma. Desmarca las que no participan en esta apertura.</p>
+          <p>Según el cronograma: captura la fecha o escribe <strong>N-#</strong> (días antes de la apertura, por ejemplo N-30). Desmarca las que no participan.</p>
         </div>
         <div id="storePlats" class="plat-picker"></div>
         <div class="pp-add">
@@ -73,11 +73,15 @@
         <label class="field">Paso<input name="titulo" required placeholder="Ej. Cajas (POS) instaladas y configuradas" autocomplete="off"></label>
         <label class="field">Detalle<textarea name="descripcion" rows="3" placeholder="Qué hay que revisar, a quién contactar, criterios de aceptación…"></textarea></label>
         <label class="field" id="taskSubField">Subdepartamento<select name="sub"></select></label>
-        <div class="grid-3">
+        <div class="grid-2">
           <label class="field">Responsable<input name="responsable" autocomplete="off"></label>
-          <label class="field">Fecha límite<input type="date" name="limite"></label>
           <label class="field">Estatus<select name="estado"></select></label>
         </div>
+        <div class="grid-2">
+          <label class="field">Plazo (N-#)<input name="plazo" placeholder="N-5" autocomplete="off" title="Días antes de la apertura: N-5, N (día de apertura) o N+2"></label>
+          <label class="field">Fecha límite<input type="date" name="limite"></label>
+        </div>
+        <p class="field-hint" id="plazoHint"></p>
         <div class="field">Imágenes
           <div class="dropzone" id="taskDrop" tabindex="0">
             <span>Arrastra, pega con <kbd>Ctrl</kbd>+<kbd>V</kbd> o <label class="link">elige imágenes<input type="file" id="taskFiles" accept="image/*" multiple hidden></label></span>
@@ -119,6 +123,10 @@
           <li><b>4</b><div><h3>Si algo falta, avisa</h3><p>Abre el paso, cambia el estatus a <strong>Bloqueado</strong> y escribe qué falta y quién lo resuelve. Puedes adjuntar fotos como evidencia.</p></div></li>
           <li><b>5</b><div><h3>Comparte el avance</h3><p>En la tienda usa <strong>Copiar resumen</strong> y pégalo en Teams o WhatsApp. Para pasar tu avance a otra persona usa <strong>Enviar avance (archivo)</strong>; ella lo carga con <strong>Recibir avance</strong>.</p></div></li>
         </ol>
+        <div class="help-legend">
+          <p class="tb-label">Plazos N-#</p>
+          <p class="help-n"><strong>N</strong> es el día de apertura. <strong>N-5</strong> son 5 días antes y <strong>N+2</strong>, 2 días después. Las fechas en N se recalculan solas si cambia la apertura.</p>
+        </div>
         <div class="help-legend">
           <p class="tb-label">Qué significa cada estatus</p>
           <ul id="helpLegend"></ul>

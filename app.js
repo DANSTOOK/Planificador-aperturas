@@ -157,7 +157,7 @@ async function filesToImgs(files) {
 
 /* ---------- Estado ---------- */
 let S = null;
-const ui = { selPlat: null, storeTab: 'plats', editPlat: false, nextTask: null, q: '', homeFilter: 'todas', taskFilter: 'todos', open: new Set(), drafts: {}, pending: {}, focusComposer: null };
+const ui = { subSel: {}, curSub: '', selPlat: null, storeTab: 'plats', editPlat: false, nextTask: null, q: '', homeFilter: 'todas', taskFilter: 'todos', open: new Set(), drafts: {}, pending: {}, focusComposer: null };
 
 let saveTimer = 0;
 function save() {
@@ -183,6 +183,17 @@ function newTask(titulo, extra = {}) {
   const now = Date.now();
   return { id: uid('k'), sub: '', titulo, descripcion: '', responsable: '', limite: '', estado: 'pendiente', imagenes: [], historial: [], creado: now, actualizado: now, ...extra };
 }
+/* Días respecto a la apertura (N): N-5 = 5 días antes, N = día de apertura,
+   N+2 = 2 días después. Internamente: número de días ANTES de la apertura. */
+const nTxt = d => d == null ? '' : d > 0 ? `N-${d}` : d === 0 ? 'N' : `N+${-d}`;
+function parseN(v) {
+  const m = /^\s*N\s*(?:([-+])\s*(\d+))?\s*$/i.exec(v || '');
+  if (!m) return null;
+  return m[1] ? (m[1] === '-' ? Number(m[2]) : -Number(m[2])) : 0;
+}
+const nOf = (iso, apertura) => iso && apertura ? daysFrom(iso, apertura) : null;
+const nChip = (iso, apertura) => { const d = nOf(iso, apertura); return d == null ? '' : `<span class="n-chip" title="${d > 0 ? `${plural(d, 'día', 'días')} antes de la apertura` : d === 0 ? 'Día de la apertura' : `${plural(-d, 'día', 'días')} después de la apertura`}">${nTxt(d)}</span>`; };
+
 /* Paso de plantilla: texto simple o { titulo, responsable, dias }.
    dias = días antes de la apertura ("N-5"); la fecha límite se calcula sola. */
 const tplStep = x => typeof x === 'string' ? { titulo: x, responsable: '', dias: null } : { titulo: x.titulo || '', responsable: x.responsable || '', dias: Number.isFinite(x.dias) ? x.dias : null };
@@ -190,11 +201,11 @@ function taskFromTpl(x, apertura, extra = {}) {
   const t = tplStep(x);
   return newTask(t.titulo, { responsable: t.responsable, diasN: t.dias, limite: apertura && t.dias != null ? addDays(apertura, -t.dias) : '', ...extra });
 }
-const tplToLine = x => { const t = tplStep(x); if (!t.responsable && t.dias == null) return t.titulo; return `${t.titulo} | ${t.responsable} | ${t.dias != null ? `N-${t.dias}` : ''}`.replace(/\s*\|\s*$/, ''); };
+const tplToLine = x => { const t = tplStep(x); if (!t.responsable && t.dias == null) return t.titulo; return `${t.titulo} | ${t.responsable} | ${nTxt(t.dias)}`.replace(/\s*\|\s*$/, ''); };
 function lineToTpl(line) {
   const [titulo, responsable = '', plazo = ''] = line.split('|').map(x => x.trim());
-  const m = /^N\s*-\s*(\d+)$/i.exec(plazo);
-  return responsable || m ? { titulo, responsable, dias: m ? Number(m[1]) : null } : titulo;
+  const dias = parseN(plazo);
+  return responsable || dias != null ? { titulo, responsable, dias } : titulo;
 }
 function newSub(cs, plantilla = true) {
   return { id: cs.id || uid('s'), nombre: cs.nombre, rol: cs.rol || '', responsable: cs.responsable || '', editado: Date.now(), _tasks: plantilla ? (cs.plantilla || []) : [] };
@@ -478,7 +489,7 @@ function viewStore(st) {
   return pageHead({
     crumbs: [['Aperturas', '#/'], [st.nombre]],
     title: `${esc(st.nombre)} <span class="cr-chip">CR ${esc(st.cr)}</span>`,
-    sub: `${ic('calendar')} Apertura el ${fmtDate(st.apertura, { weekday: 'long', day: 'numeric', month: 'long' })} ${dayTxt(st)}${st.notas ? ` <span class="dot-sep"></span> ${esc(st.notas)}` : ''}`,
+    sub: `${ic('calendar')} Apertura el ${fmtDate(st.apertura, { weekday: 'long', day: 'numeric', month: 'long' })} ${dayTxt(st)}${st.apertura ? ` <span class="n-chip today" title="Día de hoy respecto a la apertura">Hoy es ${nTxt(nOf(todayISO(), st.apertura))}</span>` : ''}${st.notas ? ` <span class="dot-sep"></span> ${esc(st.notas)}` : ''}`,
     actions: `<button class="btn" data-action="copy-summary" type="button" title="Copia un texto con el avance para pegarlo en Teams, correo o WhatsApp">${ic('copy')}Copiar resumen</button>
       <button class="btn" data-action="edit-store" type="button">${ic('edit')}Editar</button>
       ${menu([['export-store', 'send', 'Enviar avance (archivo)'], ['csv-store', 'table', 'Descargar en Excel'], ['-'], ['del-store', 'trash', 'Eliminar tienda', 'danger']])}`,
@@ -553,7 +564,7 @@ function platDetail(st, p) {
         <a class="btn btn-primary pl-open" href="${platHref(st, p)}">Abrir check list${ic('chevron')}</a>
       </div>
       <dl class="pl-facts">
-        <div><dt>Ingreso</dt><dd>${p.ingreso ? fmtDate(p.ingreso) : 'Sin fecha'}</dd></div>
+        <div><dt>Ingreso</dt><dd>${p.ingreso ? `${fmtDate(p.ingreso)} ${nChip(p.ingreso, st.apertura)}` : 'Sin fecha'}</dd></div>
         <div><dt>Responsable</dt><dd>${esc(p.responsable) || 'Sin asignar'}</dd></div>
         <div><dt>Avance</dt><dd>${s.pct}%</dd></div>
       </dl>
@@ -578,15 +589,19 @@ function gantt(st) {
     else {
       const l = pos(p.ingreso); const r = st.apertura && st.apertura > p.ingreso ? pos(st.apertura) : l + 2;
       const w = Math.max(r - l, 1.5);
-      track = `<div class="g-bar" style="left:${l}%;width:${w}%" title="${esc(p.nombre)}: ingreso ${fmtDate(p.ingreso)} · ${s.pct}%"><span style="width:${s.pct}%"></span><em>${s.pct}%</em></div>`;
+      track = `<div class="g-bar" style="left:${l}%;width:${w}%" title="${esc(p.nombre)}: ingreso ${fmtDate(p.ingreso)}${st.apertura ? ` (${nTxt(nOf(p.ingreso, st.apertura))})` : ''} · ${s.pct}%"><span style="width:${s.pct}%"></span><em>${s.pct}%</em></div>`;
     }
     return `<a class="g-row" href="${platHref(st, p)}" style="--c:${safeColor(p.color)}"><span class="g-label">${sw(p.color)}${esc(p.nombre)}</span><div class="g-track">${track}</div></a>`;
   }).join('');
-  const stepDays = Math.max(1, Math.ceil(span / 7));
-  const ticks = []; for (let i = 0; i <= span; i += stepDays) { const d = addDays(start, i); ticks.push(`<span style="left:${pos(d)}%">${fmtShort(d)}</span>`); }
+  const stepDays = Math.max(1, Math.ceil(span / 7 / 7) * 7);
+  const ticks = [];
+  if (st.apertura) {
+    // Marcas cada semana contadas desde la apertura (N, N-7, N-14…)
+    for (let d = st.apertura; d >= start; d = addDays(d, -stepDays)) if (d <= end) ticks.push(`<span style="left:${pos(d)}%"><b>${nTxt(nOf(d, st.apertura))}</b>${fmtShort(d)}</span>`);
+  } else for (let i = 0; i <= span; i += stepDays) { const d = addDays(start, i); ticks.push(`<span style="left:${pos(d)}%">${fmtShort(d)}</span>`); }
   return `<div class="gantt"><div class="gantt-inner">
     <div class="g-lines">
-      ${t >= start && t <= end ? `<div class="g-line today" style="left:${pos(t)}%"><span>Hoy</span></div>` : ''}
+      ${t >= start && t <= end ? `<div class="g-line today" style="left:${pos(t)}%"><span>Hoy${st.apertura ? ` · ${nTxt(nOf(t, st.apertura))}` : ''}</span></div>` : ''}
       ${st.apertura ? `<div class="g-line open" style="left:${pos(st.apertura)}%"><span>Apertura</span></div>` : ''}
     </div>
     ${rows}
@@ -607,9 +622,14 @@ function viewPlat(st, p) {
     : faltan === 0 ? `Los ${s.aplic} pasos están terminados.`
     : `${s.completado} de ${s.aplic} pasos terminados. ${faltan === 1 ? 'Falta 1' : `Faltan ${faltan}`}${abre}.`;
   const bloq = p.tasks.filter(k => k.estado === 'bloqueado');
-  ui.nextTask = p.tasks.find(k => k.estado === 'proceso') || p.tasks.find(k => k.estado === 'pendiente');
-  const cnt = { todos: p.tasks.length, pendientes: p.tasks.filter(k => !done(k)).length, terminados: p.tasks.filter(done).length };
   const groups = (!p.subs.length || subTasks(p, '').length ? [''] : []).concat(p.subs.map(x => x.id));
+  // Con subdepartamentos se muestra solo el check list del que se elija
+  const multi = groups.length > 1;
+  const selSid = multi && groups.includes(ui.subSel[p.pid]) ? ui.subSel[p.pid] : groups[0];
+  ui.curSub = selSid;
+  const scope = multi ? subTasks(p, selSid) : p.tasks;
+  ui.nextTask = scope.find(k => k.estado === 'proceso') || scope.find(k => k.estado === 'pendiente');
+  const cnt = { todos: scope.length, pendientes: scope.filter(k => !done(k)).length, terminados: scope.filter(done).length };
   return pageHead({
     crumbs: [['Aperturas', '#/'], [st.nombre, storeHref(st)], [p.nombre]],
     title: `${sw(p.color, 'lg')}${esc(p.nombre)}`,
@@ -624,9 +644,9 @@ function viewPlat(st, p) {
       <label class="ms-cell ms-edit"><span class="kpi-l">Responsable</span><input data-change="plat-field" data-field="responsable" value="${esc(p.responsable)}" placeholder="Nombre" autocomplete="off"></label>
       <div class="ms-cell ms-act"><button class="btn btn-primary btn-sm" type="button" data-action="edit-plat">Listo</button></div>`
     : `
-      <div class="ms-cell"><span class="kpi-l">Ingreso</span><span class="ms-v">${p.ingreso ? fmtDate(p.ingreso) : '—'}</span></div>
+      <div class="ms-cell"><span class="kpi-l">Ingreso</span><span class="ms-v">${p.ingreso ? `${fmtDate(p.ingreso)} ${nChip(p.ingreso, st.apertura)}` : '—'}</span></div>
       <div class="ms-cell"><span class="kpi-l">Responsable</span><span class="ms-v">${esc(p.responsable) || '—'}</span></div>
-      <div class="ms-cell"><span class="kpi-l">Apertura</span><span class="ms-v">${fmtDate(st.apertura)}</span></div>
+      <div class="ms-cell"><span class="kpi-l">Apertura</span><span class="ms-v">${fmtDate(st.apertura)}${st.apertura ? ` <span class="n-chip today">Hoy ${nTxt(nOf(todayISO(), st.apertura))}</span>` : ''}</span></div>
       <div class="ms-cell ms-act"><button class="btn btn-ghost btn-sm" type="button" data-action="edit-plat">${ic('edit')}Editar</button></div>`}
   </section>
   ${bloq.length ? `<section class="callout">
@@ -634,12 +654,23 @@ function viewPlat(st, p) {
     <ul>${bloq.map(k => { const c = [...k.historial].reverse().find(h => h.tipo === 'comentario' && h.texto); return `<li><button type="button" data-action="goto-task" data-id="${esc(k.id)}"><span class="cl-title">${esc(k.titulo)}</span><span class="cl-note">${c ? `${esc(c.autor.split(' · ')[0])}: ${esc(trunc(c.texto, 150))}` : 'Sin comentario: ábrelo y explica qué falta.'}</span>${ic('chevron', 'chev')}</button></li>`; }).join('')}</ul>
   </section>` : ''}
   ${tip('plat3', 'Toca el círculo de un paso para marcarlo como terminado. Toca el texto del paso para cambiar su estatus, comentar o subir fotos.')}
+  ${multi ? `<section class="sub-pick" style="--c:${safeColor(p.color)}">
+    <p class="sp-h"><b>Subdepartamentos</b><span>Elige uno para ver solo su check list</span></p>
+    <div class="sub-tiles" role="tablist" aria-label="Subdepartamentos">${groups.map(sid => {
+      const sb = p.subs.find(x => x.id === sid); const x = stats(subTasks(p, sid)); const on = sid === selSid;
+      return `<button type="button" role="tab" aria-selected="${on}" class="sub-tile ${on ? 'is-sel' : ''}" data-action="sel-sub" data-sid="${esc(sid)}">
+        <span class="sbt-name">${sb ? esc(sb.nombre) : 'Pasos generales'}</span>
+        <span class="sbt-rol">${sb ? (sb.rol ? esc(sb.rol) : '&nbsp;') : 'Toda la plataforma'}</span>
+        <span class="sbt-prog">${x.aplic ? `<span class="num">${x.pct}%</span>${bar(x.pct)}` : '<span class="muted">Sin pasos</span>'}</span>
+        ${x.bloqueado ? `<span class="flag sbt-flag">${ic('alert')}${x.bloqueado}</span>` : ''}
+      </button>`; }).join('')}</div>
+  </section>` : ''}
   <div class="list-bar">
     <div class="seg" role="tablist" aria-label="Mostrar">${[['todos', 'Todos'], ['pendientes', 'Por hacer'], ['terminados', 'Terminados']].map(([k, l]) => `<button type="button" role="tab" aria-selected="${f === k}" class="${f === k ? 'is-active' : ''}" data-action="task-filter" data-v="${k}">${l}<span class="seg-n">${cnt[k]}</span></button>`).join('')}</div>
     ${p.tasks.length ? `<button class="btn btn-ghost btn-sm" type="button" data-action="${ui.open.size ? 'collapse-all' : 'expand-all'}">${ic(ui.open.size ? 'collapse' : 'expand')}${ui.open.size ? 'Contraer' : 'Expandir'}</button>` : ''}
   </div>
   ${!p.tasks.length && !p.subs.length && canLoadTpl(p) ? `<div class="panel empty">${ic('list', 'empty-ic')}<h3>Esta plataforma aún no tiene pasos</h3><p>Agrégalos con el botón Agregar paso o carga la plantilla de ${esc(p.nombre)}.</p><button class="btn btn-primary" type="button" data-action="load-tpl">Cargar plantilla</button></div>` : ''}
-  <div class="task-list">${groups.map(sid => taskGroup(st, p, sid, items, groups.length > 1)).join('')}</div>`;
+  <div class="task-list">${multi ? taskGroup(st, p, selSid, items, true) : groups.map(sid => taskGroup(st, p, sid, items, false)).join('')}</div>`;
 }
 function canLoadTpl(p) { const c = S.catalogo.find(x => x.id === p.pid); return !!c && (c.plantilla.length || c.subs.length); }
 function taskGroup(st, p, sid, items, multi) {
@@ -656,7 +687,7 @@ function taskGroup(st, p, sid, items, multi) {
     ${head}
     ${list.length ? `<div class="tasks">${list.map(([k]) => taskItem(st, p, k, num.get(k.id))).join('')}</div>` : `<p class="group-empty">${all.length ? (ui.taskFilter === 'terminados' ? 'Aún no hay pasos terminados aquí.' : 'No queda nada por hacer aquí.') : 'Sin pasos todavía.'}</p>`}
     <form class="add-row" data-form="quick-add" autocomplete="off">
-      ${ic('plus')}<input name="titulo" placeholder="Agregar un paso${sb ? ` a ${esc(sb.nombre)}` : ''}…" aria-label="Nuevo paso${sb ? ` en ${esc(sb.nombre)}` : ''}">
+      ${ic('plus')}<input name="titulo" placeholder="Agregar un paso${sb ? ` a ${esc(sb.nombre)}` : ''}…   (opcional: Paso | Responsable | N-5)" aria-label="Nuevo paso${sb ? ` en ${esc(sb.nombre)}` : ''}">
       <button class="btn btn-sm" type="submit">Agregar</button>
     </form>
   </section>`;
@@ -671,7 +702,7 @@ function taskItem(st, p, k, n) {
   const meta = [
     doneBy && `<span class="ok">${ic('check')}${esc(doneBy.autor.split(' · ')[0])}, ${fmtShort(toISO(new Date(doneBy.fecha)))}</span>`,
     k.responsable && `<span>${ic('user')}${esc(k.responsable)}</span>`,
-    k.limite && k.estado !== 'completado' && `<span class="${late ? 'late' : ''}">${ic('calendar')}${late ? 'Venció ' : ''}${fmtShort(k.limite)}${k.diasN != null ? ` · N-${k.diasN}` : ''}</span>`,
+    k.limite && k.estado !== 'completado' && `<span class="${late ? 'late' : ''}">${ic('calendar')}${late ? 'Venció ' : ''}${fmtShort(k.limite)}${st.apertura ? ` · ${nTxt(nOf(k.limite, st.apertura))}` : ''}</span>`,
   ].filter(Boolean).join('');
   const isNext = ui.nextTask === k && ui.taskFilter !== 'terminados';
   const tickLabel = k.estado === 'completado' ? 'Quitar la marca de terminado' : 'Marcar como terminado';
@@ -698,6 +729,7 @@ function taskItem(st, p, k, n) {
   </article>`;
 }
 function taskBody(k) {
+  const ap = getStore(route().tid)?.apertura;
   let imgIdx = k.imagenes.length;
   const hist = k.historial.map(h => {
     const who = h.autor.split(' · ');
@@ -733,7 +765,7 @@ function taskBody(k) {
         <label class="thumb add" title="Subir foto">${ic('image')}<span>Subir</span><input type="file" accept="image/*" multiple data-change="task-img" hidden></label></div>
     </div>
     <div class="tb-foot">
-      <span class="tb-facts"><span>${ic('user')}${esc(k.responsable) || 'Sin responsable'}</span><span>${ic('calendar')}${k.limite ? fmtDate(k.limite) : 'Sin fecha límite'}</span><span>${ic('clock')}Actualizado ${rel(k.actualizado)}</span></span>
+      <span class="tb-facts"><span>${ic('user')}${esc(k.responsable) || 'Sin responsable'}</span><span>${ic('calendar')}${k.limite ? `${fmtDate(k.limite)}${ap ? ` · ${nTxt(nOf(k.limite, ap))}` : ''}` : 'Sin fecha límite'}</span><span>${ic('clock')}Actualizado ${rel(k.actualizado)}</span></span>
       <span class="tb-actions">
         <button class="icon-btn" type="button" data-action="move" data-d="-1" title="Subir" aria-label="Subir paso">${ic('up')}</button>
         <button class="icon-btn" type="button" data-action="move" data-d="1" title="Bajar" aria-label="Bajar paso">${ic('down')}</button>
@@ -842,13 +874,15 @@ main.addEventListener('click', async e => {
       c.subs.filter(cs => !p.subs.some(x => x.id === cs.id)).forEach(cs => addSubTo(p, cs, true, st.apertura));
       log(st, p.pid, `Cargó la plantilla de ${p.nombre}`); return commit();
     }
-    case 'new-task-full': return openTaskDlg(st, p);
+    case 'new-task-full': return openTaskDlg(st, p, null, ui.curSub || '');
     case 'toggle-open': ui.open.has(k.id) ? ui.open.delete(k.id) : ui.open.add(k.id); return render();
     case 'set-status': return setStatus(st, p, k, el.dataset.v);
     case 'edit-plat': ui.editPlat = !ui.editPlat; return render();
     case 'toggle-plat': ui.selPlat = ui.selPlat === el.dataset.pid ? null : el.dataset.pid; render(); $('.pl-detail', main)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return;
     case 'store-tab': ui.storeTab = el.dataset.v; return render();
+    case 'sel-sub': ui.subSel[p.pid] = el.dataset.sid; ui.open.clear(); ui.taskFilter = 'todos'; return render();
     case 'goto-task': {
+      const gk = p.tasks.find(x => x.id === el.dataset.id); if (gk) ui.subSel[p.pid] = gk.sub || '';
       ui.taskFilter = 'todos'; ui.open.add(el.dataset.id); render();
       const li = $(`[data-task="${CSS.escape(el.dataset.id)}"]`, main); li?.scrollIntoView({ block: 'center', behavior: 'smooth' }); return;
     }
@@ -934,7 +968,8 @@ main.addEventListener('submit', async e => {
   if (f.dataset.form === 'quick-add') {
     const titles = f.titulo.value.split('\n').map(s => s.trim()).filter(Boolean);
     if (!titles.length) return f.titulo.focus();
-    titles.forEach(t => p.tasks.push(newTask(t, { sub: sid })));
+    titles.forEach(line => { const t = lineToTpl(line); p.tasks.push(taskFromTpl(t, st.apertura, { sub: sid })); });
+    titles.forEach((line, i) => { titles[i] = tplStep(lineToTpl(line)).titulo; });
     const where = sb ? ` en ${sb.nombre}` : '';
     log(st, p.pid, titles.length > 1 ? `Agregó ${titles.length} pasos${where}` : `Agregó el paso “${trunc(titles[0], 60)}”${where}`);
     if (ui.taskFilter !== 'todos' && ui.taskFilter !== 'pendiente') ui.taskFilter = 'todos';
@@ -974,6 +1009,7 @@ function ppRow(r) {
   return `<div class="pp-row ${r.on ? '' : 'is-off'}" data-pid="${esc(r.pid)}" data-nombre="${esc(r.nombre)}" data-color="${safeColor(r.color)}">
     <label class="pp-name"><input type="checkbox" class="pp-on" ${r.on ? 'checked' : ''}><i class="dot" style="--c:${safeColor(r.color)}"></i><span>${esc(r.nombre)}${r.n ? ` <em>· ${plural(r.n, 'paso', 'pasos')}</em>` : ''}</span></label>
     <input type="date" class="pp-date" value="${esc(r.ingreso)}" aria-label="Fecha de ingreso de ${esc(r.nombre)}">
+    <input class="pp-n" value="${esc(nTxt(nOf(r.ingreso, r.apertura)))}" placeholder="N-#" title="Días antes de la apertura, por ejemplo N-30" aria-label="Ingreso de ${esc(r.nombre)} en días antes de la apertura" autocomplete="off">
     <input class="pp-resp" value="${esc(r.responsable)}" placeholder="Responsable" aria-label="Responsable de ${esc(r.nombre)}" autocomplete="off">
   </div>`;
 }
@@ -985,13 +1021,33 @@ function openStoreDlg(st = null) {
   $('#tplLabel').textContent = st ? 'Cargar los pasos de la plantilla en las plataformas que agregues' : 'Cargar los pasos de la plantilla de cada plataforma';
   const rows = S.catalogo.map(c => {
     const sp = st && getPlat(st, c.id);
-    return { pid: c.id, nombre: sp?.nombre || c.nombre, color: sp?.color || c.color, on: st ? !!sp : true, ingreso: sp?.ingreso || '', responsable: sp?.responsable || '', n: sp?.tasks.length || 0 };
+    return { pid: c.id, nombre: sp?.nombre || c.nombre, color: sp?.color || c.color, on: st ? !!sp : true, ingreso: sp?.ingreso || '', responsable: sp?.responsable || '', n: sp?.tasks.length || 0, apertura: st?.apertura || '' };
   });
   st?.plataformas.filter(p => !S.catalogo.some(c => c.id === p.pid)).forEach(p => rows.push({ ...p, on: true, n: p.tasks.length }));
   $('#storePlats').innerHTML = rows.map(ppRow).join('');
   $('#storeDlg').showModal();
   if (!st) f.nombre.focus();
 }
+/* Ingreso de cada plataforma: se puede capturar como fecha o como N-# */
+$('#storePlats').addEventListener('input', e => {
+  const row = e.target.closest('.pp-row'); if (!row) return;
+  const ap = $('#storeForm').apertura.value;
+  if (e.target.classList.contains('pp-n')) {
+    const d = parseN(e.target.value);
+    e.target.classList.toggle('is-bad', !!e.target.value.trim() && d == null);
+    if (d != null && ap) row.querySelector('.pp-date').value = addDays(ap, -d);
+  }
+  if (e.target.classList.contains('pp-date')) row.querySelector('.pp-n').value = nTxt(nOf(e.target.value, ap));
+});
+$('#storeForm').apertura.addEventListener('input', e => {
+  const ap = e.target.value; if (!ap) return;
+  // Con la apertura definida, el N-# capturado manda: se recalculan las fechas
+  $$('#storePlats .pp-row').forEach(row => {
+    const n = row.querySelector('.pp-n'); const dt = row.querySelector('.pp-date');
+    const d = parseN(n.value);
+    if (d != null) dt.value = addDays(ap, -d); else if (dt.value) n.value = nTxt(nOf(dt.value, ap));
+  });
+});
 $('#storePlats').addEventListener('change', e => {
   if (e.target.classList.contains('pp-on')) e.target.closest('.pp-row').classList.toggle('is-off', !e.target.checked);
 });
@@ -1001,7 +1057,7 @@ function addPlatFromDialog() {
   if (!c) { c = { id: uid('p'), nombre, color: PALETTE[S.catalogo.length % PALETTE.length], plantilla: [] }; S.catalogo.push(c); save(); }
   const ex = $(`#storePlats [data-pid="${CSS.escape(c.id)}"]`);
   if (ex) { ex.querySelector('.pp-on').checked = true; ex.classList.remove('is-off'); }
-  else $('#storePlats').insertAdjacentHTML('beforeend', ppRow({ pid: c.id, nombre: c.nombre, color: c.color, on: true, ingreso: '', responsable: '' }));
+  else $('#storePlats').insertAdjacentHTML('beforeend', ppRow({ pid: c.id, nombre: c.nombre, color: c.color, on: true, ingreso: '', responsable: '', apertura: '' }));
   inp.value = ''; $(`#storePlats [data-pid="${CSS.escape(c.id)}"] .pp-date`).focus();
 }
 $('#ppAddBtn').addEventListener('click', addPlatFromDialog);
@@ -1062,6 +1118,10 @@ function openTaskDlg(st, p, k = null, sid = '') {
   $('#taskDlgTitle').textContent = k ? 'Editar paso' : `Nuevo paso · ${p.nombre}`;
   f.titulo.value = k?.titulo || ''; f.descripcion.value = k?.descripcion || ''; f.responsable.value = k?.responsable || '';
   f.limite.value = k?.limite || ''; f.estado.value = k?.estado || 'pendiente';
+  f.plazo.value = k ? nTxt(k.diasN ?? nOf(k.limite, st.apertura)) : '';
+  f.plazo.disabled = !st.apertura;
+  f.plazo.classList.remove('is-bad');
+  $('#plazoHint').textContent = st.apertura ? `La tienda abre el ${fmtDate(st.apertura)}. Escribe N-5 para 5 días antes.` : 'Define la fecha de apertura de la tienda para usar N-#.';
   renderTaskThumbs();
   taskCtx.imgs.forEach(async x => { if (!x.data) { x.data = await imgData(x.id) || ''; renderTaskThumbs(); } });
   $('#taskDlg').showModal(); f.titulo.focus();
@@ -1085,11 +1145,22 @@ $('#taskDlg').addEventListener('paste', e => {
   const files = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
   if (files.length) { e.preventDefault(); addTaskDlgFiles(files); }
 });
+$('#taskForm').plazo.addEventListener('input', e => {
+  const ap = taskCtx?.st.apertura; const d = parseN(e.target.value);
+  e.target.classList.toggle('is-bad', !!e.target.value.trim() && d == null);
+  if (d != null && ap) $('#taskForm').limite.value = addDays(ap, -d);
+});
+$('#taskForm').limite.addEventListener('input', e => {
+  const ap = taskCtx?.st.apertura; if (ap) $('#taskForm').plazo.value = nTxt(nOf(e.target.value, ap));
+});
 $('#taskForm').addEventListener('submit', async e => {
   if (e.submitter?.value !== 'ok') return;
   const f = e.target; const { st, p } = taskCtx; let { k } = taskCtx;
   const data = { titulo: f.titulo.value.trim(), descripcion: f.descripcion.value.trim(), responsable: f.responsable.value.trim(), limite: f.limite.value, sub: f.sub.value };
   const estado = f.estado.value;
+  const dN = parseN(f.plazo.value);
+  if (f.plazo.value.trim() && dN == null) { e.preventDefault(); toast('El plazo debe escribirse como N-5, N o N+2', true); f.plazo.focus(); return; }
+  if (dN != null && st.apertura) { data.diasN = dN; data.limite = addDays(st.apertura, -dN); } else data.diasN = null;
   for (const x of taskCtx.imgs) if (!x.old) await putImg(x.id, x.data);
   dropImgs(taskCtx.removed);
   if (k) {
