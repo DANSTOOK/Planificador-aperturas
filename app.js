@@ -433,7 +433,7 @@ function homeCards() {
   return `<div class="store-grid">
     ${rows.map(({ st, s }) => `<a class="store-tile" href="${storeHref(st)}" title="Abrir ${esc(st.nombre)}">
       <div class="tile-top">
-        <span class="tile-ic"><img src="assets/tienda.jpg" alt=""></span>
+        <span class="tile-ic"><img src="assets/tienda.png" alt=""></span>
         ${s.bloqueado ? `<span class="flag" title="${plural(s.bloqueado, 'paso bloqueado', 'pasos bloqueados')}">${ic('alert')}${s.bloqueado}</span>` : ''}
       </div>
       <div class="tile-id"><h3 class="tile-name">${esc(st.nombre)}</h3><span class="tile-cr">CR ${esc(st.cr)}</span></div>

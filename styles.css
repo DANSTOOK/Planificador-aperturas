@@ -287,14 +287,15 @@ a.tr:hover .chev { color: var(--ink); transform: translateX(2px); }
 .hs.is-alert b { color: var(--block-ink); }
 .home-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
 .home-bar .search input { background: var(--surface); }
-.store-grid { display: grid; grid-template-columns: repeat(auto-fill, 244px); gap: 14px; }
-.store-tile { aspect-ratio: 1 / 1; min-height: 232px; display: flex; flex-direction: column; gap: 9px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; transition: border-color .15s, box-shadow .15s, transform .15s; position: relative; overflow: hidden; text-align: left; }
+.store-grid { display: grid; grid-template-columns: repeat(auto-fill, 272px); gap: 16px; }
+.store-tile { aspect-ratio: 1 / 1; min-height: 272px; display: flex; flex-direction: column; gap: 8px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; transition: border-color .15s, box-shadow .15s, transform .15s; position: relative; overflow: hidden; text-align: left; }
 a.store-tile:hover { border-color: var(--line-2); box-shadow: var(--shadow-pop); transform: translateY(-2px); }
-.tile-top { display: flex; justify-content: space-between; align-items: flex-start; }
-.tile-ic { width: 78px; height: 50px; border-radius: 8px; background: #fff; border: 1px solid var(--line); overflow: hidden; display: grid; place-items: center; }
-.tile-ic img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; display: block; }
-.tile-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.tile-name { font-size: 17px; font-weight: 700; letter-spacing: -.015em; line-height: 1.2; color: var(--ink); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.tile-top { display: flex; justify-content: center; padding-top: 4px; }
+.tile-top .flag { position: absolute; top: 12px; right: 12px; }
+.tile-ic { width: 150px; height: 83px; display: grid; place-items: center; }
+.tile-ic img { width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(0 2px 3px rgba(0,0,0,.12)); }
+.tile-id { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; text-align: center; }
+.tile-name { font-size: 20px; font-weight: 700; letter-spacing: -.015em; line-height: 1.2; color: var(--ink); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .tile-cr { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
 .tile-prog { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
 .tile-pct { font-size: 26px; font-weight: 600; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
@@ -316,8 +317,8 @@ a.store-tile:hover { border-color: var(--line-2); box-shadow: var(--shadow-pop);
   .tile-plats { display: none; }
   .tile-foot { margin: 0 -12px -12px; padding: 8px 12px; }
   .tile-foot .days { display: none; }
-  .tile-name { font-size: 15px; }
-  .tile-ic { width: 52px; height: 36px; }
+  .tile-name { font-size: 16.5px; }
+  .tile-ic { width: 112px; height: 62px; }
 }
 
 /* ---------- Tienda ---------- */
