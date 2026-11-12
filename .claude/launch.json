@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "aperturas", "runtimeExecutable": "node", "runtimeArgs": [".claude/serve.js"], "port": 5174 }
+  ]
+}

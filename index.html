@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Aperturas | Check list por plataforma</title>
+  <script>try{const t=localStorage.getItem('ap-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="brand" href="#/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand-text">Aperturas<small>Check list de plataformas</small></span></a>
+
+      <nav class="nav-list" aria-label="Secciones">
+        <a class="nav" data-nav="home" href="#/"><span data-ic="store"></span><span class="nav-text">Tiendas</span><b id="countStores"></b></a>
+        <a class="nav" data-nav="tpl" href="#/plantillas"><span data-ic="template"></span><span class="nav-text">Plantillas</span></a>
+        <button class="nav" id="newStoreSide" type="button"><span data-ic="plus"></span><span class="nav-text">Nueva tienda</span></button>
+      </nav>
+
+      <div class="side-section side-stores">
+        <div class="side-label">Aperturas</div>
+        <div id="sideStores"></div>
+      </div>
+
+      <div class="side-foot">
+        <button class="side-action" id="helpBtn" type="button"><span data-ic="help"></span><span>Cómo se usa</span></button>
+        <button class="side-action" id="exportAll" type="button" title="Descarga un archivo con todas las tiendas para guardarlo o pasarlo a otra computadora"><span data-ic="download"></span><span>Guardar copia de todo</span></button>
+        <label class="side-action" title="Carga el archivo que te envió otra persona y junta su avance con el tuyo"><span data-ic="upload"></span><span>Recibir avance</span><input id="importInput" type="file" accept="application/json,.json" hidden></label>
+        <button class="side-action" id="themeBtn" type="button"></button>
+        <button class="user-btn" id="userBtn" type="button" title="Tu nombre y plataforma"></button>
+        <p class="app-version" id="appVersion"></p>
+      </div>
+    </aside>
+
+    <main class="main" id="main" tabindex="-1"></main>
+  </div>
+
+  <!-- Tienda -->
+  <dialog id="storeDlg" class="dlg dlg-wide" aria-labelledby="storeDlgTitle">
+    <form method="dialog" id="storeForm">
+      <header class="dlg-head"><h2 id="storeDlgTitle">Nueva tienda</h2><button class="x" value="cancel" formnovalidate aria-label="Cerrar"><span data-ic="x"></span></button></header>
+      <div class="dlg-body">
+        <div class="grid-3">
+          <label class="field span-2">Nombre de la tienda<input name="nombre" required placeholder="OXXO Ameyalli" autocomplete="off"></label>
+          <label class="field">CR (id de la tienda)<input name="cr" required placeholder="50ABC" autocomplete="off"></label>
+          <label class="field">Fecha de apertura<input type="date" name="apertura" required></label>
+          <label class="field span-2">Dirección o notas<input name="notas" placeholder="Opcional" autocomplete="off"></label>
+        </div>
+        <div class="dlg-sub">
+          <h3>Plataformas y fecha de ingreso</h3>
+          <p>Según el cronograma. Desmarca las que no participan en esta apertura.</p>
+        </div>
+        <div id="storePlats" class="plat-picker"></div>
+        <div class="pp-add">
+          <input id="ppNew" placeholder="Otra plataforma (ej. Mercadotecnia)" autocomplete="off">
+          <button type="button" class="btn btn-sm" id="ppAddBtn">Agregar</button>
+        </div>
+        <label class="check-line"><input type="checkbox" name="plantilla" checked> <span id="tplLabel">Cargar los pasos de la plantilla de cada plataforma</span></label>
+      </div>
+      <footer class="dlg-foot"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn btn-primary" value="ok">Guardar tienda</button></footer>
+    </form>
+  </dialog>
+
+  <!-- Paso del check list -->
+  <dialog id="taskDlg" class="dlg" aria-labelledby="taskDlgTitle">
+    <form method="dialog" id="taskForm">
+      <header class="dlg-head"><h2 id="taskDlgTitle">Nuevo paso</h2><button class="x" value="cancel" formnovalidate aria-label="Cerrar"><span data-ic="x"></span></button></header>
+      <div class="dlg-body">
+        <label class="field">Paso<input name="titulo" required placeholder="Ej. Cajas (POS) instaladas y configuradas" autocomplete="off"></label>
+        <label class="field">Detalle<textarea name="descripcion" rows="3" placeholder="Qué hay que revisar, a quién contactar, criterios de aceptación…"></textarea></label>
+        <label class="field" id="taskSubField">Subdepartamento<select name="sub"></select></label>
+        <div class="grid-3">
+          <label class="field">Responsable<input name="responsable" autocomplete="off"></label>
+          <label class="field">Fecha límite<input type="date" name="limite"></label>
+          <label class="field">Estatus<select name="estado"></select></label>
+        </div>
+        <div class="field">Imágenes
+          <div class="dropzone" id="taskDrop" tabindex="0">
+            <span>Arrastra, pega con <kbd>Ctrl</kbd>+<kbd>V</kbd> o <label class="link">elige imágenes<input type="file" id="taskFiles" accept="image/*" multiple hidden></label></span>
+          </div>
+          <div class="thumbs" id="taskThumbs"></div>
+        </div>
+      </div>
+      <footer class="dlg-foot"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn btn-primary" value="ok">Guardar paso</button></footer>
+    </form>
+  </dialog>
+
+  <!-- Subdepartamento -->
+  <dialog id="subDlg" class="dlg" aria-labelledby="subDlgTitle">
+    <form method="dialog" id="subForm">
+      <header class="dlg-head"><h2 id="subDlgTitle">Nuevo subdepartamento</h2><button class="x" value="cancel" formnovalidate aria-label="Cerrar"><span data-ic="x"></span></button></header>
+      <div class="dlg-body">
+        <p class="dlg-note" id="subNote">Un subdepartamento es un área dentro de la plataforma (por ejemplo, dentro de Comercial: Precios). Tiene su propio check list y su propio avance.</p>
+        <label class="field">Nombre del subdepartamento<input name="nombre" required list="subOptions" placeholder="Ej. Precios y promociones" autocomplete="off"><datalist id="subOptions"></datalist></label>
+        <div class="grid-2">
+          <label class="field">Rol que lo atiende<input name="rol" placeholder="Ej. Analista comercial" autocomplete="off"></label>
+          <label class="field">Nombre del responsable<input name="responsable" placeholder="Opcional" autocomplete="off"></label>
+        </div>
+        <label class="check-line" id="subTplLine"><input type="checkbox" name="cargar" checked> <span id="subTplLabel">Cargar los pasos de la plantilla</span></label>
+        <label class="check-line" id="subSaveLine"><input type="checkbox" name="guardar" checked> <span id="subSaveLabel">Guardarlo en la plantilla para las próximas tiendas</span></label>
+      </div>
+      <footer class="dlg-foot"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn btn-primary" value="ok">Guardar</button></footer>
+    </form>
+  </dialog>
+
+  <!-- Ayuda -->
+  <dialog id="helpDlg" class="dlg dlg-wide" aria-labelledby="helpTitle">
+    <form method="dialog">
+      <header class="dlg-head"><h2 id="helpTitle">Cómo se usa</h2><button class="x" value="cancel" aria-label="Cerrar"><span data-ic="x"></span></button></header>
+      <div class="dlg-body help">
+        <ol class="help-steps">
+          <li><b>1</b><div><h3>Elige la tienda</h3><p>En <strong>Tiendas</strong> está cada apertura con su avance. Si no existe, usa <strong>Nueva tienda</strong> y captura su nombre, su CR y la fecha de apertura.</p></div></li>
+          <li><b>2</b><div><h3>Entra a tu plataforma</h3><p>Dentro de la tienda abre tu plataforma: Conservación, Administrativo, Comercial o TI. Si tu área tiene subdepartamentos, aparecen como secciones de la lista.</p></div></li>
+          <li><b>3</b><div><h3>Marca lo que terminaste</h3><p>Toca el círculo a la izquierda de cada paso cuando quede listo. El porcentaje se actualiza solo.</p></div></li>
+          <li><b>4</b><div><h3>Si algo falta, avisa</h3><p>Abre el paso, cambia el estatus a <strong>Bloqueado</strong> y escribe qué falta y quién lo resuelve. Puedes adjuntar fotos como evidencia.</p></div></li>
+          <li><b>5</b><div><h3>Comparte el avance</h3><p>En la tienda usa <strong>Copiar resumen</strong> y pégalo en Teams o WhatsApp. Para pasar tu avance a otra persona usa <strong>Enviar avance (archivo)</strong>; ella lo carga con <strong>Recibir avance</strong>.</p></div></li>
+        </ol>
+        <div class="help-legend">
+          <p class="tb-label">Qué significa cada estatus</p>
+          <ul id="helpLegend"></ul>
+        </div>
+      </div>
+      <footer class="dlg-foot"><button class="btn btn-primary" value="ok">Entendido</button></footer>
+    </form>
+  </dialog>
+
+  <!-- Perfil -->
+  <dialog id="userDlg" class="dlg dlg-narrow" aria-labelledby="userDlgTitle">
+    <form method="dialog" id="userForm">
+      <header class="dlg-head"><h2 id="userDlgTitle">¿Quién está actualizando?</h2><button class="x" value="cancel" formnovalidate aria-label="Cerrar"><span data-ic="x"></span></button></header>
+      <div class="dlg-body">
+        <p class="dlg-note" id="userNote">Tu nombre y plataforma aparecen en los comentarios y cambios de estatus para que todos sepan quién avanzó cada paso.</p>
+        <label class="field">Nombre<input name="nombre" required autocomplete="name" placeholder="Ej. Ana López"></label>
+        <label class="field">Mi plataforma<select name="plataforma"></select></label>
+      </div>
+      <footer class="dlg-foot"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn btn-primary" value="ok">Guardar</button></footer>
+    </form>
+  </dialog>
+
+  <!-- Confirmación -->
+  <dialog id="askDlg" class="dlg dlg-narrow" aria-labelledby="askTitle">
+    <header class="dlg-head"><h2 id="askTitle"></h2></header>
+    <div class="dlg-body"><p id="askMsg" class="dlg-note"></p></div>
+    <footer class="dlg-foot" id="askFoot"></footer>
+  </dialog>
+
+  <!-- Visor de imágenes -->
+  <dialog id="lightbox" class="lightbox" aria-label="Imagen">
+    <button class="lb-btn lb-close" type="button" data-lb="close" aria-label="Cerrar"><span data-ic="x"></span></button>
+    <button class="lb-btn lb-prev" type="button" data-lb="prev" aria-label="Anterior">‹</button>
+    <img id="lbImg" alt="">
+    <button class="lb-btn lb-next" type="button" data-lb="next" aria-label="Siguiente">›</button>
+    <p class="lb-count" id="lbCount"></p>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="version.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

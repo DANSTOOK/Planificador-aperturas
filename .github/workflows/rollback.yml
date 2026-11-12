@@ -1,0 +1,49 @@
+name: Rollback a una versión
+
+# Publica en GitHub Pages una versión anterior (una etiqueta vX.Y.Z) sin tocar main.
+# Ojo: el siguiente push a main vuelve a publicar lo más reciente; para un
+# rollback permanente, revierte el cambio en main (ver README).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versión a publicar (ej. v1.0.0). Las disponibles están en Releases.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Validar versión
+        run: |
+          echo "${{ inputs.version }}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' || { echo "::error::Usa el formato vX.Y.Z"; exit 1; }
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+      - name: Armar sitio de esa versión
+        run: |
+          # Las versiones viejas pueden no tener el script; se usa el de main
+          git fetch origin main --depth=1
+          git show origin/main:scripts/build-site.sh > /tmp/build-site.sh
+          bash /tmp/build-site.sh "${{ inputs.version }}-rollback"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Resumen
+        run: echo "### Publicada la versión ${{ inputs.version }}" >> "$GITHUB_STEP_SUMMARY"

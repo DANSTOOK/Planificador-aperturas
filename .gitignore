@@ -1,0 +1,12 @@
+# Sistema y editores
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.bak
+
+# Carpeta generada al publicar
+_site/
+
+# Configuración local de Claude Code
+.claude/settings.local.json
