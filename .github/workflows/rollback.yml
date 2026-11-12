@@ -30,7 +30,7 @@ jobs:
       - name: Validar versión
         run: |
           echo "${{ inputs.version }}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' || { echo "::error::Usa el formato vX.Y.Z"; exit 1; }
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.version }}
       - name: Armar sitio de esa versión
