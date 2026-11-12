@@ -402,25 +402,22 @@ function viewHome() {
   const bloq = rows.reduce((n, x) => n + x.s.bloqueado, 0);
   const avg = curso.length ? Math.round(curso.reduce((n, x) => n + x.s.pct, 0) / curso.length) : null;
   const dProx = prox ? daysFrom(t, prox.st.apertura) : null;
-  return pageHead({
-    title: 'Aperturas',
-    sub: 'Avance del check list de cada plataforma, tienda por tienda.',
-    actions: `<button class="btn btn-primary" data-action="new-store" type="button">${ic('plus')}Nueva tienda</button>`,
-  }) + `
-  ${tip('home3', 'Abre una tienda para ver cómo va cada plataforma. El porcentaje es la parte de los pasos que ya se terminaron.')}
-  <section class="kpis" aria-label="Resumen">
-    <div class="kpi"><span class="kpi-l">Aperturas en curso</span><span class="kpi-v">${curso.length}</span><span class="kpi-s">de ${plural(rows.length, 'tienda', 'tiendas')}</span></div>
-    <div class="kpi"><span class="kpi-l">Próxima apertura</span><span class="kpi-v">${prox ? (dProx === 0 ? 'Hoy' : `${dProx}<small> ${dProx === 1 ? 'día' : 'días'}</small>`) : '—'}</span><span class="kpi-s">${prox ? `${esc(prox.st.nombre)} · ${fmtShort(prox.st.apertura)}` : 'Sin aperturas próximas'}</span></div>
-    <div class="kpi"><span class="kpi-l">Avance promedio</span><span class="kpi-v">${avg == null ? '—' : `${avg}<small>%</small>`}</span><span class="kpi-s">aperturas en curso</span></div>
-    <div class="kpi ${bloq ? 'is-alert' : ''}"><span class="kpi-l">Pasos bloqueados</span><span class="kpi-v">${bloq}</span><span class="kpi-s">${bloq ? 'requieren atención' : 'todo fluye'}</span></div>
-  </section>
-  <section class="panel">
-    <div class="panel-bar">
-      <label class="search">${ic('search')}<input id="q" type="search" placeholder="Buscar por nombre o CR" value="${esc(ui.q)}" autocomplete="off" aria-label="Buscar tienda"></label>
-      <div class="seg" role="group" aria-label="Filtrar">${[['todas', 'Todas'], ['curso', 'En curso'], ['riesgo', 'En riesgo'], ['completas', 'Completas']].map(([k, l]) => `<button type="button" class="${ui.homeFilter === k ? 'is-active' : ''}" data-action="home-filter" data-v="${k}">${l}</button>`).join('')}</div>
+  return `
+  <header class="home-head">
+    <h1>Aperturas</h1>
+    <div class="hh-stats" aria-label="Resumen">
+      <span class="hs" title="Tiendas con pasos pendientes"><b>${curso.length}</b>en curso</span>
+      <span class="hs" title="${prox ? `${esc(prox.st.nombre)} · ${fmtDate(prox.st.apertura)}` : 'Sin aperturas próximas'}"><b>${prox ? (dProx === 0 ? 'Hoy' : `${dProx} d`) : '—'}</b>próxima apertura</span>
+      <span class="hs" title="Promedio de las aperturas en curso"><b>${avg == null ? '—' : `${avg}%`}</b>avance promedio</span>
+      <span class="hs ${bloq ? 'is-alert' : ''}"><b>${bloq}</b>${bloq === 1 ? 'paso bloqueado' : 'pasos bloqueados'}</span>
     </div>
-    <div id="homeCards">${homeCards()}</div>
-  </section>`;
+    <button class="btn btn-primary btn-sm" data-action="new-store" type="button">${ic('plus')}Nueva tienda</button>
+  </header>
+  <div class="home-bar">
+    <label class="search">${ic('search')}<input id="q" type="search" placeholder="Buscar por nombre o CR" value="${esc(ui.q)}" autocomplete="off" aria-label="Buscar tienda"></label>
+    <div class="seg" role="group" aria-label="Filtrar">${[['todas', 'Todas'], ['curso', 'En curso'], ['riesgo', 'En riesgo'], ['completas', 'Completas']].map(([k, l]) => `<button type="button" class="${ui.homeFilter === k ? 'is-active' : ''}" data-action="home-filter" data-v="${k}">${l}</button>`).join('')}</div>
+  </div>
+  <div id="homeCards">${homeCards()}</div>`;
 }
 function homeCards() {
   const t = todayISO(); const q = norm(ui.q);
@@ -432,17 +429,19 @@ function homeCards() {
     if (ui.homeFilter === 'riesgo') return !full && (s.bloqueado > 0 || (st.apertura && daysFrom(t, st.apertura) <= 7));
     return true;
   });
-  if (!S.tiendas.length) return `<div class="empty">${ic('store', 'empty-ic')}<h3>Aún no hay tiendas</h3><p>Da de alta la primera apertura con su CR, la fecha de apertura y la fecha de ingreso de cada plataforma.</p><button class="btn btn-primary" data-action="new-store" type="button">${ic('plus')}Nueva tienda</button></div>`;
-  if (!rows.length) return `<div class="empty">${ic('search', 'empty-ic')}<h3>Sin resultados</h3><p>Ninguna tienda coincide con la búsqueda o el filtro.</p></div>`;
-  return `<div class="table store-table" role="table">
-    <div class="tr th" role="row"><span>Tienda</span><span>Apertura</span><span>Avance general</span><span>Por plataforma</span><span></span></div>
-    ${rows.map(({ st, s }) => `<a class="tr" role="row" href="${storeHref(st)}">
-      <span class="c-name"><b>${esc(st.nombre)}</b><span class="mono">CR ${esc(st.cr)}</span></span>
-      <span class="c-date"><span>${fmtDate(st.apertura)}</span>${dayTxt(st)}</span>
-      <span class="c-prog"><span class="num">${s.pct}%</span>${stackBar(s)}<span class="c-count">${s.completado}/${s.aplic}</span></span>
-      <span class="c-plats">${st.plataformas.map(p => { const x = stats(p.tasks); return `<span class="pm" style="--c:${safeColor(p.color)}" title="${esc(p.nombre)}: ${x.pct}%"><span class="pm-bar"><i style="height:${Math.max(x.pct, 4)}%"></i></span><span class="pm-l">${esc(p.nombre.replace(/\s*\(.*\)/, '').slice(0, 4))}</span></span>`; }).join('')}</span>
-      <span class="c-end">${s.bloqueado ? `<span class="flag">${ic('alert')}${s.bloqueado}</span>` : ''}${ic('chevron', 'chev')}</span>
+  if (S.tiendas.length && !rows.length) return `<div class="panel empty">${ic('search', 'empty-ic')}<h3>Sin resultados</h3><p>Ninguna tienda coincide con la búsqueda o el filtro.</p></div>`;
+  return `<div class="store-grid">
+    ${rows.map(({ st, s }) => `<a class="store-tile" href="${storeHref(st)}" title="Abrir ${esc(st.nombre)}">
+      <div class="tile-top">
+        <span class="tile-ic"><img src="assets/tienda.jpg" alt=""></span>
+        ${s.bloqueado ? `<span class="flag" title="${plural(s.bloqueado, 'paso bloqueado', 'pasos bloqueados')}">${ic('alert')}${s.bloqueado}</span>` : ''}
+      </div>
+      <div class="tile-id"><h3 class="tile-name">${esc(st.nombre)}</h3><span class="tile-cr">CR ${esc(st.cr)}</span></div>
+      <div class="tile-prog"><span class="tile-pct">${s.pct}<small>%</small></span>${stackBar(s)}</div>
+      <div class="tile-plats">${st.plataformas.map(p => { const x = stats(p.tasks); return `<span class="tp" style="--c:${safeColor(p.color)}" title="${esc(p.nombre)}: ${x.pct}%"><i style="width:${x.pct}%"></i></span>`; }).join('')}</div>
+      <div class="tile-foot">${ic('calendar')}<span>${fmtShort(st.apertura)}</span>${dayTxt(st)}</div>
     </a>`).join('')}
+    <button class="store-tile tile-new" data-action="new-store" type="button">${ic('plus')}<span>Nueva tienda</span></button>
   </div>`;
 }
 

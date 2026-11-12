@@ -277,6 +277,49 @@ a.tr:hover .chev { color: var(--ink); transform: translateX(2px); }
 .c-end { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
 .chev { color: var(--faint); transition: transform .15s, color .15s; }
 
+/* ---------- Inicio: encabezado compacto y tiendas en cuadros ---------- */
+.home-head { display: flex; align-items: center; gap: 18px; margin-bottom: 14px; flex-wrap: wrap; }
+.home-head h1 { font-size: 20px; font-weight: 600; letter-spacing: -.015em; }
+.hh-stats { display: flex; align-items: center; flex: 1; min-width: 0; flex-wrap: wrap; gap: 4px 0; }
+.hs { display: inline-flex; align-items: baseline; gap: 6px; font-size: 12.5px; color: var(--muted); padding: 0 14px; border-left: 1px solid var(--line-2); white-space: nowrap; }
+.hs:first-child { border-left: 0; padding-left: 0; }
+.hs b { font-size: 15px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.hs.is-alert b { color: var(--block-ink); }
+.home-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.home-bar .search input { background: var(--surface); }
+.store-grid { display: grid; grid-template-columns: repeat(auto-fill, 244px); gap: 14px; }
+.store-tile { aspect-ratio: 1 / 1; min-height: 232px; display: flex; flex-direction: column; gap: 9px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; transition: border-color .15s, box-shadow .15s, transform .15s; position: relative; overflow: hidden; text-align: left; }
+a.store-tile:hover { border-color: var(--line-2); box-shadow: var(--shadow-pop); transform: translateY(-2px); }
+.tile-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.tile-ic { width: 78px; height: 50px; border-radius: 8px; background: #fff; border: 1px solid var(--line); overflow: hidden; display: grid; place-items: center; }
+.tile-ic img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; display: block; }
+.tile-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile-name { font-size: 17px; font-weight: 700; letter-spacing: -.015em; line-height: 1.2; color: var(--ink); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.tile-cr { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+.tile-prog { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
+.tile-pct { font-size: 26px; font-weight: 600; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.tile-pct small { font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 1px; }
+.tile-plats { display: flex; gap: 4px; }
+.tp { flex: 1; height: 4px; border-radius: 2px; background: var(--surface-3); overflow: hidden; }
+.tp i { display: block; height: 100%; background: var(--c); }
+.tile-foot { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 10px; margin: 0 -16px -16px; padding: 9px 16px; background: var(--surface-2); }
+.tile-foot .ic { width: 14px; height: 14px; color: var(--muted); }
+.tile-foot .days { margin-left: auto; font-size: 12px; }
+.tile-new { border-style: dashed; background: none; align-items: center; justify-content: center; color: var(--muted); cursor: pointer; font-size: 13.5px; gap: 8px; }
+.tile-new .ic { width: 22px; height: 22px; }
+.tile-new:hover { border-color: var(--accent); color: var(--accent); }
+@media (max-width: 560px) {
+  .hh-stats { order: 3; width: 100%; flex: none; }
+  .home-head .btn { margin-left: auto; }
+  .store-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .store-tile { aspect-ratio: auto; min-height: 0; padding: 12px; gap: 8px; }
+  .tile-plats { display: none; }
+  .tile-foot { margin: 0 -12px -12px; padding: 8px 12px; }
+  .tile-foot .days { display: none; }
+  .tile-name { font-size: 15px; }
+  .tile-ic { width: 52px; height: 36px; }
+}
+
 /* ---------- Tienda ---------- */
 .overview { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); margin-bottom: 18px; }
 .ov-main { display: flex; gap: 26px; align-items: center; padding: 20px 22px; }

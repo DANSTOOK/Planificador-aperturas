@@ -5,6 +5,7 @@ set -euo pipefail
 BUILD="${1:-local}"
 rm -rf _site && mkdir -p _site
 cp index.html styles.css app.js version.js _site/
+cp -r assets _site/
 # Versión y commit visibles en la app
 echo "window.APP_BUILD = '${BUILD}';" >> _site/version.js
 # Evita que el navegador use archivos viejos después de publicar
