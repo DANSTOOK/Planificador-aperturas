@@ -6,6 +6,7 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 
 ## [Sin publicar]
 
+- Base del equipo de **Plaza Tijuana Este** con las fechas de la junta semanal (10 nov 2026): Mallorca (apertura 30 nov 2026) y Prologis Alamar (apertura 4 ene 2027), con fechas clave e ingreso de cada plataforma.
 - Comercial: nuevo subdepartamento **Food Service** (Equipo FV) con 3 pasos y plazos N-5, N-2 y N-10.
 - Plantillas con responsable y plazo relativo a la apertura (`Paso | Responsable | N-5`); la fecha límite se calcula sola.
 - Plazos **N-#** en toda la app: N es el día de apertura (N-5 = 5 días antes, N+2 = 2 después). Se pueden capturar en el paso, en la captura rápida (`Paso | Responsable | N-5`) y en el ingreso de cada plataforma; la tienda muestra "Hoy es N-18" y el cronograma marca semanas en N.

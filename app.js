@@ -232,6 +232,64 @@ function normalizeStore(st) {
   });
 }
 function normalizeCatalog(c) { c.plantilla ||= []; c.subs ||= []; c.subs.forEach(s => { s.id ||= uid('s'); s.rol ||= ''; s.plantilla ||= []; }); return c; }
+/* ---------- Base del equipo (data/base.js) ---------- */
+// Fechas clave del cronograma de cada tienda, en el orden en que suelen ocurrir
+const HITOS = [
+  ['inicioObra', 'Inicio de obra'], ['sembrado', 'Sembrado'], ['finObra', 'Fin de obra'], ['contratoLuz', 'Contrato de luz'],
+  ['puestaOperativa', 'Puesta operativa'], ['mercadeoSistemas', 'Entrada Mercadeo y Sistemas'], ['carpetaPermisos', 'Carpeta de permisos'],
+  ['entregaMtto', 'Entrega Mantenimiento'], ['rhCedis', 'Entrega RH y CEDIS'], ['plaqueoFondo', 'Plaqueo y fondo fijo'],
+];
+// Qué fecha clave marca el ingreso de cada plataforma
+const PLAT_HITO = { mtto: 'entregaMtto', ti: 'mercadeoSistemas', com: 'mercadeoSistemas', adm: 'plaqueoFondo' };
+const crKey = c => norm(c).replace(/o/g, '0');
+function setApertura(st, nueva) {
+  if (!nueva || st.apertura === nueva) return;
+  allTasks(st).forEach(k => {
+    if (k.diasN == null) return;
+    if (!k.limite || (st.apertura && k.limite === addDays(st.apertura, -k.diasN))) k.limite = addDays(nueva, -k.diasN);
+  });
+  log(st, null, `Cambió la apertura: ${fmtDate(st.apertura)} → ${fmtDate(nueva)}`);
+  st.apertura = nueva;
+}
+/* Aplica las fechas de la base del equipo a las tiendas locales (por CR).
+   Solo corre una vez por versión de la base; lo que cada quien capture
+   después en su navegador no se pisa hasta la siguiente versión. */
+function applyBase() {
+  const B = window.AP_BASE;
+  if (!B || !Array.isArray(B.tiendas) || S.baseVersion === B.version) return;
+  B.tiendas.forEach(b => {
+    let st = S.tiendas.find(t => crKey(t.cr) === crKey(b.cr));
+    if (!st) {
+      st = { id: uid('t'), nombre: b.nombre, cr: b.cr, apertura: b.apertura, notas: '', creado: Date.now(), editado: Date.now(), plataformas: [], actividad: [], borrados: [] };
+      st.plataformas = S.catalogo.map(c => newStorePlat(c, { apertura: b.apertura }));
+      S.tiendas.push(st);
+      log(st, null, `Se dio de alta desde el cronograma (${B.fuente})`);
+    } else setApertura(st, b.apertura);
+    st.plaza = b.plaza || B.plaza || st.plaza || '';
+    st.formato = b.formato || st.formato || '';
+    st.hitos = { ...(st.hitos || {}), ...b.hitos };
+    st.fuente = B.fuente;
+    Object.entries(PLAT_HITO).forEach(([pid, h]) => {
+      const p = getPlat(st, pid);
+      if (p && b.hitos?.[h] && p.ingreso !== b.hitos[h]) { p.ingreso = b.hitos[h]; p.editado = Date.now(); }
+    });
+    log(st, null, `Fechas clave actualizadas (${B.fuente})`);
+  });
+  S.baseVersion = B.version;
+}
+function hitosList(st) {
+  const h = st.hitos || {};
+  const t = todayISO();
+  const rows = HITOS.filter(([k]) => h[k]).map(([k, l]) => ({ k, l, d: h[k] }));
+  if (st.apertura) rows.push({ k: 'apertura', l: 'Apertura', d: st.apertura });
+  if (!rows.length) return '';
+  rows.sort((a, b) => a.d.localeCompare(b.d));
+  return `<div class="hitos">
+    <p class="hitos-h"><b>Fechas clave</b>${st.fuente ? `<span>Fuente: ${esc(st.fuente)}</span>` : ''}</p>
+    <ol>${rows.map(x => { const st8 = x.d < t ? 'past' : x.d === t ? 'today' : 'next'; return `<li class="hito is-${st8} ${x.k === 'apertura' ? 'is-open' : ''}"><span class="hito-dot"></span><span class="hito-l">${esc(x.l)}</span><span class="hito-d">${fmtDate(x.d, { weekday: 'short', day: 'numeric', month: 'short' })}</span>${nChip(x.d, st.apertura) || ''}</li>`; }).join('')}</ol>
+  </div>`;
+}
+
 function seedState() {
   const t = todayISO();
   const st = { id: uid('t'), nombre: 'OXXO Ameyalli', cr: '50AME', apertura: addDays(t, 24), notas: 'Tienda de ejemplo: edítala o elimínala', creado: Date.now(), editado: Date.now(), plataformas: [], actividad: [], borrados: [] };
@@ -440,7 +498,7 @@ function viewHome() {
   const dProx = prox ? daysFrom(t, prox.st.apertura) : null;
   return `
   <header class="home-head">
-    <h1>Aperturas</h1>
+    <h1>Aperturas${window.AP_BASE?.plaza ? ` <span class="hh-plaza">Plaza ${esc(window.AP_BASE.plaza)}</span>` : ''}</h1>
     <div class="hh-stats" aria-label="Resumen">
       <span class="hs" title="Tiendas con pasos pendientes"><b>${curso.length}</b>en curso</span>
       <span class="hs" title="${prox ? `${esc(prox.st.nombre)} · ${fmtDate(prox.st.apertura)}` : 'Sin aperturas próximas'}"><b>${prox ? (dProx === 0 ? 'Hoy' : `${dProx} d`) : '—'}</b>próxima apertura</span>
@@ -499,7 +557,7 @@ function viewStore(st) {
     <img class="sv-img" src="assets/tienda.png" alt="">
     <div class="sv-main">
       <div class="sv-title">
-        <h1>${esc(st.nombre)}</h1><span class="cr-chip">CR ${esc(st.cr)}</span>
+        <h1>${esc(st.nombre)}</h1><span class="cr-chip">CR ${esc(st.cr)}</span>${st.plaza ? `<span class="plaza-chip">${esc(st.plaza)}${st.formato ? ` · ${esc(st.formato)}` : ''}</span>` : ''}
       </div>
       <p class="sv-when">${ic('calendar')}<span>${cuando}</span>${st.apertura ? `<span class="muted">· ${fmtDate(st.apertura, { weekday: 'long', day: 'numeric', month: 'long' })}</span><span class="n-chip today" title="Día de hoy respecto a la apertura">Hoy es ${nTxt(nOf(todayISO(), st.apertura))}</span>` : ''}</p>
       <div class="sv-prog">
@@ -524,8 +582,8 @@ function viewStore(st) {
   </section>
 
   <details class="sv-more" ${ui.openCrono ? 'open' : ''} data-toggle="openCrono">
-    <summary>${ic('calendar')}<span><b>Cronograma</b><small>Cuándo entra cada plataforma hasta la apertura</small></span>${ic('chevron', 'chev')}</summary>
-    <div class="sv-more-body">${gantt(st)}</div>
+    <summary>${ic('calendar')}<span><b>Cronograma</b><small>${st.hitos ? 'Fechas clave y cuándo entra cada plataforma' : 'Cuándo entra cada plataforma hasta la apertura'}</small></span>${ic('chevron', 'chev')}</summary>
+    <div class="sv-more-body">${hitosList(st)}${gantt(st)}</div>
   </details>
   <details class="sv-more" ${ui.openActs ? 'open' : ''} data-toggle="openActs">
     <summary>${ic('clock')}<span><b>Últimos movimientos</b><small>${st.actividad.length ? `Lo más reciente: ${esc(trunc(st.actividad[0].texto, 70))}` : 'Sin movimientos todavía'}</small></span>${ic('chevron', 'chev')}</summary>
@@ -1067,7 +1125,7 @@ $('#storeForm').addEventListener('submit', e => {
     }
     Object.assign(st, data, { editado: Date.now() });
   } else {
-    st = { id: uid('t'), ...data, creado: Date.now(), editado: Date.now(), plataformas: [], actividad: [], borrados: [] };
+    st = { id: uid('t'), ...data, plaza: window.AP_BASE?.plaza || '', creado: Date.now(), editado: Date.now(), plataformas: [], actividad: [], borrados: [] };
     S.tiendas.push(st); log(st, null, `Creó la tienda ${st.nombre}`);
   }
   const loadTpl = f.plantilla.checked;
@@ -1399,7 +1457,7 @@ window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.s
 (async function init() {
   await DB.init();
   let s = await DB.get('kv', 'state').catch(() => null);
-  if (!s || !Array.isArray(s.tiendas)) s = seedState();
+  if (!s || !Array.isArray(s.tiendas)) s = window.AP_BASE ? { version: CATALOG_VERSION, catalogo: structuredClone(DEFAULT_CATALOG), tiendas: [] } : seedState();
   const soloEjemplo = s.tiendas.every(t => (t.notas || '').startsWith('Tienda de ejemplo') && t.cr === '50AME' && t.nombre === 'OXXO Ameyalli');
   if ((s.version || 1) < CATALOG_VERSION && soloEjemplo) s = seedState();
   if ((s.version || 1) < 3) {
@@ -1430,6 +1488,7 @@ window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.s
   if (!Array.isArray(S.catalogo)) S.catalogo = structuredClone(DEFAULT_CATALOG);
   S.catalogo.forEach(normalizeCatalog);
   S.tiendas.forEach(normalizeStore);
+  applyBase();
   $$('[data-ic]').forEach(el => { el.innerHTML = ic(el.dataset.ic); });
   const ver = window.APP_VERSION ? `Versión ${window.APP_VERSION}${window.APP_BUILD ? ` · ${window.APP_BUILD}` : ''}` : '';
   $('#appVersion').textContent = ver;
