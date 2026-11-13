@@ -891,6 +891,12 @@ a.store-tile.is-off:hover { filter: none; opacity: 1; }
 .help-legend li { display: flex; gap: 12px; align-items: center; font-size: 13px; color: var(--ink-2); }
 .help-legend .st-tag { min-width: 112px; }
 
+/* Resumen por correo */
+.dlg-mail { width: min(900px, calc(100vw - 24px)); }
+.mail-preview { background: #fff; color: #1c1b18; border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; max-height: 56vh; overflow: auto; }
+.mail-foot { justify-content: flex-end; }
+.mail-foot .btn-primary { order: 9; }
+@media (max-width: 560px) { .mail-foot .btn { flex: 1 1 100%; } }
 /* Visor */
 .lightbox { border: 0; padding: 0; background: transparent; max-width: 100vw; max-height: 100vh; width: 100vw; height: 100vh; }
 .lightbox::backdrop { background: rgba(10, 10, 9, .88); }

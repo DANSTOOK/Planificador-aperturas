@@ -66,6 +66,24 @@
     </form>
   </dialog>
 
+  <!-- Resumen por correo -->
+  <dialog id="mailDlg" class="dlg dlg-mail" aria-labelledby="mailDlgTitle">
+    <form method="dialog">
+      <header class="dlg-head"><h2 id="mailDlgTitle">Resumen por correo</h2><button class="x" value="cancel" aria-label="Cerrar"><span data-ic="x"></span></button></header>
+      <div class="dlg-body">
+        <p class="dlg-note">Incluye el avance por plataforma y subdepartamento, bloqueos, pasos vencidos, próximas fechas clave y pendientes. Revísalo y elige cómo enviarlo.</p>
+        <label class="field">Asunto<input id="mailSubject" autocomplete="off"></label>
+        <div class="mail-preview" id="mailPreview"></div>
+      </div>
+      <footer class="dlg-foot mail-foot">
+        <button class="btn" type="button" id="mailText" title="Texto sin formato, para Teams o WhatsApp">Copiar como texto</button>
+        <button class="btn" type="button" id="mailTo" title="Abre tu programa de correo con el asunto y el resumen en texto">Abrir en mi correo</button>
+        <button class="btn" type="button" id="mailEml" title="Descarga un correo listo; al abrirlo en Outlook queda como mensaje nuevo con formato">Abrir en Outlook</button>
+        <button class="btn btn-primary" type="button" id="mailCopy" title="Copia el resumen con formato para pegarlo en el cuerpo del correo">Copiar para pegar en el correo</button>
+      </footer>
+    </form>
+  </dialog>
+
   <!-- Paso del check list -->
   <dialog id="taskDlg" class="dlg" aria-labelledby="taskDlgTitle">
     <form method="dialog" id="taskForm">

@@ -44,7 +44,16 @@ const PALETTE = ['#137b5f', '#2563eb', '#c2410c', '#7c3aed', '#0891b2', '#b91c1c
 /* Plantillas de ejemplo: se editan en la vista Plantillas */
 /* Cada plataforma tiene pasos generales (plantilla) y, si se requiere,
    subdepartamentos con su rol y su propio check list (subs). */
-const CATALOG_VERSION = 5;
+const CATALOG_VERSION = 6;
+/* Check list de Precios y Promociones (Comercial) */
+const PP_STEPS = [
+  'Confirmación de TI: TI nos indica cuándo realizar el reenvío de catálogos de P&P',
+  'Envío de catálogos: enviar los catálogos correspondientes de precios y promociones',
+  'Validación de promociones: TI confirma el consumo correcto y se revisan 5 promociones de diferentes categorías (banner, cabecera, comida rápida, CF y local)',
+  'Comunicación de vigencia: compartir la fecha de inicio del siguiente periodo promocional',
+  'Validación en punto de venta: comprobar en las cajas de venta que pasen las promociones',
+];
+const PP_OLD = ['Precios cargados en el sistema', 'Promociones de apertura cargadas', 'Etiquetas de precio colocadas'];
 const TI_STEPS = [
   'Alta de tienda en la plataforma ServiceNow (se requiere el número de Retek; solicitarlo a Sadot o Admin)',
   'Alta de los equipos de comunicación (switch, router y AP) y alta de la segmentación de la tienda',
@@ -74,7 +83,7 @@ const DEFAULT_CATALOG = [
   { id: 'mtto', nombre: 'Conservación (Mtto)', color: '#a16207', plantilla: ['Refrigeradores y enfriadores instalados y probados', 'Aire acondicionado funcionando', 'Iluminación interior y exterior', 'Instalación eléctrica y regulador revisados', 'Instalación hidráulica sin fugas'], subs: [] },
   { id: 'adm', nombre: 'Administrativo', color: '#7c3aed', plantilla: ['Alta de la tienda (CR) en sistemas administrativos', 'Fondo de caja asignado', 'Alta del personal en nómina', 'Documentación y permisos en tienda'], subs: [] },
   { id: 'com', nombre: 'Comercial', color: '#be185d', plantilla: ['Surtido inicial definido para la tienda'], subs: [
-    { id: 'com-precios', nombre: 'Precios y Promociones', rol: 'Analista Precios y Promociones', plantilla: ['Precios cargados en el sistema', 'Promociones de apertura cargadas', 'Etiquetas de precio colocadas'] },
+    { id: 'com-precios', nombre: 'Precios y Promociones', rol: 'Analista Precios y Promociones', plantilla: PP_STEPS },
     { id: 'com-abasto', nombre: 'Seguimiento Abasto', rol: 'Analista Seguimiento Abasto', plantilla: [] },
     { id: 'com-ejecucion', nombre: 'Ejecución Comercial', rol: 'Coordinador Ejecución Comercial', plantilla: [] },
     { id: 'com-mercadeo', nombre: 'Mercadeo', rol: 'Practicante Mercadeo', plantilla: [] },
@@ -448,6 +457,7 @@ const ICONS = {
   truck: '<path d="M3 6.5h11v9H3zM14 9.5h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17" cy="17.5" r="1.7"/>',
   clip: '<path d="m19.5 11.5-7.6 7.6a4.6 4.6 0 0 1-6.5-6.5l7.6-7.6a3.1 3.1 0 0 1 4.4 4.4l-7.6 7.6a1.5 1.5 0 0 1-2.2-2.2l7-7"/>',
   check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4.5 7 7.5 6 7.5-6"/>',
   list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r=".9" fill="currentColor"/><circle cx="4.8" cy="12" r=".9" fill="currentColor"/><circle cx="4.8" cy="17.5" r=".9" fill="currentColor"/>',
   expand: '<path d="M8 9.5 12 5.5l4 4M8 14.5l4 4 4-4"/>',
   collapse: '<path d="m8 5.5 4 4 4-4M8 18.5l4-4 4 4"/>',
@@ -581,8 +591,8 @@ function viewStore(st) {
       ${bloqTasks.length ? `<button class="sv-alert" type="button" data-action="goto-blocked" data-pid="${esc(bloqTasks[0].p.pid)}" data-id="${esc(bloqTasks[0].k.id)}">${ic('alert')}<span><b>${bloqTasks.length === 1 ? 'Hay 1 paso bloqueado' : `Hay ${bloqTasks.length} pasos bloqueados`}</b> en ${[...new Set(bloqTasks.map(x => x.p.nombre))].join(', ')}</span><span class="sv-alert-go">Ver${ic('chevron')}</span></button>` : ''}
     </div>
     <div class="sv-actions">
-      <button class="btn" data-action="copy-summary" type="button" title="Copia un texto con el avance para pegarlo en Teams, correo o WhatsApp">${ic('copy')}Copiar resumen</button>
-      ${menu([['edit-store', 'edit', 'Editar datos de la tienda'], ['export-store', 'send', 'Enviar avance (archivo)'], ['csv-store', 'table', 'Descargar en Excel'], ['-'], ['del-store', 'trash', 'Eliminar tienda', 'danger']])}
+      <button class="btn btn-primary" data-action="mail-summary" type="button" title="Resumen del avance por plataforma, bloqueos y pendientes, listo para enviar por correo">${ic('mail')}Resumen por correo</button>
+      ${menu([['copy-summary', 'copy', 'Copiar resumen corto (Teams/WhatsApp)'], ['edit-store', 'edit', 'Editar datos de la tienda'], ['export-store', 'send', 'Enviar avance (archivo)'], ['csv-store', 'table', 'Descargar en Excel'], ['-'], ['del-store', 'trash', 'Eliminar tienda', 'danger']])}
     </div>
   </section>
 
@@ -958,6 +968,7 @@ main.addEventListener('click', async e => {
     case 'task-filter': ui.taskFilter = el.dataset.v; return render();
     case 'expand-all': p.tasks.forEach(t => ui.open.add(t.id)); return render();
     case 'collapse-all': ui.open.clear(); return render();
+    case 'mail-summary': return openMailDlg(st);
     case 'copy-summary': return copyText(summary(st), 'Resumen copiado: pégalo en Teams, correo o WhatsApp');
     case 'export-store': return exportData([st], `apertura_${st.cr}_${todayISO()}.json`);
     case 'csv-store': return exportCSV(st);
@@ -1483,6 +1494,146 @@ async function importFile(file) {
   commit(); toast(mode === 'merge' ? 'Respaldo combinado' : 'Datos reemplazados');
 }
 
+/* ---------- Resumen por correo ---------- */
+/* Arma el resumen de la tienda listo para correo: asunto, HTML con estilos
+   en línea (Outlook y Gmail los respetan) y una versión en texto. */
+function emailSummary(st) {
+  const t = todayISO();
+  const s = stats(allTasks(st));
+  const dA = st.apertura ? daysFrom(t, st.apertura) : null;
+  const cuando = dA == null ? 'sin fecha de apertura' : dA > 1 ? `faltan ${dA} días` : dA === 1 ? 'abre mañana' : dA === 0 ? 'abre hoy' : `abrió hace ${plural(-dA, 'día', 'días')}`;
+  const nHoy = st.apertura ? nTxt(nOf(t, st.apertura)) : '';
+  const plats = st.plataformas.slice().sort((a, b) => (a.ingreso || '9999').localeCompare(b.ingreso || '9999'));
+  const done = k => k.estado === 'completado' || k.estado === 'na';
+  const lastNote = k => [...k.historial].reverse().find(h => h.tipo === 'comentario' && h.texto);
+  const where = (p, k) => `${p.nombre}${k.sub ? ` › ${subName(p, k.sub)}` : ''}`;
+  const dateTxt = k => k.limite ? `${fmtShort(k.limite)}${st.apertura ? ` (${nTxt(nOf(k.limite, st.apertura))})` : ''}` : '';
+  const bloq = plats.flatMap(p => p.tasks.filter(k => k.estado === 'bloqueado').map(k => ({ p, k })));
+  const vencidos = plats.flatMap(p => p.tasks.filter(k => !done(k) && k.limite && k.limite < t && k.estado !== 'bloqueado').map(k => ({ p, k })));
+  const proximos = HITOS.filter(([k]) => st.hitos?.[k] && st.hitos[k] >= t).map(([k, l]) => ({ l, d: st.hitos[k] }))
+    .concat(st.apertura && st.apertura >= t ? [{ l: 'Apertura', d: st.apertura }] : []).sort((a, b) => a.d.localeCompare(b.d)).slice(0, 6);
+  const subject = `Avance apertura ${st.nombre} (CR ${st.cr}) · ${s.pct}% · ${st.apertura ? `abre ${fmtShort(st.apertura)}` : 'sin fecha'}`;
+
+  // ---- HTML (estilos en línea) ----
+  const F = "font-family:Segoe UI,Arial,sans-serif;";
+  const C = { ink: '#1c1b18', muted: '#6b6a64', line: '#e5e3dc', soft: '#f6f5f2', ok: '#2f7d56', warn: '#b07a0c', bad: '#c0392b' };
+  const pctColor = p => p === 100 ? C.ok : p >= 50 ? C.ink : p > 0 ? C.warn : C.muted;
+  const barH = (pct, color) => `<table role="presentation" cellpadding="0" cellspacing="0" style="width:120px;border-collapse:collapse;background:${C.line};border-radius:4px"><tr><td style="height:7px;width:${Math.max(pct, 0)}%;background:${color};border-radius:4px"></td><td style="height:7px"></td></tr></table>`;
+  const th = `style="${F}text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:${C.muted};padding:8px 10px;border-bottom:2px solid ${C.line}"`;
+  const td = (extra = '') => `style="${F}font-size:13px;color:${C.ink};padding:8px 10px;border-bottom:1px solid ${C.line};${extra}"`;
+  const h2 = txt => `<h2 style="${F}font-size:15px;color:${C.ink};margin:22px 0 8px">${txt}</h2>`;
+  const platRows = plats.map(p => {
+    const x = stats(p.tasks);
+    const main = `<tr>
+      <td ${td('font-weight:600')}><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${safeColor(p.color)};margin-right:7px"></span>${esc(p.nombre)}</td>
+      <td ${td(`font-weight:700;color:${pctColor(x.pct)}`)}>${x.pct}%</td>
+      <td ${td()}>${barH(x.pct, safeColor(p.color))}</td>
+      <td ${td()}>${x.completado} de ${x.aplic}</td>
+      <td ${td(x.proceso ? `color:${C.warn}` : `color:${C.muted}`)}>${x.proceso}</td>
+      <td ${td(x.bloqueado ? `color:${C.bad};font-weight:700` : `color:${C.muted}`)}>${x.bloqueado}</td>
+      <td ${td(`color:${C.muted}`)}>${p.ingreso ? `${fmtShort(p.ingreso)}${st.apertura ? ` · ${nTxt(nOf(p.ingreso, st.apertura))}` : ''}` : '—'}</td>
+    </tr>`;
+    const subs = p.subs.map(sb => { const y = stats(subTasks(p, sb.id)); return `<tr>
+      <td ${td(`padding-left:28px;color:${C.muted}`)}>↳ ${esc(sb.nombre)}</td>
+      <td ${td(`color:${pctColor(y.pct)}`)}>${y.aplic ? `${y.pct}%` : '—'}</td><td ${td()}>${y.aplic ? barH(y.pct, safeColor(p.color)) : ''}</td>
+      <td ${td(`color:${C.muted}`)}>${y.aplic ? `${y.completado} de ${y.aplic}` : 'Sin pasos'}</td><td ${td(`color:${C.muted}`)}>${y.proceso || ''}</td><td ${td(y.bloqueado ? `color:${C.bad}` : `color:${C.muted}`)}>${y.bloqueado || ''}</td><td ${td()}></td>
+    </tr>`; }).join('');
+    return main + subs;
+  }).join('');
+  const pendHtml = plats.map(p => {
+    const list = p.tasks.filter(k => !done(k)).sort((a, b) => (a.limite || '9999').localeCompare(b.limite || '9999'));
+    if (!list.length) return `<p style="${F}font-size:13px;margin:10px 0 2px"><b style="color:${C.ink}">${esc(p.nombre)}</b> <span style="color:${C.ok}">· sin pendientes ✓</span></p>`;
+    const shown = list.slice(0, 12);
+    return `<p style="${F}font-size:13px;margin:12px 0 4px"><b style="color:${C.ink}">${esc(p.nombre)}</b> <span style="color:${C.muted}">· ${plural(list.length, 'pendiente', 'pendientes')}</span></p>
+      <ul style="${F}font-size:13px;color:${C.ink};margin:0;padding-left:20px">${shown.map(k => {
+        const late = k.limite && k.limite < t;
+        const tag = k.estado === 'bloqueado' ? `<span style="color:${C.bad};font-weight:700">[Bloqueado]</span> ` : k.estado === 'proceso' ? `<span style="color:${C.warn}">[En proceso]</span> ` : '';
+        return `<li style="margin:3px 0">${tag}${esc(k.titulo)}${k.sub ? ` <span style="color:${C.muted}">(${esc(subName(p, k.sub))})</span>` : ''}${k.limite ? ` <span style="color:${late ? C.bad : C.muted}">— ${late ? 'venció ' : ''}${dateTxt(k)}</span>` : ''}${k.responsable ? ` <span style="color:${C.muted}">· ${esc(k.responsable)}</span>` : ''}</li>`;
+      }).join('')}${list.length > shown.length ? `<li style="color:${C.muted};list-style:none;margin-left:-20px">…y ${list.length - shown.length} más</li>` : ''}</ul>`;
+  }).join('');
+  const html = `<div style="${F}color:${C.ink};max-width:760px">
+    <p style="${F}font-size:14px;margin:0 0 14px">Hola equipo, comparto el avance de la apertura:</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background:${C.soft};border:1px solid ${C.line};border-radius:8px">
+      <tr><td style="${F}padding:16px 18px">
+        <div style="font-size:20px;font-weight:700">${esc(st.nombre)} <span style="font-size:13px;font-weight:500;color:${C.muted}">CR ${esc(st.cr)}${st.plaza ? ` · Plaza ${esc(st.plaza)}` : ''}${st.formato ? ` · ${esc(st.formato)}` : ''}</span></div>
+        <div style="font-size:13px;color:${C.muted};margin-top:4px">Apertura: <b style="color:${C.ink}">${st.apertura ? fmtDate(st.apertura, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'sin fecha'}</b> · ${cuando}${nHoy ? ` · hoy es ${nHoy}` : ''}</div>
+      </td>
+      <td style="${F}padding:16px 18px;text-align:right;white-space:nowrap">
+        <div style="font-size:30px;font-weight:700;color:${pctColor(s.pct)}">${s.pct}%</div>
+        <div style="font-size:12px;color:${C.muted}">${s.completado} de ${s.aplic} pasos</div>
+      </td></tr>
+    </table>
+    ${bloq.length || vencidos.length ? `<div style="${F}margin-top:14px;padding:10px 14px;border-left:4px solid ${C.bad};background:#fdf0ee;font-size:13px">
+      ${bloq.length ? `<b style="color:${C.bad}">${bloq.length === 1 ? '1 paso bloqueado' : `${bloq.length} pasos bloqueados`}</b><ul style="margin:6px 0 4px;padding-left:20px">${bloq.map(({ p, k }) => { const c = lastNote(k); return `<li style="margin:3px 0"><b>${esc(where(p, k))}:</b> ${esc(k.titulo)}${c ? `<br><span style="color:${C.muted}">“${esc(c.texto)}” — ${esc(c.autor.split(' · ')[0])}</span>` : ''}</li>`; }).join('')}</ul>` : ''}
+      ${vencidos.length ? `<b style="color:${C.bad}">${vencidos.length === 1 ? '1 paso vencido' : `${vencidos.length} pasos vencidos`}</b><ul style="margin:6px 0 0;padding-left:20px">${vencidos.map(({ p, k }) => `<li style="margin:3px 0"><b>${esc(where(p, k))}:</b> ${esc(k.titulo)} <span style="color:${C.muted}">— era para el ${dateTxt(k)}</span></li>`).join('')}</ul>` : ''}
+    </div>` : ''}
+    ${h2('Avance por plataforma')}
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">
+      <tr><th ${th}>Plataforma</th><th ${th}>Avance</th><th ${th}></th><th ${th}>Terminados</th><th ${th}>En proceso</th><th ${th}>Bloqueados</th><th ${th}>Ingreso</th></tr>
+      ${platRows}
+    </table>
+    ${proximos.length ? `${h2('Próximas fechas clave')}<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse">${proximos.map(x => `<tr><td ${td(`color:${C.muted};white-space:nowrap`)}>${fmtDate(x.d, { weekday: 'short', day: 'numeric', month: 'short' })}${st.apertura ? ` · ${nTxt(nOf(x.d, st.apertura))}` : ''}</td><td ${td(x.l === 'Apertura' ? `font-weight:700;color:${C.bad}` : '')}>${esc(x.l)}</td></tr>`).join('')}</table>` : ''}
+    ${h2('Pendientes por plataforma')}
+    ${pendHtml}
+    <p style="${F}font-size:11.5px;color:${C.muted};margin-top:24px;border-top:1px solid ${C.line};padding-top:10px">Resumen generado desde Aperturas · Check list de plataformas · ${fmtDateTime(Date.now())}${me() ? ` · ${esc(me())}` : ''}</p>
+  </div>`;
+
+  // ---- Texto plano ----
+  const L = [];
+  L.push(`${st.nombre} · CR ${st.cr}${st.plaza ? ` · Plaza ${st.plaza}` : ''}`);
+  L.push(`Apertura: ${st.apertura ? fmtDate(st.apertura) : 'sin fecha'} (${cuando}${nHoy ? `; hoy es ${nHoy}` : ''})`);
+  L.push(`Avance general: ${s.pct}% (${s.completado} de ${s.aplic} pasos)`, '');
+  if (bloq.length) { L.push('BLOQUEOS'); bloq.forEach(({ p, k }) => { const c = lastNote(k); L.push(`- [${where(p, k)}] ${k.titulo}${c ? ` — "${c.texto}" (${c.autor.split(' · ')[0]})` : ''}`); }); L.push(''); }
+  if (vencidos.length) { L.push('VENCIDOS'); vencidos.forEach(({ p, k }) => L.push(`- [${where(p, k)}] ${k.titulo} — era para el ${dateTxt(k)}`)); L.push(''); }
+  L.push('AVANCE POR PLATAFORMA');
+  plats.forEach(p => { const x = stats(p.tasks); L.push(`- ${p.nombre}: ${x.pct}% (${x.completado}/${x.aplic})${x.proceso ? ` · ${x.proceso} en proceso` : ''}${x.bloqueado ? ` · ${x.bloqueado} bloqueado(s)` : ''}${p.ingreso ? ` · ingreso ${fmtShort(p.ingreso)}` : ''}`); p.subs.forEach(sb => { const y = stats(subTasks(p, sb.id)); L.push(`    ${sb.nombre}: ${y.aplic ? `${y.pct}% (${y.completado}/${y.aplic})` : 'sin pasos'}`); }); });
+  if (proximos.length) { L.push('', 'PRÓXIMAS FECHAS CLAVE'); proximos.forEach(x => L.push(`- ${fmtShort(x.d)}${st.apertura ? ` (${nTxt(nOf(x.d, st.apertura))})` : ''}: ${x.l}`)); }
+  L.push('', 'PENDIENTES');
+  plats.forEach(p => { const list = p.tasks.filter(k => !done(k)); L.push(`${p.nombre}: ${list.length ? '' : 'sin pendientes'}`); list.slice(0, 12).forEach(k => L.push(`  - ${k.estado === 'bloqueado' ? '[Bloqueado] ' : k.estado === 'proceso' ? '[En proceso] ' : ''}${k.titulo}${k.limite ? ` — ${dateTxt(k)}` : ''}`)); if (list.length > 12) L.push(`  …y ${list.length - 12} más`); });
+  return { subject, html, text: L.join('\n') };
+}
+
+let mailCtx = null;
+function openMailDlg(st) {
+  mailCtx = emailSummary(st);
+  $('#mailSubject').value = mailCtx.subject;
+  $('#mailPreview').innerHTML = mailCtx.html;
+  $('#mailDlg').showModal();
+}
+async function copyMailHtml() {
+  const { html, text } = mailCtx;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })]);
+  } catch {
+    const range = document.createRange(); range.selectNodeContents($('#mailPreview'));
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range); document.execCommand('copy'); sel.removeAllRanges();
+  }
+  toast('Resumen copiado: pégalo en el cuerpo de tu correo');
+}
+const b64utf8 = s => btoa(unescape(encodeURIComponent(s)));
+function downloadEml() {
+  const subject = $('#mailSubject').value.trim() || mailCtx.subject;
+  const body = `<!doctype html><html><head><meta charset="utf-8"></head><body>${mailCtx.html}</body></html>`;
+  const eml = [
+    'To: ', `Subject: =?UTF-8?B?${b64utf8(subject)}?=`, 'X-Unsent: 1', 'MIME-Version: 1.0',
+    'Content-Type: text/html; charset=UTF-8', 'Content-Transfer-Encoding: base64', '',
+    b64utf8(body).replace(/.{1,76}/g, '$&\r\n'),
+  ].join('\r\n');
+  const name = subject.replace(/[\\/:*?"<>|]+/g, '').slice(0, 80);
+  download(`${name}.eml`, eml, 'message/rfc822');
+  toast('Ábrelo con Outlook: queda listo como correo nuevo para enviar');
+}
+function openMailto() {
+  const subject = $('#mailSubject').value.trim() || mailCtx.subject;
+  let body = mailCtx.text;
+  if (body.length > 1700) body = body.slice(0, 1700) + '\n…\n(El resumen completo está en la app; usa "Copiar" para pegarlo con formato.)';
+  location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+$('#mailCopy').addEventListener('click', copyMailHtml);
+$('#mailEml').addEventListener('click', downloadEml);
+$('#mailTo').addEventListener('click', openMailto);
+$('#mailText').addEventListener('click', () => copyText(mailCtx.text, 'Resumen en texto copiado'));
+
 /* ---------- Menús desplegables ---------- */
 document.addEventListener('click', e => {
   $$('details.menu[open]').forEach(d => { if (!d.contains(e.target) || e.target.closest('.menu-item')) d.open = false; });
@@ -1543,6 +1694,21 @@ window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.s
       }
     });
     s.version = 5;
+  }
+  if ((s.version || 1) < 6) {
+    const pp = (s.catalogo || []).find(c => c.id === 'com')?.subs?.find(x => x.id === 'com-precios');
+    if (pp) pp.plantilla = [...PP_STEPS];
+    (s.tiendas || []).forEach(t => {
+      normalizeStore(t);
+      const p = t.plataformas.find(x => x.pid === 'com');
+      if (!p || !p.subs.some(x => x.id === 'com-precios')) return;
+      const untouched = k => k.sub === 'com-precios' && PP_OLD.includes(k.titulo) && k.estado === 'pendiente' && !k.historial.length && !k.imagenes.length;
+      p.tasks = p.tasks.filter(k => !untouched(k));
+      const have = new Set(subTasks(p, 'com-precios').map(k => k.titulo));
+      PP_STEPS.filter(x => !have.has(x)).forEach(x => p.tasks.push(taskFromTpl(x, t.apertura, { sub: 'com-precios' })));
+      t.actividad.unshift({ fecha: Date.now(), autor: 'Sistema', pid: 'com', texto: 'Cargó el check list de Precios y Promociones' });
+    });
+    s.version = 6;
   }
   S = s;
   if (!Array.isArray(S.catalogo)) S.catalogo = structuredClone(DEFAULT_CATALOG);

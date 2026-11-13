@@ -84,6 +84,7 @@ Cada línea puede llevar responsable y plazo separados por `|`, contando días a
 
 ## Trabajo entre plataformas (sinergia)
 
+- **Resumen por correo** (botón principal en cada tienda) arma un correo con el avance por plataforma y subdepartamento, bloqueos, vencidos, próximas fechas clave y pendientes. Se puede *copiar para pegar en el correo* con formato, *abrir en Outlook* (descarga un .eml que se abre como correo nuevo), *abrir en mi correo* o *copiar como texto*.
 - **Tu nombre y plataforma** (abajo a la izquierda) aparecen en cada comentario y cambio.
 - **Copiar resumen** arma un texto con el avance por plataforma y los bloqueos con su último comentario, listo para pegar en Teams, correo o WhatsApp.
 - **Excel (CSV)** descarga todos los pasos de la tienda con estatus, responsable, fecha límite y último comentario.

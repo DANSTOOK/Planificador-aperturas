@@ -6,6 +6,8 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 
 ## [Sin publicar]
 
+- Botón **Resumen por correo** en cada tienda: avance por plataforma y subdepartamento, bloqueos con su último comentario, pasos vencidos, próximas fechas clave y pendientes. Se puede copiar con formato, abrir en Outlook (.eml), abrir en el correo o copiar como texto.
+- Check list real de **Precios y Promociones** (5 pasos); reemplaza los pasos de ejemplo que no se habían tocado.
 - Color por plaza en el brillo de las tarjetas y en los filtros: Tijuana Este rojo, Tijuana Centro verde, Playas azul y Ensenada amarillo.
 - Se suma **Plaza Playas**: Paseo Chapultepec (16 oct), Emeterio (16 nov), Astoria (17 nov) y Altaplus (27 nov), con sus fechas clave.
 - Se suma **Plaza Ensenada**: Tuxtla Gutiérrez (9 oct), Gamiz (31 oct), Elpidio (9 nov), Avenida B (11 nov), Piñas (13 nov), Minas de Sabino (16 nov), Plaza Mare (30 nov), Oslo (4 ene 2027) y Tixkokob (15 feb 2027), con sus fechas clave.
