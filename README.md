@@ -36,17 +36,17 @@ Tiendas
 - En la tarjeta de la plataforma (vista de tienda), en el resumen y en Excel se ve el avance de cada subdepartamento.
 - En *Mi plataforma* (tu nombre, abajo a la izquierda) puedes elegir también tu subdepartamento; así aparece en tus comentarios.
 
-## Base del equipo (Plaza Tijuana Este)
+## Base del equipo (Plazas Tijuana Este y Tijuana Centro)
 
-`data/base.js` trae las tiendas en apertura de **Plaza Tijuana Este** con sus fechas clave, tomadas de la tabla *Tiendas en construcción* de la junta semanal de aperturas. Al abrir la app:
+`data/base.js` trae las tiendas en apertura de **Plaza Tijuana Este** y **Plaza Tijuana Centro** con sus fechas clave, tomadas de la tabla *Tiendas en construcción* de la junta semanal de aperturas. Al abrir la app:
 
 - La tienda con el mismo CR recibe su fecha de apertura, sus fechas clave (inicio y fin de obra, sembrado, puesta operativa, entrada de Mercadeo y Sistemas, entrega de Mantenimiento, RH y CEDIS, plaqueo y fondo fijo…) y el ingreso de cada plataforma. Si no existe, se crea con las plantillas.
 - Ingreso por plataforma: **Conservación** = Entrega Mantenimiento; **TI** y **Comercial** = Entrada Mercadeo y Sistemas; **Administrativo** = Plaqueo y fondo fijo.
 - Se aplica una vez por versión de la base; para actualizar fechas, edita el archivo, cambia `version` y publica.
 
-Las fechas clave se ven en la tienda, en el *Calendario de la apertura*, junto con el ingreso de cada plataforma y su N-#. La base incluye las aperturas de Tijuana Este desde el mes anterior (octubre 2026) para no saturar la vista.
+Las fechas clave se ven en la tienda, en el *Calendario de la apertura*, junto con el ingreso de cada plataforma y su N-#. La base incluye las aperturas de ambas plazas desde el mes anterior (octubre 2026) para no saturar la vista.
 
-En **Tiendas** se navega por mes: las tiendas que abren en el mes elegido se resaltan y las demás quedan en gris, pero se pueden abrir y seguir avanzando. Los filtros permiten ver solo las del mes o solo las del mes anterior.
+En **Tiendas** se navega por mes: las tiendas que abren en el mes elegido se resaltan y las demás quedan en gris, pero se pueden abrir y seguir avanzando. Los filtros permiten ver solo las del mes o solo las del mes anterior, y arriba se elige la plaza.
 
 ## Plazos N-#
 

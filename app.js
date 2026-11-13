@@ -157,7 +157,7 @@ async function filesToImgs(files) {
 
 /* ---------- Estado ---------- */
 let S = null;
-const ui = { homeMonth: '', monthScope: 'todas', calMonth: {}, openCrono: false, openActs: false, subSel: {}, curSub: '', selPlat: null, storeTab: 'plats', editPlat: false, nextTask: null, q: '', homeFilter: 'todas', taskFilter: 'todos', open: new Set(), drafts: {}, pending: {}, focusComposer: null };
+const ui = { plaza: '', homeMonth: '', monthScope: 'todas', calMonth: {}, openCrono: false, openActs: false, subSel: {}, curSub: '', selPlat: null, storeTab: 'plats', editPlat: false, nextTask: null, q: '', homeFilter: 'todas', taskFilter: 'todos', open: new Set(), drafts: {}, pending: {}, focusComposer: null };
 
 let saveTimer = 0;
 function save() {
@@ -501,11 +501,13 @@ function viewHome() {
   const bloq = rows.reduce((n, x) => n + x.s.bloqueado, 0);
   const dProx = prox ? daysFrom(t, prox.st.apertura) : null;
   const mes = ui.homeMonth || monthKey(t);
-  const enMes = rows.filter(x => monthKey(x.st.apertura) === mes).length;
-  const plazas = [...new Set(S.tiendas.map(x => x.plaza).filter(Boolean))];
+  const plazas = [...new Set(S.tiendas.map(x => x.plaza).filter(Boolean))].sort();
+  if (ui.plaza && !plazas.includes(ui.plaza)) ui.plaza = '';
+  const enMes = rows.filter(x => monthKey(x.st.apertura) === mes && (!ui.plaza || x.st.plaza === ui.plaza)).length;
+  const plazaTitulo = ui.plaza || (plazas.length === 1 ? plazas[0] : '');
   return `
   <header class="home-head">
-    <h1>Aperturas${plazas.length === 1 ? ` <span class="hh-plaza">Plaza ${esc(plazas[0])}</span>` : ''}</h1>
+    <h1>Aperturas${plazaTitulo ? ` <span class="hh-plaza">Plaza ${esc(plazaTitulo)}</span>` : ''}</h1>
     <div class="hh-stats" aria-label="Resumen">
       <span class="hs" title="Tiendas con pasos pendientes"><b>${curso.length}</b>en curso</span>
       <span class="hs" title="${prox ? `${esc(prox.st.nombre)} · ${fmtDate(prox.st.apertura)}` : 'Sin aperturas próximas'}"><b>${prox ? (dProx === 0 ? 'Hoy' : `${dProx} d`) : '—'}</b>próxima apertura</span>
@@ -513,6 +515,7 @@ function viewHome() {
     </div>
     <button class="btn btn-primary btn-sm" data-action="new-store" type="button">${ic('plus')}Nueva tienda</button>
   </header>
+  ${plazas.length > 1 ? `<div class="plaza-bar" role="group" aria-label="Plaza">${[['', 'Todas las plazas'], ...plazas.map(p => [p, `Plaza ${p}`])].map(([k, l]) => { const n = S.tiendas.filter(t => !k || t.plaza === k).length; return `<button type="button" class="plaza-btn ${(ui.plaza || '') === k ? 'is-active' : ''}" data-action="plaza-filter" data-v="${esc(k)}">${k ? ic('store') : ''}${esc(l)}<span>${n}</span></button>`; }).join('')}</div>` : ''}
   <div class="month-bar">
     <div class="month-nav" role="group" aria-label="Mes de apertura">
       <button class="icon-btn" type="button" data-action="home-month" data-d="-1" aria-label="Mes anterior" title="Mes anterior">${ic('chevron', 'flip')}</button>
@@ -531,6 +534,7 @@ function homeCards() {
   const scope = ui.monthScope || 'todas';
   const rows = sortedStores().map(st => ({ st, s: stats(allTasks(st)) })).filter(({ st }) => {
     if (q && !norm(`${st.nombre} ${st.cr} ${st.plaza || ''}`).includes(q)) return false;
+    if (ui.plaza && st.plaza !== ui.plaza) return false;
     if (scope === 'mes') return monthKey(st.apertura) === mes;
     if (scope === 'anterior') return monthKey(st.apertura) === addMonths(mes, -1);
     return true;
@@ -946,6 +950,7 @@ main.addEventListener('click', async e => {
     case 'home-filter': ui.homeFilter = el.dataset.v; return render();
     case 'home-month': { const cur = ui.homeMonth || monthKey(todayISO()); ui.homeMonth = el.dataset.d === '0' ? '' : addMonths(cur, Number(el.dataset.d)); return render(); }
     case 'month-scope': ui.monthScope = el.dataset.v; return render();
+    case 'plaza-filter': ui.plaza = el.dataset.v; return render();
     case 'cal-nav': {
       const cur = ui.calMonth[st.id] || monthKey(st.apertura) || monthKey(todayISO());
       ui.calMonth[st.id] = el.dataset.d === 'open' ? monthKey(st.apertura) : addMonths(cur, Number(el.dataset.d)); return render();
@@ -1113,7 +1118,7 @@ function openStoreDlg(st = null) {
   const f = $('#storeForm'); f.reset();
   $('#storeDlgTitle').textContent = st ? `Editar ${st.nombre}` : 'Nueva tienda';
   f.nombre.value = st?.nombre || ''; f.cr.value = st?.cr || ''; f.apertura.value = st?.apertura || ''; f.notas.value = st?.notas || '';
-  f.plaza.value = st?.plaza || window.AP_BASE?.plaza || 'Tijuana Este';
+  f.plaza.value = st?.plaza || ui.plaza || 'Tijuana Este';
   $('#tplLabel').textContent = st ? 'Cargar los pasos de la plantilla en las plataformas que agregues' : 'Cargar los pasos de la plantilla de cada plataforma';
   const rows = S.catalogo.map(c => {
     const sp = st && getPlat(st, c.id);

@@ -6,6 +6,7 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 
 ## [Sin publicar]
 
+- Se suma **Plaza Tijuana Centro**: Tutuli (13 oct), Termales (9 nov), Food Court (16 nov), Stryker (30 nov) y Prologis Fase II (11 ene 2027), con sus fechas clave. Filtro por plaza en el inicio.
 - Inicio por mes: se elige el mes con flechas; las tiendas que abren ese mes se resaltan y las demás quedan en gris (se pueden seguir abriendo). Filtros "Todas", "Solo este mes" y "Solo el mes anterior".
 - Cada tarjeta muestra su plaza; la plaza se elige al dar de alta la tienda.
 - Se agregaron las aperturas recientes de Tijuana Este desde octubre: City Point, Papaloapan, Ameyalli y Alegranza.
