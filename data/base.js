@@ -6,10 +6,16 @@
    (o se crea si no existe). Para actualizar: cambia las fechas, sube
    "version" y publica. Cada hito usa el formato AAAA-MM-DD. */
 window.AP_BASE = {
-  version: '2026-11-10',
+  version: '2026-11-10b',
   fuente: 'Conexión junta semanal aperturas · 10 nov 2026',
   plaza: 'Tijuana Este',
   tiendas: [
+    // Aperturas recientes de la plaza (desde el mes anterior), solo con su fecha de apertura
+    { cr: '502I8', nombre: 'OXXO City Point', formato: 'Nicho', apertura: '2026-10-05' },
+    { cr: '503IQ', nombre: 'OXXO Papaloapan', formato: 'i78', apertura: '2026-10-27' },
+    { cr: '50D2U', nombre: 'OXXO Ameyalli', formato: 'i78', apertura: '2026-10-31' },
+    { cr: '50CS9', nombre: 'OXXO Alegranza', formato: 'i78', apertura: '2026-11-02' },
+    // En construcción, con todas sus fechas clave
     {
       cr: '507OA', nombre: 'OXXO Mallorca', formato: 'Nicho', apertura: '2026-11-30',
       hitos: {

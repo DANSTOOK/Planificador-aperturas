@@ -6,6 +6,10 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 
 ## [Sin publicar]
 
+- Inicio por mes: se elige el mes con flechas; las tiendas que abren ese mes se resaltan y las demás quedan en gris (se pueden seguir abriendo). Filtros "Todas", "Solo este mes" y "Solo el mes anterior".
+- Cada tarjeta muestra su plaza; la plaza se elige al dar de alta la tienda.
+- Se agregaron las aperturas recientes de Tijuana Este desde octubre: City Point, Papaloapan, Ameyalli y Alegranza.
+- El cronograma de la tienda ahora es un calendario mensual con la apertura, las fechas clave y el ingreso de cada plataforma.
 - Base del equipo de **Plaza Tijuana Este** con las fechas de la junta semanal (10 nov 2026): Mallorca (apertura 30 nov 2026) y Prologis Alamar (apertura 4 ene 2027), con fechas clave e ingreso de cada plataforma.
 - Comercial: nuevo subdepartamento **Food Service** (Equipo FV) con 3 pasos y plazos N-5, N-2 y N-10.
 - Plantillas con responsable y plazo relativo a la apertura (`Paso | Responsable | N-5`); la fecha límite se calcula sola.
