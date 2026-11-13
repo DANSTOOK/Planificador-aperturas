@@ -567,6 +567,43 @@ a.plat-tile { color: inherit; min-height: 200px; }
 .plaza-btn.is-active[data-plaza] { background: var(--glow); border-color: var(--glow); color: #fff; }
 .plaza-btn.is-active[data-plaza="Ensenada"] { color: #1c1b18; }
 
+/* Inicio: panel de filtros (plaza y mes) */
+.filters { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 18px; overflow: hidden; }
+.f-row { display: grid; grid-template-columns: 168px minmax(0, 1fr); align-items: center; gap: 12px; padding: 10px 14px; }
+.f-row + .f-row { border-top: 1px solid var(--line); }
+.f-label { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.f-label .ic { width: 15px; height: 15px; }
+.f-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.f-months { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+.f-chip { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 8px 0 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink-2); font-size: 13.5px; font-weight: 500; cursor: pointer; white-space: nowrap; flex: none; transition: border-color .15s, background .15s, color .15s; }
+.f-chip:hover { border-color: var(--line-2); color: var(--ink); background: var(--surface-2); }
+.f-n { min-width: 22px; height: 20px; padding: 0 6px; border-radius: 6px; background: var(--surface-3); color: var(--muted); font-family: var(--mono); font-size: 11.5px; display: inline-grid; place-items: center; }
+.f-chip.is-active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.f-chip.is-active .f-n { background: color-mix(in srgb, var(--bg) 20%, transparent); color: inherit; }
+.f-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--glow); flex: none; }
+.f-plaza.is-active { background: var(--glow); border-color: var(--glow); color: #fff; }
+.f-plaza.is-active .f-dot { background: #fff; }
+.f-plaza.is-active[data-plaza="Ensenada"] { color: #1c1b18; }
+.f-plaza.is-active[data-plaza="Ensenada"] .f-dot { background: #1c1b18; }
+.f-sep { width: 1px; height: 22px; background: var(--line-2); margin: 0 4px; flex: none; }
+.fm-name { display: inline-flex; align-items: baseline; gap: 3px; font-weight: 600; }
+.fm-name small { font-size: 10.5px; font-weight: 500; color: var(--muted); }
+.f-chip.is-active .fm-name small { color: inherit; opacity: .7; }
+.f-month.is-now { position: relative; border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+.f-month.is-now::after { content: 'Hoy'; position: absolute; top: -7px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; background: var(--accent); color: var(--on-accent); padding: 0 5px; border-radius: 4px; line-height: 13px; }
+.f-months { padding-top: 8px; margin-top: -8px; }
+.f-month.is-empty { opacity: .45; }
+.f-foot { grid-template-columns: minmax(0, 360px) minmax(0, 1fr); }
+.f-foot .search { max-width: none; margin: 0; }
+.f-result { font-size: 13px; color: var(--muted); text-align: right; }
+.f-result b { color: var(--ink); }
+.f-result .link-btn { margin-left: 6px; font-size: 13px; }
+@media (max-width: 860px) {
+  .f-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .f-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .f-foot { grid-template-columns: minmax(0, 1fr); }
+  .f-result { text-align: left; }
+}
 /* Inicio por mes */
 .ic.flip { transform: rotate(180deg); }
 .plaza-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }

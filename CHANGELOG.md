@@ -6,6 +6,8 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 
 ## [Sin publicar]
 
+- Check list de **Procesos Comerciales** (9 pasos de aperturas POS con su detalle).
+- Inicio con un panel de filtros: fila de **Plaza** y fila de **Mes de apertura** (meses seguidos con su conteo y marca de "Hoy"), buscador y resumen de lo que se está viendo con opción de restablecer. Abre en el mes actual.
 - Check list de **Seguimiento Abasto** con las 7 actividades del proceso de aperturas de la región donde Abasto es responsable (cambio a tienda operativa, formato de comunicación, pedido inicial, catálogo vs sembrado, carga de constantes, validación de transferencia y programación de entrega), con fecha límite en N-# y detalle. Las plantillas conservan el detalle de cada paso.
 - Botón **Resumen por correo** en cada tienda: avance por plataforma y subdepartamento, bloqueos con su último comentario, pasos vencidos, próximas fechas clave y pendientes. Se puede copiar con formato, abrir en Outlook (.eml), abrir en el correo o copiar como texto.
 - Check list real de **Precios y Promociones** (5 pasos); reemplaza los pasos de ejemplo que no se habían tocado.

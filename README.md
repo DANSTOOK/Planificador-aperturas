@@ -46,7 +46,7 @@ Tiendas
 
 Las fechas clave se ven en la tienda, en el *Calendario de la apertura*, junto con el ingreso de cada plataforma y su N-#. La base incluye las aperturas de ambas plazas desde el mes anterior (octubre 2026) para no saturar la vista.
 
-En **Tiendas** se navega por mes: las tiendas que abren en el mes elegido se resaltan y las demás quedan en gris, pero se pueden abrir y seguir avanzando. Los filtros permiten ver solo las del mes o solo las del mes anterior, y arriba se elige la plaza.
+En **Tiendas** hay un panel de filtros: se elige la **plaza** y el **mes de apertura** con un toque (cada opción muestra cuántas tiendas tiene) y abajo se indica cuántas tiendas se están viendo. Abre en el mes actual; con *Todos* se ven todas las tiendas y las de otros meses quedan en gris.
 
 ## Plazos N-#
 

@@ -44,7 +44,19 @@ const PALETTE = ['#137b5f', '#2563eb', '#c2410c', '#7c3aed', '#0891b2', '#b91c1c
 /* Plantillas de ejemplo: se editan en la vista Plantillas */
 /* Cada plataforma tiene pasos generales (plantilla) y, si se requiere,
    subdepartamentos con su rol y su propio check list (subs). */
-const CATALOG_VERSION = 8;
+const CATALOG_VERSION = 9;
+/* Check list de Procesos Comerciales (Comercial). Fuente: "Check List Procesos Comerciales" (aperturas POS). */
+const PROCESOS_STEPS = [
+  { titulo: 'Reenvío de catálogo completo', descripcion: 'Se comparte el folio a TI para validar la recepción correcta de los documentos.' },
+  { titulo: 'Validar en HC los proveedores asignados a la tienda', descripcion: 'Se realiza antes de que la máquina de procesos llegue a la tienda.' },
+  { titulo: 'Reenvío de catálogo completo por proveedores pendientes', descripcion: 'Se alinea con el Gantt proporcionado por Abasto.' },
+  { titulo: 'Comparativo de artículos por proveedor vs catálogo de la tienda', descripcion: 'Para validar que la cantidad de artículos esté cargada correctamente en la tienda.' },
+  { titulo: 'Activación de artículos o proveedores', descripcion: 'En caso de que haya discrepancias con artículos inactivos de proveedores.' },
+  { titulo: 'Validar que las opciones de devoluciones estén activas', descripcion: 'Aplica para devolución a CEDIS.' },
+  { titulo: 'Validar en POS Servicios', descripcion: 'Se realiza antes de que la máquina de procesos llegue a la tienda.' },
+  { titulo: 'Validación TAE', descripcion: 'Se realiza antes de que la máquina de procesos llegue a la tienda.' },
+  { titulo: 'Validación de devolución a CEDIS', descripcion: 'Se valida con el líder de tienda que pueda realizar devoluciones a CEDIS.' },
+];
 /* Proceso completo de aperturas de la región. Fuente: "Proceso Completo Aperturas",
    hoja Actividades Región TIJ. dias = fecha límite (N-#); la descripción indica desde cuándo se ejecuta.
    Al check list de Seguimiento Abasto solo van las actividades donde Abasto es responsable. */
@@ -108,7 +120,7 @@ const DEFAULT_CATALOG = [
     { id: 'com-abasto', nombre: 'Seguimiento Abasto', rol: 'Analista Seguimiento Abasto', plantilla: ABASTO_STEPS },
     { id: 'com-ejecucion', nombre: 'Ejecución Comercial', rol: 'Coordinador Ejecución Comercial', plantilla: [] },
     { id: 'com-mercadeo', nombre: 'Mercadeo', rol: 'Practicante Mercadeo', plantilla: [] },
-    { id: 'com-procesos', nombre: 'Procesos Comerciales', rol: '', plantilla: [] },
+    { id: 'com-procesos', nombre: 'Procesos Comerciales', rol: '', plantilla: PROCESOS_STEPS },
     FV_SUB,
   ] },
   { id: 'ti', nombre: 'TI', color: '#2563eb', plantilla: TI_STEPS, subs: [] },
@@ -524,55 +536,79 @@ const monthKey = iso => (iso || '').slice(0, 7);
 const addMonths = (ym, n) => { const [y, m] = ym.split('-').map(Number); const d = new Date(y, m - 1 + n, 1); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; };
 const monthName = (ym, year = true) => { const [y, m] = ym.split('-').map(Number); const s = new Date(y, m - 1, 1).toLocaleDateString('es-MX', year ? { month: 'long', year: 'numeric' } : { month: 'long' }); return s.charAt(0).toUpperCase() + s.slice(1); };
 
+/* ---------- Inicio: filtros de plaza y mes ---------- */
+const MES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+function homeFilters() {
+  const mes = ui.homeMonth === 'all' ? '' : (ui.homeMonth || monthKey(todayISO()));
+  return { mes, plaza: ui.plaza || '', q: norm(ui.q) };
+}
+const matchQ = (st, q) => !q || norm(`${st.nombre} ${st.cr} ${st.plaza || ''}`).includes(q);
+function homeRows() {
+  const { mes, plaza, q } = homeFilters();
+  return sortedStores().filter(st => matchQ(st, q) && (!plaza || st.plaza === plaza) && (!mes || monthKey(st.apertura) === mes));
+}
+function homeResult() {
+  const n = homeRows().length, total = S.tiendas.length;
+  const { mes, plaza, q } = homeFilters();
+  const partes = [plaza ? `Plaza ${esc(plaza)}` : 'todas las plazas', mes ? `abren en ${monthName(mes).toLowerCase()}` : 'todos los meses'];
+  return `<b>${n}</b> de ${plural(total, 'tienda', 'tiendas')} · ${partes.join(' · ')}${q ? ' · con búsqueda' : ''}${plaza || ui.homeMonth === 'all' || ui.homeMonth && ui.homeMonth !== monthKey(todayISO()) || q ? ` <button class="link-btn" type="button" data-action="clear-filters">Restablecer</button>` : ''}`;
+}
+
 function viewHome() {
   const t = todayISO();
   const rows = sortedStores().map(st => ({ st, s: stats(allTasks(st)) }));
-  const curso = rows.filter(x => !(x.s.aplic && x.s.pct === 100));
+  const curso = rows.filter(x => !(x.s.aplic && x.s.pct === 100) && (!x.st.apertura || x.st.apertura >= t));
   const prox = rows.filter(x => x.st.apertura && x.st.apertura >= t && x.s.pct < 100)[0];
   const bloq = rows.reduce((n, x) => n + x.s.bloqueado, 0);
   const dProx = prox ? daysFrom(t, prox.st.apertura) : null;
-  const mes = ui.homeMonth || monthKey(t);
+  const { mes, plaza } = homeFilters();
+  const hoyMes = monthKey(t);
   const plazas = [...new Set(S.tiendas.map(x => x.plaza).filter(Boolean))].sort();
   if (ui.plaza && !plazas.includes(ui.plaza)) ui.plaza = '';
-  const enMes = rows.filter(x => monthKey(x.st.apertura) === mes && (!ui.plaza || x.st.plaza === ui.plaza)).length;
-  const plazaTitulo = ui.plaza || (plazas.length === 1 ? plazas[0] : '');
+  // Meses con aperturas (más el actual), para elegir con un toque
+  const conAp = [...new Set(S.tiendas.map(x => monthKey(x.apertura)).filter(Boolean).concat(hoyMes))].sort();
+  const meses = []; for (let m = conAp[0]; m <= conAp[conAp.length - 1]; m = addMonths(m, 1)) meses.push(m); // meses seguidos, sin huecos
+  const enMes = (m, p) => S.tiendas.filter(x => (!m || monthKey(x.apertura) === m) && (!p || x.plaza === p)).length;
   return `
   <header class="home-head">
-    <h1>Aperturas${plazaTitulo ? ` <span class="hh-plaza">Plaza ${esc(plazaTitulo)}</span>` : ''}</h1>
+    <h1>Aperturas</h1>
     <div class="hh-stats" aria-label="Resumen">
-      <span class="hs" title="Tiendas con pasos pendientes"><b>${curso.length}</b>en curso</span>
-      <span class="hs" title="${prox ? `${esc(prox.st.nombre)} · ${fmtDate(prox.st.apertura)}` : 'Sin aperturas próximas'}"><b>${prox ? (dProx === 0 ? 'Hoy' : `${dProx} d`) : '—'}</b>próxima apertura</span>
+      <span class="hs" title="Tiendas que aún no abren y tienen pasos pendientes"><b>${curso.length}</b>por abrir</span>
+      <span class="hs" title="${prox ? `${esc(prox.st.nombre)} · ${fmtDate(prox.st.apertura)}` : 'Sin aperturas próximas'}"><b>${prox ? (dProx === 0 ? 'Hoy' : `${dProx} d`) : '—'}</b>${prox ? `próxima: ${esc(prox.st.nombre.replace(/^OXXO\s+/i, ''))}` : 'próxima apertura'}</span>
       <span class="hs ${bloq ? 'is-alert' : ''}"><b>${bloq}</b>${bloq === 1 ? 'paso bloqueado' : 'pasos bloqueados'}</span>
     </div>
     <button class="btn btn-primary btn-sm" data-action="new-store" type="button">${ic('plus')}Nueva tienda</button>
   </header>
-  ${plazas.length > 1 ? `<div class="plaza-bar" role="group" aria-label="Plaza">${[['', 'Todas las plazas'], ...plazas.map(p => [p, `Plaza ${p}`])].map(([k, l]) => { const n = S.tiendas.filter(t => !k || t.plaza === k).length; return `<button type="button" class="plaza-btn ${(ui.plaza || '') === k ? 'is-active' : ''}" ${k ? `data-plaza="${esc(k)}"` : ''} data-action="plaza-filter" data-v="${esc(k)}">${k ? ic('store') : ''}${esc(l)}<span>${n}</span></button>`; }).join('')}</div>` : ''}
-  <div class="month-bar">
-    <div class="month-nav" role="group" aria-label="Mes de apertura">
-      <button class="icon-btn" type="button" data-action="home-month" data-d="-1" aria-label="Mes anterior" title="Mes anterior">${ic('chevron', 'flip')}</button>
-      <div class="mn-label"><b>${monthName(mes)}</b><span>${enMes ? plural(enMes, 'apertura', 'aperturas') : 'Sin aperturas'}</span></div>
-      <button class="icon-btn" type="button" data-action="home-month" data-d="1" aria-label="Mes siguiente" title="Mes siguiente">${ic('chevron')}</button>
-      ${mes !== monthKey(t) ? `<button class="link-btn" type="button" data-action="home-month" data-d="0">Ir a este mes</button>` : ''}
+  <section class="filters" aria-label="Filtros">
+    <div class="f-row">
+      <span class="f-label">${ic('store')}Plaza</span>
+      <div class="f-chips" role="group" aria-label="Plaza">
+        <button type="button" class="f-chip ${!plaza ? 'is-active' : ''}" data-action="plaza-filter" data-v="">Todas<span class="f-n">${enMes(mes, '')}</span></button>
+        ${plazas.map(p => `<button type="button" class="f-chip f-plaza ${plaza === p ? 'is-active' : ''}" data-action="plaza-filter" data-v="${esc(p)}" data-plaza="${esc(p)}"><i class="f-dot"></i>${esc(p)}<span class="f-n">${enMes(mes, p)}</span></button>`).join('')}
+      </div>
     </div>
-    <div class="seg" role="group" aria-label="Mostrar">${[['todas', 'Todas'], ['mes', `Solo ${monthName(mes, false).toLowerCase()}`], ['anterior', `Solo ${monthName(addMonths(mes, -1), false).toLowerCase()}`]].map(([k, l]) => `<button type="button" class="${(ui.monthScope || 'todas') === k ? 'is-active' : ''}" data-action="month-scope" data-v="${k}">${l}</button>`).join('')}</div>
-    <label class="search">${ic('search')}<input id="q" type="search" placeholder="Buscar por nombre o CR" value="${esc(ui.q)}" autocomplete="off" aria-label="Buscar tienda"></label>
-  </div>
+    <div class="f-row">
+      <span class="f-label">${ic('calendar')}Mes de apertura</span>
+      <div class="f-chips f-months" role="group" aria-label="Mes de apertura">
+        <button type="button" class="f-chip ${!mes ? 'is-active' : ''}" data-action="home-month" data-v="all">Todos<span class="f-n">${enMes('', plaza)}</span></button>
+        <span class="f-sep" aria-hidden="true"></span>
+        ${meses.map(m => { const [y, mm] = m.split('-').map(Number); const n = enMes(m, plaza); return `<button type="button" class="f-chip f-month ${mes === m ? 'is-active' : ''} ${m === hoyMes ? 'is-now' : ''} ${n ? '' : 'is-empty'}" data-action="home-month" data-v="${m}" title="${monthName(m)}${m === hoyMes ? ' (mes actual)' : ''}"><span class="fm-name">${MES_CORTO[mm - 1]}<small>${String(y).slice(2)}</small></span><span class="f-n">${n}</span></button>`; }).join('')}
+      </div>
+    </div>
+    <div class="f-row f-foot">
+      <label class="search">${ic('search')}<input id="q" type="search" placeholder="Buscar por nombre o CR" value="${esc(ui.q)}" autocomplete="off" aria-label="Buscar tienda"></label>
+      <p class="f-result" id="fResult" aria-live="polite">${homeResult()}</p>
+    </div>
+  </section>
   <div id="homeCards">${homeCards()}</div>`;
 }
 function homeCards() {
-  const q = norm(ui.q);
-  const mes = ui.homeMonth || monthKey(todayISO());
-  const scope = ui.monthScope || 'todas';
-  const rows = sortedStores().map(st => ({ st, s: stats(allTasks(st)) })).filter(({ st }) => {
-    if (q && !norm(`${st.nombre} ${st.cr} ${st.plaza || ''}`).includes(q)) return false;
-    if (ui.plaza && st.plaza !== ui.plaza) return false;
-    if (scope === 'mes') return monthKey(st.apertura) === mes;
-    if (scope === 'anterior') return monthKey(st.apertura) === addMonths(mes, -1);
-    return true;
-  });
-  if (S.tiendas.length && !rows.length) return `<div class="panel empty">${ic('calendar', 'empty-ic')}<h3>Sin aperturas</h3><p>No hay tiendas que abran en ${scope === 'anterior' ? monthName(addMonths(mes, -1)) : monthName(mes)}${q ? ' con esa búsqueda' : ''}.</p></div>`;
+  const rows = homeRows().map(st => ({ st, s: stats(allTasks(st)) }));
+  const { mes } = homeFilters();
+  const hoyMes = monthKey(todayISO());
+  if (S.tiendas.length && !rows.length) return `<div class="panel empty">${ic('calendar', 'empty-ic')}<h3>Sin aperturas con estos filtros</h3><p>Prueba con otro mes u otra plaza.</p><button class="btn" type="button" data-action="clear-filters">Restablecer filtros</button></div>`;
   return `<div class="store-grid">
-    ${rows.map(({ st, s }, i) => { const off = monthKey(st.apertura) !== mes; return `<a class="store-tile ${off ? 'is-off' : 'is-month'}" href="${storeHref(st)}" data-plaza="${esc(st.plaza || '')}" title="Abrir ${esc(st.nombre)}" style="--i:${i}">
+    ${rows.map(({ st, s }, i) => { const off = !mes && monthKey(st.apertura) !== hoyMes; return `<a class="store-tile ${off ? 'is-off' : 'is-month'}" href="${storeHref(st)}" data-plaza="${esc(st.plaza || '')}" title="Abrir ${esc(st.nombre)}" style="--i:${i}">
       ${s.bloqueado ? `<span class="flag tile-flag" title="${plural(s.bloqueado, 'paso bloqueado', 'pasos bloqueados')}">${ic('alert')}${s.bloqueado}</span>` : ''}
       ${st.plaza ? `<span class="tile-plaza">${ic('store')}Plaza ${esc(st.plaza)}</span>` : ''}
       <div class="tile-top"><span class="tile-ic"><img src="assets/tienda.png" alt=""></span></div>
@@ -989,7 +1025,8 @@ main.addEventListener('click', async e => {
     case 'new-store': return openStoreDlg();
     case 'edit-store': return openStoreDlg(st);
     case 'home-filter': ui.homeFilter = el.dataset.v; return render();
-    case 'home-month': { const cur = ui.homeMonth || monthKey(todayISO()); ui.homeMonth = el.dataset.d === '0' ? '' : addMonths(cur, Number(el.dataset.d)); return render(); }
+    case 'home-month': ui.homeMonth = el.dataset.v; return render();
+    case 'clear-filters': ui.plaza = ''; ui.homeMonth = ''; ui.q = ''; return render();
     case 'month-scope': ui.monthScope = el.dataset.v; return render();
     case 'plaza-filter': ui.plaza = el.dataset.v; return render();
     case 'cal-nav': {
@@ -1131,7 +1168,7 @@ main.addEventListener('submit', async e => {
 });
 
 main.addEventListener('input', e => {
-  if (e.target.id === 'q') { ui.q = e.target.value; $('#homeCards').innerHTML = homeCards(); }
+  if (e.target.id === 'q') { ui.q = e.target.value; $('#homeCards').innerHTML = homeCards(); const fr = $('#fResult'); if (fr) fr.innerHTML = homeResult(); }
 });
 main.addEventListener('paste', async e => {
   const ta = e.target.closest('.composer textarea'); if (!ta) return;
@@ -1771,6 +1808,20 @@ window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.s
       t.actividad.unshift({ fecha: Date.now(), autor: 'Sistema', pid: 'com', texto: 'Seguimiento Abasto: se dejaron solo las actividades a cargo de Abasto' });
     });
     s.version = 8;
+  }
+  if ((s.version || 1) < 9) {
+    const pc = (s.catalogo || []).find(c => c.id === 'com')?.subs?.find(x => x.id === 'com-procesos');
+    if (pc) pc.plantilla = structuredClone(PROCESOS_STEPS);
+    (s.tiendas || []).forEach(t => {
+      normalizeStore(t);
+      const p = t.plataformas.find(x => x.pid === 'com');
+      if (!p || !p.subs.some(x => x.id === 'com-procesos')) return;
+      const have = new Set(subTasks(p, 'com-procesos').map(k => k.titulo));
+      const nuevos = PROCESOS_STEPS.filter(x => !have.has(x.titulo));
+      nuevos.forEach(x => p.tasks.push(taskFromTpl(x, t.apertura, { sub: 'com-procesos' })));
+      if (nuevos.length) t.actividad.unshift({ fecha: Date.now(), autor: 'Sistema', pid: 'com', texto: 'Cargó el check list de Procesos Comerciales' });
+    });
+    s.version = 9;
   }
   S = s;
   if (!Array.isArray(S.catalogo)) S.catalogo = structuredClone(DEFAULT_CATALOG);
