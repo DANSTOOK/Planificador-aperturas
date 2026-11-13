@@ -782,23 +782,33 @@ function viewPlat(st, p) {
         <span class="sbt-name">${sb ? esc(sb.nombre) : 'Pasos generales'}</span>
         <span class="sbt-rol">${sb ? (sb.rol ? esc(sb.rol) : '&nbsp;') : 'Toda la plataforma'}</span>
         <span class="sbt-prog">${x.aplic ? `<span class="num">${x.pct}%</span>${bar(x.pct)}` : '<span class="muted">Sin pasos</span>'}</span>
+        <span class="sbt-count">${x.aplic ? `${x.completado} de ${plural(x.aplic, 'paso', 'pasos')}` : ''}${on ? '<b class="sbt-on">Viendo</b>' : ''}</span>
         ${x.bloqueado ? `<span class="flag sbt-flag">${ic('alert')}${x.bloqueado}</span>` : ''}
       </button>`; }).join('')}</div>
-  </section>` : ''}
+  </section>
+  ${(() => { const sb = p.subs.find(x => x.id === selSid); const x = stats(subTasks(p, selSid)); return `<section class="sub-banner" data-sub="${esc(selSid)}" style="--c:${safeColor(p.color)}">
+    <div class="sbn-text">
+      <span class="sbn-kicker">${ic('list')}Estás viendo el check list de</span>
+      <h2>${sb ? esc(sb.nombre) : `Pasos generales de ${esc(p.nombre)}`}</h2>
+      <p>${sb ? (sb.rol ? `${ic('user')}${esc(sb.rol)}` : 'Sin rol asignado') : 'Pasos de toda la plataforma'}${sb?.responsable ? ` · ${esc(sb.responsable)}` : ''}</p>
+    </div>
+    <div class="sbn-prog"><span class="sbn-pct">${x.pct}<small>%</small></span><div>${bar(x.pct)}<span>${x.completado} de ${plural(x.aplic, 'paso terminado', 'pasos terminados')}</span></div></div>
+    ${sb ? `<div class="grp-actions"><button class="icon-btn" type="button" data-action="edit-sub" data-sub-id="${esc(sb.id)}" title="Editar subdepartamento" aria-label="Editar subdepartamento">${ic('edit')}</button><button class="icon-btn danger" type="button" data-action="del-sub" title="Eliminar subdepartamento" aria-label="Eliminar subdepartamento">${ic('trash')}</button></div>` : ''}
+  </section>`; })()}` : ''}
   <div class="list-bar">
     <div class="seg" role="tablist" aria-label="Mostrar">${[['todos', 'Todos'], ['pendientes', 'Por hacer'], ['terminados', 'Terminados']].map(([k, l]) => `<button type="button" role="tab" aria-selected="${f === k}" class="${f === k ? 'is-active' : ''}" data-action="task-filter" data-v="${k}">${l}<span class="seg-n">${cnt[k]}</span></button>`).join('')}</div>
     ${p.tasks.length ? `<button class="btn btn-ghost btn-sm" type="button" data-action="${ui.open.size ? 'collapse-all' : 'expand-all'}">${ic(ui.open.size ? 'collapse' : 'expand')}${ui.open.size ? 'Contraer' : 'Expandir'}</button>` : ''}
   </div>
   ${!p.tasks.length && !p.subs.length && canLoadTpl(p) ? `<div class="panel empty">${ic('list', 'empty-ic')}<h3>Esta plataforma aún no tiene pasos</h3><p>Agrégalos con el botón Agregar paso o carga la plantilla de ${esc(p.nombre)}.</p><button class="btn btn-primary" type="button" data-action="load-tpl">Cargar plantilla</button></div>` : ''}
-  <div class="task-list">${multi ? taskGroup(st, p, selSid, items, true) : groups.map(sid => taskGroup(st, p, sid, items, false)).join('')}</div>`;
+  <div class="task-list ${multi ? 'is-sub' : ''}" style="--c:${safeColor(p.color)}">${multi ? taskGroup(st, p, selSid, items, true, true) : groups.map(sid => taskGroup(st, p, sid, items, false)).join('')}</div>`;
 }
 function canLoadTpl(p) { const c = S.catalogo.find(x => x.id === p.pid); return !!c && (c.plantilla.length || c.subs.length); }
-function taskGroup(st, p, sid, items, multi) {
+function taskGroup(st, p, sid, items, multi, noHead = false) {
   const sb = p.subs.find(x => x.id === sid);
   const all = subTasks(p, sid); const s = stats(all);
   const list = items.filter(([k]) => (k.sub || '') === sid);
   let n = 0; const num = new Map(all.map(k => [k.id, ++n]));
-  const head = (sb || multi) ? `<header class="grp-head">
+  const head = !noHead && (sb || multi) ? `<header class="grp-head">
       <div class="grp-title"><b>${sb ? esc(sb.nombre) : 'Pasos generales'}</b>${sb ? (sb.rol ? `<span>${ic('user')}${esc(sb.rol)}</span>` : '') : `<span>Toda la plataforma</span>`}${sb?.responsable ? `<span>${esc(sb.responsable)}</span>` : ''}</div>
       <div class="grp-prog"><span class="c-count">${s.completado}/${s.aplic}</span>${bar(s.pct)}<span class="num">${s.pct}%</span></div>
       ${sb ? `<div class="grp-actions"><button class="icon-btn" type="button" data-action="edit-sub" title="Editar subdepartamento" aria-label="Editar subdepartamento">${ic('edit')}</button><button class="icon-btn danger" type="button" data-action="del-sub" title="Eliminar subdepartamento" aria-label="Eliminar subdepartamento">${ic('trash')}</button></div>` : '<div class="grp-actions"></div>'}
