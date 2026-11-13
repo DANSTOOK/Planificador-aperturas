@@ -36,9 +36,9 @@ Tiendas
 - En la tarjeta de la plataforma (vista de tienda), en el resumen y en Excel se ve el avance de cada subdepartamento.
 - En *Mi plataforma* (tu nombre, abajo a la izquierda) puedes elegir también tu subdepartamento; así aparece en tus comentarios.
 
-## Base del equipo (Plazas Tijuana Este, Tijuana Centro y Ensenada)
+## Base del equipo (Plazas Tijuana Este, Tijuana Centro, Ensenada y Playas)
 
-`data/base.js` trae las tiendas en apertura de **Plaza Tijuana Este**, **Plaza Tijuana Centro** y **Plaza Ensenada** con sus fechas clave, tomadas de la tabla *Tiendas en construcción* de la junta semanal de aperturas. Al abrir la app:
+`data/base.js` trae las tiendas en apertura de **Plaza Tijuana Este**, **Plaza Tijuana Centro**, **Plaza Ensenada** y **Plaza Playas** con sus fechas clave, tomadas de la tabla *Tiendas en construcción* de la junta semanal de aperturas. Al abrir la app:
 
 - La tienda con el mismo CR recibe su fecha de apertura, sus fechas clave (inicio y fin de obra, sembrado, puesta operativa, entrada de Mercadeo y Sistemas, entrega de Mantenimiento, RH y CEDIS, plaqueo y fondo fijo…) y el ingreso de cada plataforma. Si no existe, se crea con las plantillas.
 - Ingreso por plataforma: **Conservación** = Entrega Mantenimiento; **TI** y **Comercial** = Entrada Mercadeo y Sistemas; **Administrativo** = Plaqueo y fondo fijo.

@@ -1,4 +1,4 @@
-/* Base del equipo: tiendas de las plazas Tijuana Este, Tijuana Centro y Ensenada
+/* Base del equipo: tiendas de las plazas Tijuana Este, Tijuana Centro, Ensenada y Playas
    con sus fechas clave, desde el mes anterior.
    Fuente: "Conexión junta semanal aperturas", Región Tijuana, 10 nov 2026
    (tablas "Tiendas en construcción" y aperturas del mes).
@@ -7,9 +7,9 @@
    (o se crea si no existe). Para actualizar: cambia las fechas, sube
    "version" y publica. Cada hito usa el formato AAAA-MM-DD. */
 window.AP_BASE = {
-  version: '2026-11-10d',
+  version: '2026-11-10e',
   fuente: 'Conexión junta semanal aperturas · 10 nov 2026',
-  plazas: ['Tijuana Este', 'Tijuana Centro', 'Ensenada'],
+  plazas: ['Tijuana Este', 'Tijuana Centro', 'Ensenada', 'Playas'],
   tiendas: [
     /* ---------- Plaza Tijuana Este ---------- */
     // Aperturas recientes, solo con su fecha de apertura
@@ -127,6 +127,32 @@ window.AP_BASE = {
         inicioObra: '2026-10-28', sembrado: '2027-01-11', puestaOperativa: '2027-01-26', mercadeoSistemas: '2027-02-04',
         contratoLuz: '2027-02-05', finObra: '2027-02-05', entregaMtto: '2027-02-06', carpetaPermisos: '2027-02-08',
         rhCedis: '2027-02-08', plaqueoFondo: '2027-02-12',
+      },
+    },
+    /* ---------- Plaza Playas ---------- */
+    { plaza: 'Playas', cr: '50A1I', nombre: 'OXXO Paseo Chapultepec', formato: 'Nicho', apertura: '2026-10-16' },
+    {
+      plaza: 'Playas', cr: '50GK6', nombre: 'OXXO Emeterio', formato: 'Tradicional', apertura: '2026-11-16',
+      hitos: {
+        inicioObra: '2026-08-24', mercadeoSistemas: '2026-10-12', sembrado: '2026-10-17', finObra: '2026-10-23',
+        puestaOperativa: '2026-10-28', contratoLuz: '2026-11-04', carpetaPermisos: '2026-11-08', entregaMtto: '2026-11-10',
+        rhCedis: '2026-11-12', plaqueoFondo: '2026-11-15',
+      },
+    },
+    {
+      plaza: 'Playas', cr: '50T1O', nombre: 'OXXO Astoria', formato: 'Tradicional', apertura: '2026-11-17',
+      hitos: {
+        inicioObra: '2026-08-26', sembrado: '2026-10-27', puestaOperativa: '2026-10-28', finObra: '2026-11-05',
+        contratoLuz: '2026-11-06', mercadeoSistemas: '2026-11-08', carpetaPermisos: '2026-11-10', entregaMtto: '2026-11-11',
+        rhCedis: '2026-11-13', plaqueoFondo: '2026-11-16',
+      },
+    },
+    {
+      plaza: 'Playas', cr: '50P6K', nombre: 'OXXO Altaplus', formato: 'Tradicional', apertura: '2026-11-27',
+      hitos: {
+        inicioObra: '2026-08-26', sembrado: '2026-10-23', puestaOperativa: '2026-11-07', finObra: '2026-11-11',
+        contratoLuz: '2026-11-17', mercadeoSistemas: '2026-11-17', carpetaPermisos: '2026-11-20', entregaMtto: '2026-11-20',
+        rhCedis: '2026-11-23', plaqueoFondo: '2026-11-24',
       },
     },
   ],
