@@ -539,7 +539,7 @@ function homeCards() {
   return `<div class="store-grid">
     ${rows.map(({ st, s }, i) => { const off = monthKey(st.apertura) !== mes; return `<a class="store-tile ${off ? 'is-off' : 'is-month'}" href="${storeHref(st)}" title="Abrir ${esc(st.nombre)}" style="--i:${i}">
       ${s.bloqueado ? `<span class="flag tile-flag" title="${plural(s.bloqueado, 'paso bloqueado', 'pasos bloqueados')}">${ic('alert')}${s.bloqueado}</span>` : ''}
-      ${st.plaza ? `<span class="tile-plaza">${ic('store')}${esc(st.plaza)}</span>` : ''}
+      ${st.plaza ? `<span class="tile-plaza">${ic('store')}Plaza ${esc(st.plaza)}</span>` : ''}
       <div class="tile-top"><span class="tile-ic"><img src="assets/tienda.png" alt=""></span></div>
       <div class="tile-id"><h3 class="tile-name">${esc(st.nombre)}</h3><span class="tile-cr">CR ${esc(st.cr)}</span></div>
       <div class="tile-stats">
@@ -567,7 +567,7 @@ function viewStore(st) {
     <img class="sv-img" src="assets/tienda.png" alt="">
     <div class="sv-main">
       <div class="sv-title">
-        <h1>${esc(st.nombre)}</h1><span class="cr-chip">CR ${esc(st.cr)}</span>${st.plaza ? `<span class="plaza-chip">${esc(st.plaza)}${st.formato ? ` · ${esc(st.formato)}` : ''}</span>` : ''}
+        <h1>${esc(st.nombre)}</h1><span class="cr-chip">CR ${esc(st.cr)}</span>${st.plaza ? `<span class="plaza-chip">Plaza ${esc(st.plaza)}${st.formato ? ` · ${esc(st.formato)}` : ''}</span>` : ''}
       </div>
       <p class="sv-when">${ic('calendar')}<span>${cuando}</span>${st.apertura ? `<span class="muted">· ${fmtDate(st.apertura, { weekday: 'long', day: 'numeric', month: 'long' })}</span><span class="n-chip today" title="Día de hoy respecto a la apertura">Hoy es ${nTxt(nOf(todayISO(), st.apertura))}</span>` : ''}</p>
       <div class="sv-prog">
