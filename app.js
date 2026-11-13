@@ -44,10 +44,11 @@ const PALETTE = ['#137b5f', '#2563eb', '#c2410c', '#7c3aed', '#0891b2', '#b91c1c
 /* Plantillas de ejemplo: se editan en la vista Plantillas */
 /* Cada plataforma tiene pasos generales (plantilla) y, si se requiere,
    subdepartamentos con su rol y su propio check list (subs). */
-const CATALOG_VERSION = 7;
-/* Check list de Seguimiento Abasto (Comercial). Fuente: "Proceso Completo Aperturas",
-   hoja Actividades Región TIJ. dias = fecha límite (N-#); la descripción indica desde cuándo se ejecuta. */
-const ABASTO_STEPS = [
+const CATALOG_VERSION = 8;
+/* Proceso completo de aperturas de la región. Fuente: "Proceso Completo Aperturas",
+   hoja Actividades Región TIJ. dias = fecha límite (N-#); la descripción indica desde cuándo se ejecuta.
+   Al check list de Seguimiento Abasto solo van las actividades donde Abasto es responsable. */
+const PROCESO_REGION = [
   { titulo: 'Tienda notificada: colocar la tienda como "Notificada" en CNT', responsable: 'Jefe Administrativo Plaza', dias: 25, descripcion: 'Se ejecuta desde N-40. El jefe administrativo coloca el estatus Notificada en CNT.' },
   { titulo: 'Asignación de segmento: asignar el segmento de la tienda según sus características (ej. entorno)', responsable: 'C. Ejecución C. / Variedad OS', dias: 24, descripcion: 'Se ejecuta desde N-35. Enviar por correo a OS el CR y el segmento a asignar (respuesta máx. 2 días hábiles).' },
   { titulo: 'Captura de mobiliario y equipo', responsable: 'C. Ejecución C.', dias: 19, descripcion: 'Se ejecuta desde N-35. Se puede hacer en cuanto se tenga la asignación de segmento.' },
@@ -63,6 +64,8 @@ const ABASTO_STEPS = [
   { titulo: 'Programación de entrega: programar el recordatorio del aviso de entrega a la tienda', responsable: 'A. Abasto', dias: 6, descripcion: 'Se ejecuta desde N-7. Correo a todos los involucrados con la fecha de recepción del pedido inicial.' },
   { titulo: 'Entrega del pedido inicial de CEDIS a la tienda', responsable: 'CEDIS / Solistica', dias: 4, descripcion: 'Se ejecuta desde N-5. Día de recepción del pedido inicial por parte del equipo de tienda.' },
 ];
+const ABASTO_STEPS = PROCESO_REGION.filter(x => /abasto/i.test(x.responsable));
+const NO_ABASTO = PROCESO_REGION.filter(x => !/abasto/i.test(x.responsable)).map(x => x.titulo);
 /* Check list de Precios y Promociones (Comercial) */
 const PP_STEPS = [
   'Confirmación de TI: TI nos indica cuándo realizar el reenvío de catálogos de P&P',
@@ -1752,6 +1755,22 @@ window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.s
       if (nuevos.length) t.actividad.unshift({ fecha: Date.now(), autor: 'Sistema', pid: 'com', texto: 'Cargó el check list de Seguimiento Abasto' });
     });
     s.version = 7;
+  }
+  if ((s.version || 1) < 8) {
+    // Seguimiento Abasto: se quitan las actividades que son de otras áreas (si nadie las ha movido)
+    const ab = (s.catalogo || []).find(c => c.id === 'com')?.subs?.find(x => x.id === 'com-abasto');
+    if (ab) ab.plantilla = structuredClone(ABASTO_STEPS);
+    (s.tiendas || []).forEach(t => {
+      normalizeStore(t);
+      const p = t.plataformas.find(x => x.pid === 'com');
+      if (!p) return;
+      const quitar = k => k.sub === 'com-abasto' && NO_ABASTO.includes(k.titulo) && k.estado === 'pendiente' && !k.historial.length && !k.imagenes.length;
+      const n = p.tasks.filter(quitar).length;
+      if (!n) return;
+      p.tasks = p.tasks.filter(k => !quitar(k));
+      t.actividad.unshift({ fecha: Date.now(), autor: 'Sistema', pid: 'com', texto: 'Seguimiento Abasto: se dejaron solo las actividades a cargo de Abasto' });
+    });
+    s.version = 8;
   }
   S = s;
   if (!Array.isArray(S.catalogo)) S.catalogo = structuredClone(DEFAULT_CATALOG);
