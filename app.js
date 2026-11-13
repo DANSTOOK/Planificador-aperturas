@@ -515,7 +515,7 @@ function viewHome() {
     </div>
     <button class="btn btn-primary btn-sm" data-action="new-store" type="button">${ic('plus')}Nueva tienda</button>
   </header>
-  ${plazas.length > 1 ? `<div class="plaza-bar" role="group" aria-label="Plaza">${[['', 'Todas las plazas'], ...plazas.map(p => [p, `Plaza ${p}`])].map(([k, l]) => { const n = S.tiendas.filter(t => !k || t.plaza === k).length; return `<button type="button" class="plaza-btn ${(ui.plaza || '') === k ? 'is-active' : ''}" data-action="plaza-filter" data-v="${esc(k)}">${k ? ic('store') : ''}${esc(l)}<span>${n}</span></button>`; }).join('')}</div>` : ''}
+  ${plazas.length > 1 ? `<div class="plaza-bar" role="group" aria-label="Plaza">${[['', 'Todas las plazas'], ...plazas.map(p => [p, `Plaza ${p}`])].map(([k, l]) => { const n = S.tiendas.filter(t => !k || t.plaza === k).length; return `<button type="button" class="plaza-btn ${(ui.plaza || '') === k ? 'is-active' : ''}" ${k ? `data-plaza="${esc(k)}"` : ''} data-action="plaza-filter" data-v="${esc(k)}">${k ? ic('store') : ''}${esc(l)}<span>${n}</span></button>`; }).join('')}</div>` : ''}
   <div class="month-bar">
     <div class="month-nav" role="group" aria-label="Mes de apertura">
       <button class="icon-btn" type="button" data-action="home-month" data-d="-1" aria-label="Mes anterior" title="Mes anterior">${ic('chevron', 'flip')}</button>
@@ -541,7 +541,7 @@ function homeCards() {
   });
   if (S.tiendas.length && !rows.length) return `<div class="panel empty">${ic('calendar', 'empty-ic')}<h3>Sin aperturas</h3><p>No hay tiendas que abran en ${scope === 'anterior' ? monthName(addMonths(mes, -1)) : monthName(mes)}${q ? ' con esa búsqueda' : ''}.</p></div>`;
   return `<div class="store-grid">
-    ${rows.map(({ st, s }, i) => { const off = monthKey(st.apertura) !== mes; return `<a class="store-tile ${off ? 'is-off' : 'is-month'}" href="${storeHref(st)}" title="Abrir ${esc(st.nombre)}" style="--i:${i}">
+    ${rows.map(({ st, s }, i) => { const off = monthKey(st.apertura) !== mes; return `<a class="store-tile ${off ? 'is-off' : 'is-month'}" href="${storeHref(st)}" data-plaza="${esc(st.plaza || '')}" title="Abrir ${esc(st.nombre)}" style="--i:${i}">
       ${s.bloqueado ? `<span class="flag tile-flag" title="${plural(s.bloqueado, 'paso bloqueado', 'pasos bloqueados')}">${ic('alert')}${s.bloqueado}</span>` : ''}
       ${st.plaza ? `<span class="tile-plaza">${ic('store')}Plaza ${esc(st.plaza)}</span>` : ''}
       <div class="tile-top"><span class="tile-ic"><img src="assets/tienda.png" alt=""></span></div>

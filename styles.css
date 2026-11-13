@@ -116,7 +116,7 @@ kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line-2)
 .nav-text { flex: 1; }
 .nav b { font-size: 11.5px; font-weight: 500; color: var(--muted); font-family: var(--mono); }
 .side-label { font-size: 11.5px; color: var(--muted); padding: 0 8px 6px; font-weight: 500; }
-.side-stores { flex: 1; min-height: 0; }
+.side-stores { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -4px; padding: 0 4px; scrollbar-width: thin; }
 .side-store { display: flex; align-items: center; gap: 9px; padding: 5px 8px; border-radius: var(--r); font-size: 13px; color: var(--ink-2); }
 .side-store:hover { background: var(--surface-3); color: var(--ink); }
 .side-store.is-active { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
@@ -315,25 +315,25 @@ a.store-tile:hover { border-color: var(--line-2); box-shadow: var(--shadow-pop);
   transition: transform .35s cubic-bezier(.2, .8, .2, 1), box-shadow .35s, border-color .25s;
   animation: tile-in .55s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i, 0) * 70ms); }
 a.store-tile::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 62%; z-index: -1;
-  background: radial-gradient(120% 90% at 50% 0%, rgba(232, 33, 39, .13), rgba(246, 166, 35, .07) 45%, transparent 75%);
+  background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--glow) 16%, transparent), color-mix(in srgb, var(--glow) 7%, transparent) 45%, transparent 75%);
   transition: opacity .35s; opacity: .8; }
 a.store-tile::after { content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; z-index: 2; pointer-events: none;
   background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .35), transparent); transform: skewX(-18deg); opacity: 0; }
-a.store-tile:hover { transform: translateY(-6px); border-color: color-mix(in srgb, #e82127 35%, var(--line)); box-shadow: 0 22px 40px -18px rgba(232, 33, 39, .35), 0 6px 14px -6px rgba(28, 27, 24, .14); }
+a.store-tile:hover { transform: translateY(-6px); border-color: color-mix(in srgb, var(--glow) 45%, var(--line)); box-shadow: 0 22px 40px -18px color-mix(in srgb, var(--glow) 45%, transparent), 0 0 0 3px color-mix(in srgb, var(--glow) 14%, transparent), 0 6px 14px -6px rgba(28, 27, 24, .14); }
 a.store-tile:hover::before { opacity: 1; }
 a.store-tile:hover::after { animation: tile-shine .9s ease; }
 a.store-tile:active { transform: translateY(-2px) scale(.99); }
 .tile-top { padding-top: 2px; }
 .tile-ic { width: 200px; height: 110px; }
 .tile-ic img { transition: transform .45s cubic-bezier(.2, .8, .2, 1), filter .35s; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .16)); animation: store-float 4.5s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -900ms); }
-a.store-tile:hover .tile-ic img { transform: scale(1.07) translateY(-3px); filter: drop-shadow(0 12px 14px rgba(232, 33, 39, .28)); }
+a.store-tile:hover .tile-ic img { transform: scale(1.07) translateY(-3px); filter: drop-shadow(0 12px 14px color-mix(in srgb, var(--glow) 35%, transparent)); }
 .tile-name { font-size: 25px; font-weight: 700; letter-spacing: -.025em; line-height: 1.15; }
 .tile-cr { font-size: 12px; letter-spacing: .04em; }
 .tile-pct { font-size: 30px; }
 .store-tile .bar > span, .store-tile .tp i { animation: bar-grow 1.1s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i, 0) * 70ms + 250ms); }
 .tile-top .flag { animation: flag-pulse 2.2s ease-in-out infinite; }
 .tile-foot { margin: 0 -18px -18px; padding: 10px 18px; transition: background .25s; }
-a.store-tile:hover .tile-foot { background: color-mix(in srgb, #e82127 5%, var(--surface-2)); }
+a.store-tile:hover .tile-foot { background: color-mix(in srgb, var(--glow) 6%, var(--surface-2)); }
 .tile-new { transition: border-color .2s, color .2s, transform .35s cubic-bezier(.2, .8, .2, 1), background .2s; }
 .tile-new:hover { transform: translateY(-4px); background: var(--surface); }
 .tile-new .ic { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
@@ -349,7 +349,7 @@ a.store-tile:hover .tile-foot { background: color-mix(in srgb, #e82127 5%, var(-
 .ts-v.is-done { color: var(--st-done); }
 .ts-date .ts-v { font-size: 21px; letter-spacing: -.02em; margin-top: 4px; }
 .ts-date .days { font-size: 12px; }
-a.store-tile:hover .tile-stats { background: color-mix(in srgb, #e82127 5%, var(--surface-2)); }
+a.store-tile:hover .tile-stats { background: color-mix(in srgb, var(--glow) 6%, var(--surface-2)); }
 @media (max-width: 560px) {
   .tile-stats { margin: auto -12px -12px; }
   .ts { padding: 10px 12px; }
@@ -555,6 +555,18 @@ a.plat-tile { color: inherit; min-height: 200px; }
 .hito.is-open .hito-l { font-weight: 700; }
 .hito.is-open .hito-dot { border-color: var(--st-block); }
 .hito-d { color: var(--ink-2); white-space: nowrap; }
+/* Color de cada plaza (brillo de la tarjeta, etiqueta y filtro) */
+.store-tile, .plaza-btn { --glow: #e82127; }
+[data-plaza="Tijuana Este"] { --glow: #e82127; }
+[data-plaza="Tijuana Centro"] { --glow: #16a34a; }
+[data-plaza="Playas"] { --glow: #2563eb; }
+[data-plaza="Ensenada"] { --glow: #eab308; }
+.tile-plaza .ic { color: var(--glow) !important; }
+.tile-plaza { border-color: color-mix(in srgb, var(--glow) 35%, var(--line)) !important; }
+.plaza-btn[data-plaza] .ic { color: var(--glow); }
+.plaza-btn.is-active[data-plaza] { background: var(--glow); border-color: var(--glow); color: #fff; }
+.plaza-btn.is-active[data-plaza="Ensenada"] { color: #1c1b18; }
+
 /* Inicio por mes */
 .ic.flip { transform: rotate(180deg); }
 .plaza-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
@@ -579,7 +591,7 @@ a.plat-tile { color: inherit; min-height: 200px; }
 .store-tile.is-off::before { opacity: 0 !important; }
 .store-tile.is-off .tile-ic img { animation: none; }
 a.store-tile.is-off:hover { filter: none; opacity: 1; }
-.store-tile.is-month { border-color: color-mix(in srgb, #e82127 30%, var(--line)); }
+.store-tile.is-month { border-color: color-mix(in srgb, var(--glow) 35%, var(--line)); }
 
 /* Calendario de la tienda */
 .cal { padding: 14px 16px 16px; }
