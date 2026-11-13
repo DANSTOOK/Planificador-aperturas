@@ -1564,101 +1564,177 @@ async function importFile(file) {
 }
 
 /* ---------- Resumen por correo ---------- */
-/* Arma el resumen de la tienda listo para correo: asunto, HTML con estilos
-   en línea (Outlook y Gmail los respetan) y una versión en texto. */
+/* Correo pensado para leerse de arriba abajo:
+   1) cómo va la tienda, 2) qué necesita atención, 3) una tarjeta por
+   departamento con sus subdepartamentos y pendientes, 4) próximas fechas.
+   Todo con tablas y estilos en línea para que Outlook y Gmail lo respeten. */
 function emailSummary(st) {
   const t = todayISO();
   const s = stats(allTasks(st));
   const dA = st.apertura ? daysFrom(t, st.apertura) : null;
-  const cuando = dA == null ? 'sin fecha de apertura' : dA > 1 ? `faltan ${dA} días` : dA === 1 ? 'abre mañana' : dA === 0 ? 'abre hoy' : `abrió hace ${plural(-dA, 'día', 'días')}`;
+  const cuando = dA == null ? 'Sin fecha de apertura' : dA > 1 ? `Faltan ${dA} días` : dA === 1 ? 'Abre mañana' : dA === 0 ? 'Abre hoy' : `Abrió hace ${plural(-dA, 'día', 'días')}`;
   const nHoy = st.apertura ? nTxt(nOf(t, st.apertura)) : '';
   const plats = st.plataformas.slice().sort((a, b) => (a.ingreso || '9999').localeCompare(b.ingreso || '9999'));
   const done = k => k.estado === 'completado' || k.estado === 'na';
   const lastNote = k => [...k.historial].reverse().find(h => h.tipo === 'comentario' && h.texto);
   const where = (p, k) => `${p.nombre}${k.sub ? ` › ${subName(p, k.sub)}` : ''}`;
-  const dateTxt = k => k.limite ? `${fmtShort(k.limite)}${st.apertura ? ` (${nTxt(nOf(k.limite, st.apertura))})` : ''}` : '';
+  const dTxt = d => d ? `${fmtDate(d, { weekday: 'short', day: 'numeric', month: 'short' })}${st.apertura ? ` (${nTxt(nOf(d, st.apertura))})` : ''}` : '';
   const bloq = plats.flatMap(p => p.tasks.filter(k => k.estado === 'bloqueado').map(k => ({ p, k })));
-  const vencidos = plats.flatMap(p => p.tasks.filter(k => !done(k) && k.limite && k.limite < t && k.estado !== 'bloqueado').map(k => ({ p, k })));
-  const proximos = HITOS.filter(([k]) => st.hitos?.[k] && st.hitos[k] >= t).map(([k, l]) => ({ l, d: st.hitos[k] }))
-    .concat(st.apertura && st.apertura >= t ? [{ l: 'Apertura', d: st.apertura }] : []).sort((a, b) => a.d.localeCompare(b.d)).slice(0, 6);
+  const venc = plats.flatMap(p => p.tasks.filter(k => !done(k) && k.estado !== 'bloqueado' && k.limite && k.limite < t).map(k => ({ p, k })));
+  const prox = HITOS.filter(([k]) => st.hitos?.[k] && st.hitos[k] >= t).map(([k, l]) => ({ l, d: st.hitos[k] }))
+    .concat(plats.filter(p => p.ingreso && p.ingreso >= t).map(p => ({ l: `Ingresa ${p.nombre}`, d: p.ingreso })))
+    .concat(st.apertura && st.apertura >= t ? [{ l: 'Apertura', d: st.apertura, open: true }] : [])
+    .sort((a, b) => a.d.localeCompare(b.d)).slice(0, 8);
   const subject = `Avance apertura ${st.nombre} (CR ${st.cr}) · ${s.pct}% · ${st.apertura ? `abre ${fmtShort(st.apertura)}` : 'sin fecha'}`;
 
-  // ---- HTML (estilos en línea) ----
-  const F = "font-family:Segoe UI,Arial,sans-serif;";
-  const C = { ink: '#1c1b18', muted: '#6b6a64', line: '#e5e3dc', soft: '#f6f5f2', ok: '#2f7d56', warn: '#b07a0c', bad: '#c0392b' };
+  // ---- piezas de diseño (HTML para correo) ----
+  const F = 'font-family:Segoe UI,Helvetica,Arial,sans-serif;';
+  const C = { ink: '#1c1b18', ink2: '#4b4943', muted: '#85827a', line: '#e7e5df', soft: '#f6f5f2', ok: '#2f7d56', okBg: '#e7f1ea', warn: '#a8700a', warnBg: '#fbf2dd', bad: '#c0392b', badBg: '#fbe9e5' };
   const pctColor = p => p === 100 ? C.ok : p >= 50 ? C.ink : p > 0 ? C.warn : C.muted;
-  const barH = (pct, color) => `<table role="presentation" cellpadding="0" cellspacing="0" style="width:120px;border-collapse:collapse;background:${C.line};border-radius:4px"><tr><td style="height:7px;width:${Math.max(pct, 0)}%;background:${color};border-radius:4px"></td><td style="height:7px"></td></tr></table>`;
-  const th = `style="${F}text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:${C.muted};padding:8px 10px;border-bottom:2px solid ${C.line}"`;
-  const td = (extra = '') => `style="${F}font-size:13px;color:${C.ink};padding:8px 10px;border-bottom:1px solid ${C.line};${extra}"`;
-  const h2 = txt => `<h2 style="${F}font-size:15px;color:${C.ink};margin:22px 0 8px">${txt}</h2>`;
-  const platRows = plats.map(p => {
-    const x = stats(p.tasks);
-    const main = `<tr>
-      <td ${td('font-weight:600')}><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${safeColor(p.color)};margin-right:7px"></span>${esc(p.nombre)}</td>
-      <td ${td(`font-weight:700;color:${pctColor(x.pct)}`)}>${x.pct}%</td>
-      <td ${td()}>${barH(x.pct, safeColor(p.color))}</td>
-      <td ${td()}>${x.completado} de ${x.aplic}</td>
-      <td ${td(x.proceso ? `color:${C.warn}` : `color:${C.muted}`)}>${x.proceso}</td>
-      <td ${td(x.bloqueado ? `color:${C.bad};font-weight:700` : `color:${C.muted}`)}>${x.bloqueado}</td>
-      <td ${td(`color:${C.muted}`)}>${p.ingreso ? `${fmtShort(p.ingreso)}${st.apertura ? ` · ${nTxt(nOf(p.ingreso, st.apertura))}` : ''}` : '—'}</td>
-    </tr>`;
-    const subs = p.subs.map(sb => { const y = stats(subTasks(p, sb.id)); return `<tr>
-      <td ${td(`padding-left:28px;color:${C.muted}`)}>↳ ${esc(sb.nombre)}</td>
-      <td ${td(`color:${pctColor(y.pct)}`)}>${y.aplic ? `${y.pct}%` : '—'}</td><td ${td()}>${y.aplic ? barH(y.pct, safeColor(p.color)) : ''}</td>
-      <td ${td(`color:${C.muted}`)}>${y.aplic ? `${y.completado} de ${y.aplic}` : 'Sin pasos'}</td><td ${td(`color:${C.muted}`)}>${y.proceso || ''}</td><td ${td(y.bloqueado ? `color:${C.bad}` : `color:${C.muted}`)}>${y.bloqueado || ''}</td><td ${td()}></td>
-    </tr>`; }).join('');
-    return main + subs;
-  }).join('');
-  const pendHtml = plats.map(p => {
-    const list = p.tasks.filter(k => !done(k)).sort((a, b) => (a.limite || '9999').localeCompare(b.limite || '9999'));
-    if (!list.length) return `<p style="${F}font-size:13px;margin:10px 0 2px"><b style="color:${C.ink}">${esc(p.nombre)}</b> <span style="color:${C.ok}">· sin pendientes ✓</span></p>`;
-    const shown = list.slice(0, 12);
-    return `<p style="${F}font-size:13px;margin:12px 0 4px"><b style="color:${C.ink}">${esc(p.nombre)}</b> <span style="color:${C.muted}">· ${plural(list.length, 'pendiente', 'pendientes')}</span></p>
-      <ul style="${F}font-size:13px;color:${C.ink};margin:0;padding-left:20px">${shown.map(k => {
-        const late = k.limite && k.limite < t;
-        const tag = k.estado === 'bloqueado' ? `<span style="color:${C.bad};font-weight:700">[Bloqueado]</span> ` : k.estado === 'proceso' ? `<span style="color:${C.warn}">[En proceso]</span> ` : '';
-        return `<li style="margin:3px 0">${tag}${esc(k.titulo)}${k.sub ? ` <span style="color:${C.muted}">(${esc(subName(p, k.sub))})</span>` : ''}${k.limite ? ` <span style="color:${late ? C.bad : C.muted}">— ${late ? 'venció ' : ''}${dateTxt(k)}</span>` : ''}${k.responsable ? ` <span style="color:${C.muted}">· ${esc(k.responsable)}</span>` : ''}</li>`;
-      }).join('')}${list.length > shown.length ? `<li style="color:${C.muted};list-style:none;margin-left:-20px">…y ${list.length - shown.length} más</li>` : ''}</ul>`;
-  }).join('');
-  const html = `<div style="${F}color:${C.ink};max-width:760px">
-    <p style="${F}font-size:14px;margin:0 0 14px">Hola equipo, comparto el avance de la apertura:</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background:${C.soft};border:1px solid ${C.line};border-radius:8px">
-      <tr><td style="${F}padding:16px 18px">
-        <div style="font-size:20px;font-weight:700">${esc(st.nombre)} <span style="font-size:13px;font-weight:500;color:${C.muted}">CR ${esc(st.cr)}${st.plaza ? ` · Plaza ${esc(st.plaza)}` : ''}${st.formato ? ` · ${esc(st.formato)}` : ''}</span></div>
-        <div style="font-size:13px;color:${C.muted};margin-top:4px">Apertura: <b style="color:${C.ink}">${st.apertura ? fmtDate(st.apertura, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'sin fecha'}</b> · ${cuando}${nHoy ? ` · hoy es ${nHoy}` : ''}</div>
-      </td>
-      <td style="${F}padding:16px 18px;text-align:right;white-space:nowrap">
-        <div style="font-size:30px;font-weight:700;color:${pctColor(s.pct)}">${s.pct}%</div>
-        <div style="font-size:12px;color:${C.muted}">${s.completado} de ${s.aplic} pasos</div>
-      </td></tr>
-    </table>
-    ${bloq.length || vencidos.length ? `<div style="${F}margin-top:14px;padding:10px 14px;border-left:4px solid ${C.bad};background:#fdf0ee;font-size:13px">
-      ${bloq.length ? `<b style="color:${C.bad}">${bloq.length === 1 ? '1 paso bloqueado' : `${bloq.length} pasos bloqueados`}</b><ul style="margin:6px 0 4px;padding-left:20px">${bloq.map(({ p, k }) => { const c = lastNote(k); return `<li style="margin:3px 0"><b>${esc(where(p, k))}:</b> ${esc(k.titulo)}${c ? `<br><span style="color:${C.muted}">“${esc(c.texto)}” — ${esc(c.autor.split(' · ')[0])}</span>` : ''}</li>`; }).join('')}</ul>` : ''}
-      ${vencidos.length ? `<b style="color:${C.bad}">${vencidos.length === 1 ? '1 paso vencido' : `${vencidos.length} pasos vencidos`}</b><ul style="margin:6px 0 0;padding-left:20px">${vencidos.map(({ p, k }) => `<li style="margin:3px 0"><b>${esc(where(p, k))}:</b> ${esc(k.titulo)} <span style="color:${C.muted}">— era para el ${dateTxt(k)}</span></li>`).join('')}</ul>` : ''}
-    </div>` : ''}
-    ${h2('Avance por plataforma')}
-    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">
-      <tr><th ${th}>Plataforma</th><th ${th}>Avance</th><th ${th}></th><th ${th}>Terminados</th><th ${th}>En proceso</th><th ${th}>Bloqueados</th><th ${th}>Ingreso</th></tr>
-      ${platRows}
-    </table>
-    ${proximos.length ? `${h2('Próximas fechas clave')}<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse">${proximos.map(x => `<tr><td ${td(`color:${C.muted};white-space:nowrap`)}>${fmtDate(x.d, { weekday: 'short', day: 'numeric', month: 'short' })}${st.apertura ? ` · ${nTxt(nOf(x.d, st.apertura))}` : ''}</td><td ${td(x.l === 'Apertura' ? `font-weight:700;color:${C.bad}` : '')}>${esc(x.l)}</td></tr>`).join('')}</table>` : ''}
-    ${h2('Pendientes por plataforma')}
-    ${pendHtml}
-    <p style="${F}font-size:11.5px;color:${C.muted};margin-top:24px;border-top:1px solid ${C.line};padding-top:10px">Resumen generado desde Aperturas · Check list de plataformas · ${fmtDateTime(Date.now())}${me() ? ` · ${esc(me())}` : ''}</p>
-  </div>`;
+  const bar = (pct, color, w = '100%', h = 8) => `<table role="presentation" cellpadding="0" cellspacing="0" style="width:${w};border-collapse:collapse"><tr><td style="background:${C.line};height:${h}px;border-radius:${h}px;padding:0"><table role="presentation" cellpadding="0" cellspacing="0" style="width:${Math.max(pct, 1)}%;border-collapse:collapse"><tr><td style="background:${color};height:${h}px;border-radius:${h}px;padding:0;font-size:0;line-height:0">&nbsp;</td></tr></table></td></tr></table>`;
+  const pill = (txt, fg, bg) => `<span style="${F}display:inline-block;font-size:11px;font-weight:700;color:${fg};background:${bg};border-radius:10px;padding:1px 8px;white-space:nowrap">${txt}</span>`;
+  const estadoPill = k => k.estado === 'bloqueado' ? pill('Bloqueado', C.bad, C.badBg) : k.estado === 'proceso' ? pill('En proceso', C.warn, C.warnBg) : pill('Pendiente', C.ink2, C.soft);
+  const section = (num, title, sub = '') => `<tr><td style="${F}padding:26px 0 10px"><table role="presentation" cellpadding="0" cellspacing="0"><tr>
+    <td style="${F}width:26px;height:26px;background:${C.ink};color:#fff;border-radius:13px;text-align:center;font-size:13px;font-weight:700">${num}</td>
+    <td style="${F}padding-left:10px;font-size:17px;font-weight:700;color:${C.ink}">${title}${sub ? ` <span style="font-size:13px;font-weight:400;color:${C.muted}">${sub}</span>` : ''}</td></tr></table></td></tr>`;
+  const kpi = (label, value, color = C.ink, note = '') => `<td style="${F}width:25%;padding:12px 14px;background:#fff;border:1px solid ${C.line};border-radius:8px;vertical-align:top">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:${C.muted}">${label}</div>
+    <div style="font-size:24px;font-weight:700;color:${color};margin-top:2px">${value}</div>${note ? `<div style="font-size:12px;color:${C.muted}">${note}</div>` : ''}</td>`;
 
-  // ---- Texto plano ----
+  // 1) Encabezado
+  const head = `<tr><td style="${F}background:${C.soft};border:1px solid ${C.line};border-radius:12px;padding:18px 20px">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%"><tr>
+      <td style="${F}vertical-align:top">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:${C.muted}">Avance de apertura${st.plaza ? ` · Plaza ${esc(st.plaza)}` : ''}</div>
+        <div style="font-size:24px;font-weight:700;color:${C.ink};margin-top:4px">${esc(st.nombre)}</div>
+        <div style="font-size:13px;color:${C.ink2};margin-top:2px">CR ${esc(st.cr)}${st.formato ? ` · ${esc(st.formato)}` : ''}</div>
+        <div style="font-size:14px;color:${C.ink};margin-top:10px">Apertura: <b>${st.apertura ? fmtDate(st.apertura, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'sin fecha'}</b></div>
+        <div style="font-size:13px;color:${C.muted};margin-top:2px">${cuando}${nHoy ? ` · hoy es ${nHoy}` : ''}</div>
+      </td>
+      <td style="${F}vertical-align:top;text-align:right;width:170px">
+        <div style="font-size:44px;font-weight:700;line-height:1;color:${pctColor(s.pct)}">${s.pct}%</div>
+        <div style="font-size:12px;color:${C.muted};margin:4px 0 8px">avance general</div>
+        ${bar(s.pct, s.pct === 100 ? C.ok : C.ink, '170px', 8)}
+      </td></tr></table></td></tr>`;
+
+  // 2) Indicadores
+  const kpis = `<tr><td style="padding-top:12px"><table role="presentation" cellpadding="0" cellspacing="6" style="width:100%;border-collapse:separate"><tr>
+    ${kpi('Pasos terminados', `${s.completado}<span style="font-size:14px;color:${C.muted}"> / ${s.aplic}</span>`)}
+    ${kpi('En proceso', s.proceso, s.proceso ? C.warn : C.ink)}
+    ${kpi('Bloqueados', bloq.length, bloq.length ? C.bad : C.ok)}
+    ${kpi('Vencidos', venc.length, venc.length ? C.bad : C.ok)}
+  </tr></table></td></tr>`;
+
+  // 3) Atención
+  const atencionItems = [
+    ...bloq.map(({ p, k }) => { const c = lastNote(k); return { tipo: pill('Bloqueado', C.bad, C.badBg), dep: where(p, k), txt: k.titulo, nota: c ? `“${c.texto}” — ${c.autor.split(' · ')[0]}` : 'Sin comentario de qué falta' }; }),
+    ...venc.map(({ p, k }) => ({ tipo: pill('Vencido', C.bad, '#fff'), dep: where(p, k), txt: k.titulo, nota: `Era para el ${dTxt(k.limite)}${k.responsable ? ` · ${k.responsable}` : ''}` })),
+  ];
+  const atencion = atencionItems.length ? `${section('!', 'Requiere atención', plural(atencionItems.length, 'punto', 'puntos'))}
+    <tr><td style="background:${C.badBg};border-left:4px solid ${C.bad};border-radius:6px;padding:4px 14px">
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%">${atencionItems.map((x, i) => `<tr><td style="${F}padding:10px 0;${i ? `border-top:1px solid #f1d2cc;` : ''}">
+        <div>${x.tipo} <span style="font-size:12px;font-weight:700;color:${C.ink2}">${esc(x.dep)}</span></div>
+        <div style="font-size:14px;color:${C.ink};margin-top:4px">${esc(x.txt)}</div>
+        <div style="font-size:12.5px;color:${C.ink2};margin-top:2px">${esc(x.nota)}</div></td></tr>`).join('')}</table>
+    </td></tr>` : `${section('!', 'Requiere atención')}<tr><td style="${F}background:${C.okBg};border-radius:6px;padding:12px 14px;font-size:14px;color:${C.ok}">✓ No hay pasos bloqueados ni vencidos.</td></tr>`;
+
+  // 4) Una tarjeta por departamento
+  const pendList = (tasks) => {
+    const list = tasks.filter(k => !done(k)).sort((a, b) => (a.estado === 'bloqueado' ? -1 : 0) - (b.estado === 'bloqueado' ? -1 : 0) || (a.limite || '9999').localeCompare(b.limite || '9999'));
+    if (!list.length) return `<div style="${F}font-size:13px;color:${C.ok};padding:4px 0">✓ Sin pendientes</div>`;
+    const shown = list.slice(0, 8);
+    return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%">${shown.map(k => {
+      const late = k.limite && k.limite < t;
+      return `<tr><td style="${F}padding:7px 0;border-top:1px solid ${C.line};vertical-align:top;width:92px">${estadoPill(k)}</td>
+        <td style="${F}padding:7px 0 7px 8px;border-top:1px solid ${C.line};vertical-align:top">
+          <div style="font-size:13.5px;color:${C.ink}">${esc(k.titulo)}</div>
+          ${k.limite || k.responsable ? `<div style="font-size:12px;color:${late ? C.bad : C.muted};margin-top:2px">${k.limite ? `${late ? 'Venció' : 'Para el'} ${dTxt(k.limite)}` : ''}${k.limite && k.responsable ? ' · ' : ''}${k.responsable ? esc(k.responsable) : ''}</div>` : ''}
+        </td></tr>`;
+    }).join('')}${list.length > shown.length ? `<tr><td></td><td style="${F}padding:6px 0 0 8px;font-size:12px;color:${C.muted}">…y ${list.length - shown.length} pendientes más en la app</td></tr>` : ''}</table>`;
+  };
+  const deptCard = p => {
+    const x = stats(p.tasks); const col = safeColor(p.color);
+    const groups = [''].concat(p.subs.map(sb => sb.id)).filter(sid => sid === '' ? (subTasks(p, '').length || !p.subs.length) : true);
+    const body = groups.map(sid => {
+      const sb = p.subs.find(z => z.id === sid); const tasks = subTasks(p, sid); const y = stats(tasks);
+      if (!sb) return `<div style="${F}padding:12px 16px 4px">${p.subs.length ? `<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:${C.muted};margin-bottom:6px">Pasos generales</div>` : ''}${pendList(tasks)}</div>`;
+      return `<div style="${F}padding:12px 16px 4px;border-top:1px solid ${C.line}">
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%"><tr>
+          <td style="${F}vertical-align:middle"><span style="font-size:14px;font-weight:700;color:${C.ink}">${esc(sb.nombre)}</span>${sb.rol ? `<span style="font-size:12px;color:${C.muted}"> · ${esc(sb.rol)}</span>` : ''}</td>
+          <td style="${F}width:150px;vertical-align:middle;text-align:right">${y.aplic ? `<span style="font-size:13px;font-weight:700;color:${pctColor(y.pct)}">${y.pct}%</span> <span style="font-size:12px;color:${C.muted}">${y.completado}/${y.aplic}</span>` : `<span style="font-size:12px;color:${C.muted}">Sin pasos</span>`}</td>
+        </tr></table>
+        ${y.aplic ? `<div style="margin:6px 0 4px">${pendList(tasks)}</div>` : ''}
+      </div>`;
+    }).join('');
+    return `<tr><td style="padding-bottom:14px"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border:1px solid ${C.line};border-radius:10px;border-collapse:separate;overflow:hidden">
+      <tr><td style="${F}background:${col};padding:0;height:5px;font-size:0;line-height:0">&nbsp;</td></tr>
+      <tr><td style="${F}padding:14px 16px 10px;background:#fff">
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%"><tr>
+          <td style="${F}vertical-align:middle">
+            <div style="font-size:18px;font-weight:700;color:${C.ink}">${esc(p.nombre)}</div>
+            <div style="font-size:12.5px;color:${C.muted};margin-top:2px">${x.completado} de ${plural(x.aplic, 'paso terminado', 'pasos terminados')}${p.ingreso ? ` · ingreso ${dTxt(p.ingreso)}` : ''}${p.responsable ? ` · ${esc(p.responsable)}` : ''}</div>
+          </td>
+          <td style="${F}width:140px;vertical-align:middle;text-align:right">
+            <div style="font-size:26px;font-weight:700;color:${pctColor(x.pct)};line-height:1">${x.pct}%</div>
+            <div style="margin-top:6px">${bar(x.pct, x.pct === 100 ? C.ok : col, '140px', 6)}</div>
+          </td></tr></table>
+      </td></tr>
+      <tr><td style="background:#fff;padding:0 0 8px">${body}</td></tr>
+    </table></td></tr>`;
+  };
+  // Índice rápido de departamentos
+  const indice = `<tr><td><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">${plats.map(p => { const x = stats(p.tasks); return `<tr>
+    <td style="${F}padding:7px 0;border-bottom:1px solid ${C.line};width:14px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${safeColor(p.color)}"></span></td>
+    <td style="${F}padding:7px 8px;border-bottom:1px solid ${C.line};font-size:14px;font-weight:600;color:${C.ink}">${esc(p.nombre)}</td>
+    <td style="${F}padding:7px 8px;border-bottom:1px solid ${C.line};width:160px">${bar(x.pct, x.pct === 100 ? C.ok : safeColor(p.color), '160px', 6)}</td>
+    <td style="${F}padding:7px 0;border-bottom:1px solid ${C.line};width:56px;text-align:right;font-size:14px;font-weight:700;color:${pctColor(x.pct)}">${x.pct}%</td>
+    <td style="${F}padding:7px 0 7px 10px;border-bottom:1px solid ${C.line};width:150px;font-size:12px;color:${x.bloqueado ? C.bad : C.muted}">${x.bloqueado ? `${plural(x.bloqueado, 'bloqueado', 'bloqueados')}` : x.aplic - x.completado ? `${x.aplic - x.completado} por hacer` : 'Completo'}</td>
+  </tr>`; }).join('')}</table></td></tr>`;
+
+  // 5) Próximas fechas
+  const fechas = prox.length ? `${section(4, 'Próximas fechas')}
+    <tr><td><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">${prox.map(x => `<tr>
+      <td style="${F}padding:7px 0;border-bottom:1px solid ${C.line};width:190px;font-size:13px;color:${x.open ? C.bad : C.ink2};font-weight:${x.open ? 700 : 400}">${dTxt(x.d)}</td>
+      <td style="${F}padding:7px 8px;border-bottom:1px solid ${C.line};font-size:13.5px;color:${C.ink};font-weight:${x.open ? 700 : 400}">${esc(x.l)}</td></tr>`).join('')}</table></td></tr>` : '';
+
+  const html = `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:700px;border-collapse:collapse;${F}color:${C.ink}">
+    <tr><td style="${F}font-size:14px;color:${C.ink};padding-bottom:14px">Hola equipo, les comparto cómo va la apertura de <b>${esc(st.nombre)}</b>:</td></tr>
+    ${head}
+    ${kpis}
+    ${atencion}
+    ${section(2, 'Avance por departamento')}
+    ${indice}
+    ${section(3, 'Detalle por departamento', 'pendientes de cada área')}
+    ${plats.map(deptCard).join('')}
+    ${fechas}
+    <tr><td style="${F}font-size:11.5px;color:${C.muted};padding-top:22px;border-top:1px solid ${C.line}">Resumen generado desde Aperturas · Check list de plataformas · ${fmtDateTime(Date.now())}${me() ? ` · ${esc(me())}` : ''}</td></tr>
+  </table>`;
+
+  // ---- Texto plano, misma estructura ----
   const L = [];
-  L.push(`${st.nombre} · CR ${st.cr}${st.plaza ? ` · Plaza ${st.plaza}` : ''}`);
-  L.push(`Apertura: ${st.apertura ? fmtDate(st.apertura) : 'sin fecha'} (${cuando}${nHoy ? `; hoy es ${nHoy}` : ''})`);
-  L.push(`Avance general: ${s.pct}% (${s.completado} de ${s.aplic} pasos)`, '');
-  if (bloq.length) { L.push('BLOQUEOS'); bloq.forEach(({ p, k }) => { const c = lastNote(k); L.push(`- [${where(p, k)}] ${k.titulo}${c ? ` — "${c.texto}" (${c.autor.split(' · ')[0]})` : ''}`); }); L.push(''); }
-  if (vencidos.length) { L.push('VENCIDOS'); vencidos.forEach(({ p, k }) => L.push(`- [${where(p, k)}] ${k.titulo} — era para el ${dateTxt(k)}`)); L.push(''); }
-  L.push('AVANCE POR PLATAFORMA');
-  plats.forEach(p => { const x = stats(p.tasks); L.push(`- ${p.nombre}: ${x.pct}% (${x.completado}/${x.aplic})${x.proceso ? ` · ${x.proceso} en proceso` : ''}${x.bloqueado ? ` · ${x.bloqueado} bloqueado(s)` : ''}${p.ingreso ? ` · ingreso ${fmtShort(p.ingreso)}` : ''}`); p.subs.forEach(sb => { const y = stats(subTasks(p, sb.id)); L.push(`    ${sb.nombre}: ${y.aplic ? `${y.pct}% (${y.completado}/${y.aplic})` : 'sin pasos'}`); }); });
-  if (proximos.length) { L.push('', 'PRÓXIMAS FECHAS CLAVE'); proximos.forEach(x => L.push(`- ${fmtShort(x.d)}${st.apertura ? ` (${nTxt(nOf(x.d, st.apertura))})` : ''}: ${x.l}`)); }
-  L.push('', 'PENDIENTES');
-  plats.forEach(p => { const list = p.tasks.filter(k => !done(k)); L.push(`${p.nombre}: ${list.length ? '' : 'sin pendientes'}`); list.slice(0, 12).forEach(k => L.push(`  - ${k.estado === 'bloqueado' ? '[Bloqueado] ' : k.estado === 'proceso' ? '[En proceso] ' : ''}${k.titulo}${k.limite ? ` — ${dateTxt(k)}` : ''}`)); if (list.length > 12) L.push(`  …y ${list.length - 12} más`); });
+  L.push(`AVANCE DE APERTURA · ${st.nombre} (CR ${st.cr})${st.plaza ? ` · Plaza ${st.plaza}` : ''}`);
+  L.push(`Apertura: ${st.apertura ? fmtDate(st.apertura) : 'sin fecha'} · ${cuando}${nHoy ? ` · hoy es ${nHoy}` : ''}`);
+  L.push(`Avance general: ${s.pct}% (${s.completado} de ${s.aplic} pasos) · En proceso: ${s.proceso} · Bloqueados: ${bloq.length} · Vencidos: ${venc.length}`, '');
+  L.push('REQUIERE ATENCIÓN');
+  if (!atencionItems.length) L.push('- Sin bloqueos ni vencidos');
+  bloq.forEach(({ p, k }) => { const c = lastNote(k); L.push(`- [Bloqueado] ${where(p, k)}: ${k.titulo}${c ? ` — "${c.texto}" (${c.autor.split(' · ')[0]})` : ''}`); });
+  venc.forEach(({ p, k }) => L.push(`- [Vencido] ${where(p, k)}: ${k.titulo} — era para el ${dTxt(k.limite)}`));
+  L.push('', 'AVANCE POR DEPARTAMENTO');
+  plats.forEach(p => { const x = stats(p.tasks); L.push(`- ${p.nombre}: ${x.pct}% (${x.completado}/${x.aplic})${x.bloqueado ? ` · ${x.bloqueado} bloqueado(s)` : ''}`); });
+  L.push('', 'DETALLE POR DEPARTAMENTO');
+  plats.forEach(p => {
+    const x = stats(p.tasks);
+    L.push('', `== ${p.nombre.toUpperCase()} · ${x.pct}% ==`);
+    [''].concat(p.subs.map(sb => sb.id)).forEach(sid => {
+      const sb = p.subs.find(z => z.id === sid); const tasks = subTasks(p, sid); if (!sb && !tasks.length && p.subs.length) return;
+      const y = stats(tasks); const pend = tasks.filter(k => !done(k));
+      if (sb) L.push(`  ${sb.nombre}${sb.rol ? ` (${sb.rol})` : ''}: ${y.aplic ? `${y.pct}% (${y.completado}/${y.aplic})` : 'sin pasos'}`);
+      pend.slice(0, 8).forEach(k => L.push(`    - ${k.estado === 'bloqueado' ? '[Bloqueado] ' : k.estado === 'proceso' ? '[En proceso] ' : ''}${k.titulo}${k.limite ? ` — ${dTxt(k.limite)}` : ''}`));
+      if (pend.length > 8) L.push(`    …y ${pend.length - 8} más`);
+      if (y.aplic && !pend.length) L.push('    ✓ Sin pendientes');
+    });
+  });
+  if (prox.length) { L.push('', 'PRÓXIMAS FECHAS'); prox.forEach(x => L.push(`- ${dTxt(x.d)}: ${x.l}`)); }
   return { subject, html, text: L.join('\n') };
 }
 

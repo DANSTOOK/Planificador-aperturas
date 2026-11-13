@@ -950,7 +950,7 @@ a.store-tile.is-off:hover { filter: none; opacity: 1; }
 
 /* Resumen por correo */
 .dlg-mail { width: min(900px, calc(100vw - 24px)); }
-.mail-preview { background: #fff; color: #1c1b18; border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; max-height: 56vh; overflow: auto; }
+.mail-preview { background: #fff; color: #1c1b18; border: 1px solid var(--line); border-radius: 10px; padding: 22px 26px; max-height: 60vh; overflow: auto; }
 .mail-foot { justify-content: flex-end; }
 .mail-foot .btn-primary { order: 9; }
 @media (max-width: 560px) { .mail-foot .btn { flex: 1 1 100%; } }
