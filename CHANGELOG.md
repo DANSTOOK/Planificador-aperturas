@@ -6,6 +6,7 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 
 ## [Sin publicar]
 
+- Check list de **Seguimiento Abasto** (14 puntos de control del proceso de aperturas de la Región Tijuana) con responsable, fecha límite en N-# y detalle de desde cuándo se ejecuta. Las plantillas ahora conservan el detalle de cada paso.
 - Botón **Resumen por correo** en cada tienda: avance por plataforma y subdepartamento, bloqueos con su último comentario, pasos vencidos, próximas fechas clave y pendientes. Se puede copiar con formato, abrir en Outlook (.eml), abrir en el correo o copiar como texto.
 - Check list real de **Precios y Promociones** (5 pasos); reemplaza los pasos de ejemplo que no se habían tocado.
 - Color por plaza en el brillo de las tarjetas y en los filtros: Tijuana Este rojo, Tijuana Centro verde, Playas azul y Ensenada amarillo.

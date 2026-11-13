@@ -44,7 +44,25 @@ const PALETTE = ['#137b5f', '#2563eb', '#c2410c', '#7c3aed', '#0891b2', '#b91c1c
 /* Plantillas de ejemplo: se editan en la vista Plantillas */
 /* Cada plataforma tiene pasos generales (plantilla) y, si se requiere,
    subdepartamentos con su rol y su propio check list (subs). */
-const CATALOG_VERSION = 6;
+const CATALOG_VERSION = 7;
+/* Check list de Seguimiento Abasto (Comercial). Fuente: "Proceso Completo Aperturas",
+   hoja Actividades Región TIJ. dias = fecha límite (N-#); la descripción indica desde cuándo se ejecuta. */
+const ABASTO_STEPS = [
+  { titulo: 'Tienda notificada: colocar la tienda como "Notificada" en CNT', responsable: 'Jefe Administrativo Plaza', dias: 25, descripcion: 'Se ejecuta desde N-40. El jefe administrativo coloca el estatus Notificada en CNT.' },
+  { titulo: 'Asignación de segmento: asignar el segmento de la tienda según sus características (ej. entorno)', responsable: 'C. Ejecución C. / Variedad OS', dias: 24, descripcion: 'Se ejecuta desde N-35. Enviar por correo a OS el CR y el segmento a asignar (respuesta máx. 2 días hábiles).' },
+  { titulo: 'Captura de mobiliario y equipo', responsable: 'C. Ejecución C.', dias: 19, descripcion: 'Se ejecuta desde N-35. Se puede hacer en cuanto se tenga la asignación de segmento.' },
+  { titulo: 'Sembrado: realizar el sembrado de la tienda nueva', responsable: 'C. Ejecución C. / Variedad OS', dias: 11, descripcion: 'Se ejecuta desde N-30. Sembrar de acuerdo al espacio del Mapa Legos (5 días hábiles para recibir retroalimentación). Lo que se siembre después de esta fecha debe esperar 21 días en artículos de CEDIS. Límite N-11.' },
+  { titulo: 'Cambio de estatus a tienda operativa: gestionar que la tienda quede Operativa y Autorizada', responsable: 'A. Abasto / Jefe Administrativo Plaza', dias: 10, descripcion: 'Se ejecuta desde N-25. El área administrativa coloca la tienda como operativa en RMS (validar con administrativo).' },
+  { titulo: 'Formato de comunicación de apertura: llenar el formato inicial de CEDIS y proveedores (incluye tienda espejo)', responsable: 'C. Ejecución C. / A. Abasto', dias: 10, descripcion: 'Se ejecuta desde N-25. Incluye datos técnicos de la tienda, dirección, fechas de apertura, ubicación y si abre o no con permiso de alcohol.' },
+  { titulo: 'Alta en RDM / flexibilidad CEDIS: solicitar y validar el alta de la tienda en RDM de CEDIS', responsable: 'Sistemas CEDIS / A. Solistica', dias: 10, descripcion: 'Se ejecuta desde N-25. Validar el alta en RDM y la alineación de PMO; sin esto no se genera el pedido inicial (de RMS V16 a RDM). Validar también la flexibilidad de CEDIS si la tienda aplica.' },
+  { titulo: 'Tienda enviada: validar que la tienda esté enviada en el sembrado', responsable: 'C. Ejecución C. / C. Procesos Comerciales', dias: 15, descripcion: 'Se ejecuta desde N-20. Verificar que la tienda esté enviada y sembrada según el lineamiento (archivo Planogramas Sembrados y Sembrado en Excel).' },
+  { titulo: 'Pedido inicial: generar el pedido inicial / catálogo', responsable: 'Abasto OS / A. Abasto', dias: 7, descripcion: 'Se ejecuta desde N-10. Se genera el catálogo con la carga inicial de constantes de la tienda (actividad exclusiva de Región).' },
+  { titulo: 'Catálogo vs sembrado: revisar el pedido inicial contra el sembrado', responsable: 'C. Ejecución C. / Procesos Comerciales / A. Abasto', dias: 7, descripcion: 'Se ejecuta desde N-8. Que la variedad del pedido sea la misma que la sembrada, para detectar a tiempo productos que no llegarían para la apertura.' },
+  { titulo: 'Carga de constantes del pedido inicial', responsable: 'A. Abasto / Abasto OS', dias: 7, descripcion: 'Se ejecuta en N-7. Solicitar la carga de las constantes iniciales según el pedido tipo de la región; Abasto OS genera el primer pedido.' },
+  { titulo: 'Validación de transferencia: validar las cantidades cargadas en la primera transferencia', responsable: 'Abasto OS', dias: 5, descripcion: 'Se ejecuta desde N-6. Revisar que la carga de constantes coincida con lo solicitado por Abasto Región.' },
+  { titulo: 'Programación de entrega: programar el recordatorio del aviso de entrega a la tienda', responsable: 'A. Abasto', dias: 6, descripcion: 'Se ejecuta desde N-7. Correo a todos los involucrados con la fecha de recepción del pedido inicial.' },
+  { titulo: 'Entrega del pedido inicial de CEDIS a la tienda', responsable: 'CEDIS / Solistica', dias: 4, descripcion: 'Se ejecuta desde N-5. Día de recepción del pedido inicial por parte del equipo de tienda.' },
+];
 /* Check list de Precios y Promociones (Comercial) */
 const PP_STEPS = [
   'Confirmación de TI: TI nos indica cuándo realizar el reenvío de catálogos de P&P',
@@ -84,7 +102,7 @@ const DEFAULT_CATALOG = [
   { id: 'adm', nombre: 'Administrativo', color: '#7c3aed', plantilla: ['Alta de la tienda (CR) en sistemas administrativos', 'Fondo de caja asignado', 'Alta del personal en nómina', 'Documentación y permisos en tienda'], subs: [] },
   { id: 'com', nombre: 'Comercial', color: '#be185d', plantilla: ['Surtido inicial definido para la tienda'], subs: [
     { id: 'com-precios', nombre: 'Precios y Promociones', rol: 'Analista Precios y Promociones', plantilla: PP_STEPS },
-    { id: 'com-abasto', nombre: 'Seguimiento Abasto', rol: 'Analista Seguimiento Abasto', plantilla: [] },
+    { id: 'com-abasto', nombre: 'Seguimiento Abasto', rol: 'Analista Seguimiento Abasto', plantilla: ABASTO_STEPS },
     { id: 'com-ejecucion', nombre: 'Ejecución Comercial', rol: 'Coordinador Ejecución Comercial', plantilla: [] },
     { id: 'com-mercadeo', nombre: 'Mercadeo', rol: 'Practicante Mercadeo', plantilla: [] },
     { id: 'com-procesos', nombre: 'Procesos Comerciales', rol: '', plantilla: [] },
@@ -205,10 +223,10 @@ const nChip = (iso, apertura) => { const d = nOf(iso, apertura); return d == nul
 
 /* Paso de plantilla: texto simple o { titulo, responsable, dias }.
    dias = días antes de la apertura ("N-5"); la fecha límite se calcula sola. */
-const tplStep = x => typeof x === 'string' ? { titulo: x, responsable: '', dias: null } : { titulo: x.titulo || '', responsable: x.responsable || '', dias: Number.isFinite(x.dias) ? x.dias : null };
+const tplStep = x => typeof x === 'string' ? { titulo: x, responsable: '', dias: null, descripcion: '' } : { titulo: x.titulo || '', responsable: x.responsable || '', dias: Number.isFinite(x.dias) ? x.dias : null, descripcion: x.descripcion || '' };
 function taskFromTpl(x, apertura, extra = {}) {
   const t = tplStep(x);
-  return newTask(t.titulo, { responsable: t.responsable, diasN: t.dias, limite: apertura && t.dias != null ? addDays(apertura, -t.dias) : '', ...extra });
+  return newTask(t.titulo, { descripcion: t.descripcion, responsable: t.responsable, diasN: t.dias, limite: apertura && t.dias != null ? addDays(apertura, -t.dias) : '', ...extra });
 }
 const tplToLine = x => { const t = tplStep(x); if (!t.responsable && t.dias == null) return t.titulo; return `${t.titulo} | ${t.responsable} | ${nTxt(t.dias)}`.replace(/\s*\|\s*$/, ''); };
 function lineToTpl(line) {
@@ -1062,12 +1080,13 @@ main.addEventListener('change', async e => {
   if (a === 'cat-color') { c.color = safeColor(el.value); }
   if (a === 'cat-name') { const v = el.value.trim(); if (!v) { el.value = c.nombre; return; } c.nombre = v; }
   const lines = v => v.split('\n').map(s => s.replace(/^\s*(?:[-•*]|\d+[.)])\s*/, '').trim()).filter(Boolean);
-  if (a === 'cat-steps') c.plantilla = lines(el.value).map(lineToTpl);
+  const keepDesc = (prev, next) => next.map(n => { const t = tplStep(n); const old = (prev || []).map(tplStep).find(o => o.titulo === t.titulo && o.descripcion); return old ? { titulo: t.titulo, responsable: t.responsable, dias: t.dias, descripcion: old.descripcion } : n; });
+  if (a === 'cat-steps') c.plantilla = keepDesc(c.plantilla, lines(el.value).map(lineToTpl));
   const ts = c.subs?.find(x => x.id === el.closest('[data-tsub]')?.dataset.tsub);
   if (ts) {
     if (a === 'tsub-name') { const v = el.value.trim(); if (!v) { el.value = ts.nombre; return; } ts.nombre = v; }
     if (a === 'tsub-rol') ts.rol = el.value.trim();
-    if (a === 'tsub-steps') ts.plantilla = lines(el.value).map(lineToTpl);
+    if (a === 'tsub-steps') ts.plantilla = keepDesc(ts.plantilla, lines(el.value).map(lineToTpl));
   }
   commit();
 });
@@ -1709,6 +1728,20 @@ window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.s
       t.actividad.unshift({ fecha: Date.now(), autor: 'Sistema', pid: 'com', texto: 'Cargó el check list de Precios y Promociones' });
     });
     s.version = 6;
+  }
+  if ((s.version || 1) < 7) {
+    const ab = (s.catalogo || []).find(c => c.id === 'com')?.subs?.find(x => x.id === 'com-abasto');
+    if (ab) ab.plantilla = structuredClone(ABASTO_STEPS);
+    (s.tiendas || []).forEach(t => {
+      normalizeStore(t);
+      const p = t.plataformas.find(x => x.pid === 'com');
+      if (!p || !p.subs.some(x => x.id === 'com-abasto')) return;
+      const have = new Set(subTasks(p, 'com-abasto').map(k => k.titulo));
+      const nuevos = ABASTO_STEPS.filter(x => !have.has(x.titulo));
+      nuevos.forEach(x => p.tasks.push(taskFromTpl(x, t.apertura, { sub: 'com-abasto' })));
+      if (nuevos.length) t.actividad.unshift({ fecha: Date.now(), autor: 'Sistema', pid: 'com', texto: 'Cargó el check list de Seguimiento Abasto' });
+    });
+    s.version = 7;
   }
   S = s;
   if (!Array.isArray(S.catalogo)) S.catalogo = structuredClone(DEFAULT_CATALOG);
