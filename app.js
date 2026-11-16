@@ -390,7 +390,8 @@ function countdown(st) {
   if (d > 1) return { label: `Faltan ${d} días`, cls: ok ? 'done' : 'warn' };
   if (d === 1) return { label: 'Abre mañana', cls: ok ? 'done' : 'warn' };
   if (d === 0) return { label: 'Abre hoy', cls: ok ? 'done' : 'danger' };
-  return ok ? { label: `Abrió hace ${plural(-d, 'día', 'días')}`, cls: 'done' } : { label: 'Abrió con pendientes', cls: 'danger' };
+  if (ok) return { label: `Abrió hace ${plural(-d, 'día', 'días')}`, cls: 'done' };
+  return stats(allTasks(st)).bloqueado ? { label: 'Abrió con bloqueos', cls: 'danger' } : { label: `Abrió hace ${plural(-d, 'día', 'días')}`, cls: '' };
 }
 const bar = (pct, cls = '') => `<div class="bar ${cls} ${pct === 100 ? 'is-full' : ''}" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><span style="width:${pct}%"></span></div>`;
 function stackBar(s, cls = '') {
@@ -462,7 +463,7 @@ function render() {
     window.scrollTo(0, 0); lastHash = location.hash;
     // Entrada animada solo al cambiar de pantalla (no en cada clic)
     main.classList.remove('route-in'); void main.offsetWidth; main.classList.add('route-in');
-    clearTimeout(routeTimer); routeTimer = setTimeout(() => main.classList.remove('route-in'), 1400);
+    clearTimeout(routeTimer); routeTimer = setTimeout(() => main.classList.remove('route-in'), 1700);
     countUp(main);
   } else window.scrollTo(0, y);
   if (ui.justDone) { $(`[data-task="${CSS.escape(ui.justDone)}"]`, main)?.classList.add('just-done'); ui.justDone = null; }
@@ -480,7 +481,7 @@ function renderSidebar(r) {
   const list = sortedStores();
   $('#sideStores').innerHTML = list.length ? list.map(st => {
     const s = stats(allTasks(st));
-    return `<a class="side-store ${r.tid === st.id ? 'is-active' : ''}" href="${storeHref(st)}"><span class="ss-ring" style="--p:${s.pct}"></span><span class="ss-name">${esc(st.nombre)}</span><span class="ss-pct">${s.pct}%</span></a>`;
+    return `<a class="side-store ${r.tid === st.id ? 'is-active' : ''}" href="${storeHref(st)}" data-plaza="${esc(st.plaza || '')}" title="${esc(st.nombre)} · ${s.pct}% · ${st.plaza ? `Plaza ${esc(st.plaza)}` : ''}"><span class="ss-ring" style="--p:${s.pct}"></span><span class="ss-name">${esc(st.nombre.replace(/^OXXO\s+/i, ''))}</span><span class="ss-pct">${st.apertura ? fmtShort(st.apertura) : `${s.pct}%`}</span></a>`;
   }).join('') : '<p class="side-empty">Sin tiendas todavía</p>';
   const n = Pref.get('ap-user').trim();
   const area = userArea();
