@@ -6,6 +6,7 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 
 ## [Sin publicar]
 
+- Animaciones y efectos en toda la app: entrada escalonada al cambiar de pantalla, porcentajes que suben desde 0, barras que se llenan, efectos al pasar el cursor y al presionar, paso completado con destello y palomita animada, detalle del paso que se despliega suave, confeti al completar una plataforma o la tienda, encabezado de tienda con el color de su plaza, menús y ventanas con transición y avisos con ícono. Respeta la opción de reducir movimiento.
 - Check list de **Procesos Comerciales** (9 pasos de aperturas POS con su detalle).
 - Inicio con un panel de filtros: fila de **Plaza** y fila de **Mes de apertura** (meses seguidos con su conteo y marca de "Hoy"), buscador y resumen de lo que se está viendo con opción de restablecer. Abre en el mes actual.
 - Check list de **Seguimiento Abasto** con las 7 actividades del proceso de aperturas de la región donde Abasto es responsable (cambio a tienda operativa, formato de comunicación, pedido inicial, catálogo vs sembrado, carga de constantes, validación de transferencia y programación de entrega), con fecha límite en N-# y detalle. Las plantillas conservan el detalle de cada paso.

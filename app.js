@@ -411,6 +411,35 @@ const platHref = (st, p) => `${storeHref(st)}/p/${encodeURIComponent(p.pid)}`;
 
 const main = $('#main');
 let lastHash = null;
+let routeTimer = 0;
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* Los porcentajes suben desde 0 al entrar a una pantalla */
+function countUp(root) {
+  if (reduceMotion()) return;
+  $$('.sv-pct, .pt-pct, .ts:not(.ts-date) .ts-v, .sbn-pct, .num-lg, .sbt-prog .num', root).forEach(el => {
+    const tn = [...el.childNodes].find(n => n.nodeType === 3 && /\d/.test(n.textContent)); if (!tn) return;
+    const m = tn.textContent.match(/^(\s*)(\d+)([\s\S]*)$/); if (!m) return;
+    const end = Number(m[2]); if (!end) return;
+    const t0 = performance.now(), dur = 750;
+    const step = t => { const p = Math.min(1, (t - t0) / dur); tn.textContent = m[1] + Math.round(end * (1 - Math.pow(1 - p, 3))) + m[3]; if (p < 1) requestAnimationFrame(step); };
+    tn.textContent = m[1] + '0' + m[3]; requestAnimationFrame(step);
+  });
+}
+/* Celebración al completar una plataforma o la tienda */
+function confetti(big = false) {
+  if (reduceMotion()) return;
+  const cv = document.createElement('canvas'); cv.className = 'confetti'; document.body.append(cv);
+  const W = innerWidth, H = innerHeight, dpr = devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr; const g = cv.getContext('2d'); g.scale(dpr, dpr);
+  const colors = ['#e82127', '#f6a623', '#16a34a', '#2563eb', '#eab308', '#7c3aed', '#be185d'];
+  const ps = Array.from({ length: big ? 220 : 120 }, () => ({ x: W / 2 + (Math.random() - .5) * 240, y: H * .38, vx: (Math.random() - .5) * 14, vy: -Math.random() * 12 - 5, s: Math.random() * 7 + 5, r: Math.random() * 6, vr: (Math.random() - .5) * .35, c: colors[Math.floor(Math.random() * colors.length)] }));
+  const t0 = performance.now(), dur = big ? 2600 : 1900;
+  (function frame(t) {
+    const e = t - t0; g.clearRect(0, 0, W, H);
+    ps.forEach(p => { p.vy += .32; p.x += p.vx; p.y += p.vy; p.vx *= .985; p.r += p.vr; g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.globalAlpha = Math.max(0, 1 - e / dur); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); g.restore(); });
+    if (e < dur) requestAnimationFrame(frame); else cv.remove();
+  })(t0);
+}
 function render() {
   if (!S) return;
   const r = route();
@@ -429,7 +458,15 @@ function render() {
   document.title = title;
   renderSidebar(r);
   hydrate(main);
-  if (location.hash !== lastHash) { window.scrollTo(0, 0); lastHash = location.hash; } else window.scrollTo(0, y);
+  if (location.hash !== lastHash) {
+    window.scrollTo(0, 0); lastHash = location.hash;
+    // Entrada animada solo al cambiar de pantalla (no en cada clic)
+    main.classList.remove('route-in'); void main.offsetWidth; main.classList.add('route-in');
+    clearTimeout(routeTimer); routeTimer = setTimeout(() => main.classList.remove('route-in'), 1400);
+    countUp(main);
+  } else window.scrollTo(0, y);
+  if (ui.justDone) { $(`[data-task="${CSS.escape(ui.justDone)}"]`, main)?.classList.add('just-done'); ui.justDone = null; }
+  if (ui.justOpened) { $(`[data-task="${CSS.escape(ui.justOpened)}"]`, main)?.classList.add('just-opened'); ui.justOpened = null; }
   if (ui.focusComposer) {
     const ta = $(`[data-task="${CSS.escape(ui.focusComposer)}"] .composer textarea`, main);
     if (ta) { ta.placeholder = '¿Qué lo está bloqueando y quién debe resolverlo?'; ta.focus(); ta.closest('.task').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
@@ -634,7 +671,7 @@ function viewStore(st) {
   const acts = st.actividad.slice(0, 12);
   return `
   <nav class="crumbs" aria-label="Ruta"><a href="#/">Aperturas</a><span class="sep">${ic('chevron')}</span><span aria-current="page">${esc(st.nombre)}</span></nav>
-  <section class="sv-hero">
+  <section class="sv-hero" data-plaza="${esc(st.plaza || '')}">
     <img class="sv-img" src="assets/tienda.png" alt="">
     <div class="sv-main">
       <div class="sv-title">
@@ -998,10 +1035,11 @@ function setStatus(st, p, k, estado) {
   const before = stats(p.tasks).pct;
   k.historial.push({ id: uid('h'), tipo: 'estado', autor: author(), de: k.estado, a: estado, fecha: Date.now() });
   k.estado = estado; k.actualizado = Date.now();
+  if (estado === 'completado') ui.justDone = k.id;
   log(st, p.pid, `“${trunc(k.titulo, 60)}” → ${STATUS[estado].label}`);
   if (estado === 'bloqueado') { ui.open.add(k.id); ui.focusComposer = k.id; toast('Deja un comentario con lo que lo bloquea'); }
   const after = stats(p.tasks).pct;
-  if (after === 100 && before < 100) { log(st, p.pid, `${p.nombre} completó su check list`); toast(`${p.nombre} completó su check list`); }
+  if (after === 100 && before < 100) { log(st, p.pid, `${p.nombre} completó su check list`); toast(`${p.nombre} completó su check list`); setTimeout(() => confetti(stats(allTasks(st)).pct === 100), 120); }
   if (stats(allTasks(st)).pct === 100 && before < 100) toast(`${st.nombre} tiene su check list completo`);
   commit();
 }
@@ -1053,7 +1091,7 @@ main.addEventListener('click', async e => {
       log(st, p.pid, `Cargó la plantilla de ${p.nombre}`); return commit();
     }
     case 'new-task-full': return openTaskDlg(st, p, null, ui.curSub || '');
-    case 'toggle-open': ui.open.has(k.id) ? ui.open.delete(k.id) : ui.open.add(k.id); return render();
+    case 'toggle-open': if (ui.open.has(k.id)) ui.open.delete(k.id); else { ui.open.add(k.id); ui.justOpened = k.id; } return render();
     case 'set-status': return setStatus(st, p, k, el.dataset.v);
     case 'edit-plat': ui.editPlat = !ui.editPlat; return render();
     case 'toggle-plat': ui.selPlat = ui.selPlat === el.dataset.pid ? null : el.dataset.pid; render(); $('.pl-detail', main)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return;
@@ -1456,7 +1494,7 @@ $('#lightbox').addEventListener('keydown', e => {
 });
 let toastTimer = 0;
 function toast(msg, err = false) {
-  const t = $('#toast'); t.textContent = msg; t.classList.toggle('is-error', err); t.classList.add('is-on');
+  const t = $('#toast'); t.innerHTML = `${ic(err ? 'alert' : 'check')}<span>${esc(msg)}</span>`; t.classList.toggle('is-error', err); t.classList.add('is-on');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('is-on'), 3200);
 }
 
