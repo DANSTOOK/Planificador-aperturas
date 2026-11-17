@@ -199,7 +199,7 @@ async function filesToImgs(files) {
 
 /* ---------- Estado ---------- */
 let S = null;
-const ui = { plaza: '', homeMonth: '', monthScope: 'todas', calMonth: {}, openCrono: false, openActs: false, subSel: {}, curSub: '', selPlat: null, storeTab: 'plats', editPlat: false, nextTask: null, q: '', homeFilter: 'todas', taskFilter: 'todos', open: new Set(), drafts: {}, pending: {}, focusComposer: null };
+const ui = { selMode: false, sel: new Set(), tipsSeen: new Set(), plaza: '', homeMonth: '', monthScope: 'todas', calMonth: {}, openCrono: false, openActs: false, subSel: {}, curSub: '', selPlat: null, storeTab: 'plats', editPlat: false, nextTask: null, q: '', homeFilter: 'todas', taskFilter: 'todos', open: new Set(), drafts: {}, pending: {}, focusComposer: null };
 
 let saveTimer = 0;
 function save() {
@@ -550,6 +550,12 @@ const sw = (c, cls = '') => `<i class="sw ${cls}" style="--c:${safeColor(c)}"></
 /* ---------- Estructura común ---------- */
 function tip(key, html) {
   if (Pref.get('ap-tip-' + key)) return '';
+  if (!ui.tipsSeen.has(key)) {
+    ui.tipsSeen.add(key);
+    const n = Number(Pref.get('ap-tipn-' + key) || 0) + 1;
+    Pref.set('ap-tipn-' + key, String(n));
+    if (n > 3) { Pref.set('ap-tip-' + key, '1'); return ''; }
+  }
   return `<div class="hint" role="note">${ic('info')}<p>${html}</p><button class="icon-btn" type="button" data-action="hide-tip" data-v="${key}" aria-label="Ocultar esta ayuda" title="Ocultar">${ic('x')}</button></div>`;
 }
 function openHelp() { $('#helpDlg').showModal(); }
@@ -636,15 +642,27 @@ function viewHome() {
     <div class="f-row f-foot">
       <label class="search">${ic('search')}<input id="q" type="search" placeholder="Buscar por nombre o CR" value="${esc(ui.q)}" autocomplete="off" aria-label="Buscar tienda"></label>
       <p class="f-result" id="fResult" aria-live="polite">${homeResult()}</p>
+      <div class="seg view-toggle" role="group" aria-label="Vista">${[['tarjetas', 'store', 'Tarjetas'], ['lista', 'list', 'Lista']].map(([k, i, l]) => `<button type="button" class="${homeView() === k ? 'is-active' : ''}" data-action="home-view" data-v="${k}" title="Ver como ${l.toLowerCase()}">${ic(i)}${l}</button>`).join('')}</div>
     </div>
   </section>
   <div id="homeCards">${homeCards()}</div>`;
 }
+const homeView = () => Pref.get('ap-home-view') === 'lista' ? 'lista' : 'tarjetas';
 function homeCards() {
   const rows = homeRows().map(st => ({ st, s: stats(allTasks(st)) }));
   const { mes } = homeFilters();
   const hoyMes = monthKey(todayISO());
   if (S.tiendas.length && !rows.length) return `<div class="panel empty">${ic('calendar', 'empty-ic')}<h3>Sin aperturas con estos filtros</h3><p>Prueba con otro mes u otra plaza.</p><button class="btn" type="button" data-action="clear-filters">Restablecer filtros</button></div>`;
+  if (homeView() === 'lista') return `<div class="panel store-list" role="table" aria-label="Tiendas">
+    <div class="sl-row sl-head" role="row"><span>Tienda</span><span>Plaza</span><span>Apertura</span><span>Avance</span><span></span></div>
+    ${rows.map(({ st, s }, i) => { const off = !mes && monthKey(st.apertura) !== hoyMes; return `<a class="sl-row ${off ? 'is-off' : ''}" role="row" href="${storeHref(st)}" data-plaza="${esc(st.plaza || '')}" style="--i:${i}">
+      <span class="sl-name"><img src="assets/tienda.png" alt=""><span><b>${esc(st.nombre)}</b><small>CR ${esc(st.cr)}${st.formato ? ` · ${esc(st.formato)}` : ''}</small></span></span>
+      <span class="sl-plaza">${st.plaza ? `<i class="f-dot"></i>${esc(st.plaza)}` : '—'}</span>
+      <span class="sl-date"><b>${st.apertura ? fmtShort(st.apertura) : '—'}</b>${dayTxt(st)}</span>
+      <span class="sl-prog"><span class="num">${s.pct}%</span>${stackBar(s)}<small>${s.completado}/${s.aplic}</small></span>
+      <span class="sl-end">${s.bloqueado ? `<span class="flag">${ic('alert')}${s.bloqueado}</span>` : ''}${ic('chevron', 'chev')}</span>
+    </a>`; }).join('')}
+  </div>`;
   return `<div class="store-grid">
     ${rows.map(({ st, s }, i) => { const off = !mes && monthKey(st.apertura) !== hoyMes; return `<a class="store-tile ${off ? 'is-off' : 'is-month'}" href="${storeHref(st)}" data-plaza="${esc(st.plaza || '')}" title="Abrir ${esc(st.nombre)}" style="--i:${i}">
       ${s.bloqueado ? `<span class="flag tile-flag" title="${plural(s.bloqueado, 'paso bloqueado', 'pasos bloqueados')}">${ic('alert')}${s.bloqueado}</span>` : ''}
@@ -874,10 +892,17 @@ function viewPlat(st, p) {
   </section>`; })()}` : ''}
   <div class="list-bar">
     <div class="seg" role="tablist" aria-label="Mostrar">${[['todos', 'Todos'], ['pendientes', 'Por hacer'], ['terminados', 'Terminados']].map(([k, l]) => `<button type="button" role="tab" aria-selected="${f === k}" class="${f === k ? 'is-active' : ''}" data-action="task-filter" data-v="${k}">${l}<span class="seg-n">${cnt[k]}</span></button>`).join('')}</div>
-    ${p.tasks.length ? `<button class="btn btn-ghost btn-sm" type="button" data-action="${ui.open.size ? 'collapse-all' : 'expand-all'}">${ic(ui.open.size ? 'collapse' : 'expand')}${ui.open.size ? 'Contraer' : 'Expandir'}</button>` : ''}
+    ${p.tasks.length ? `<span class="lb-actions"><button class="btn btn-sm ${ui.selMode ? 'btn-primary' : 'btn-ghost'}" type="button" data-action="sel-mode">${ic('check')}${ui.selMode ? 'Seleccionando…' : 'Seleccionar varios'}</button>` : ''}${p.tasks.length ? `<button class="btn btn-ghost btn-sm" type="button" data-action="${ui.open.size ? 'collapse-all' : 'expand-all'}">${ic(ui.open.size ? 'collapse' : 'expand')}${ui.open.size ? 'Contraer' : 'Expandir'}</button></span>` : ''}
   </div>
   ${!p.tasks.length && !p.subs.length && canLoadTpl(p) ? `<div class="panel empty">${ic('list', 'empty-ic')}<h3>Esta plataforma aún no tiene pasos</h3><p>Agrégalos con el botón Agregar paso o carga la plantilla de ${esc(p.nombre)}.</p><button class="btn btn-primary" type="button" data-action="load-tpl">Cargar plantilla</button></div>` : ''}
-  <div class="task-list ${multi ? 'is-sub' : ''}" style="--c:${safeColor(p.color)}">${multi ? taskGroup(st, p, selSid, items, true, true) : groups.map(sid => taskGroup(st, p, sid, items, false)).join('')}</div>`;
+  <div class="task-list ${multi ? 'is-sub' : ''} ${ui.selMode ? 'is-selecting' : ''}" style="--c:${safeColor(p.color)}">${multi ? taskGroup(st, p, selSid, items, true, true) : groups.map(sid => taskGroup(st, p, sid, items, false)).join('')}</div>
+  ${ui.selMode ? `<div class="bulk-bar" role="toolbar" aria-label="Acciones para los pasos seleccionados">
+    <span class="bb-count"><b>${ui.sel.size}</b> ${ui.sel.size === 1 ? 'paso seleccionado' : 'pasos seleccionados'}</span>
+    <button class="btn btn-sm" type="button" data-action="sel-all">Seleccionar todos</button>
+    <span class="bb-sep"></span>
+    ${['completado', 'proceso', 'pendiente', 'na'].map(e => `<button class="btn btn-sm bb-st" type="button" data-action="bulk-status" data-v="${e}" ${ui.sel.size ? '' : 'disabled'}>${stIcon(e)}${STATUS[e].label}</button>`).join('')}
+    <button class="icon-btn" type="button" data-action="sel-mode" aria-label="Terminar selección" title="Terminar selección">${ic('x')}</button>
+  </div>` : ''}`;
 }
 function canLoadTpl(p) { const c = S.catalogo.find(x => x.id === p.pid); return !!c && (c.plantilla.length || c.subs.length); }
 function taskGroup(st, p, sid, items, multi, noHead = false) {
@@ -913,7 +938,7 @@ function taskItem(st, p, k, n) {
   ].filter(Boolean).join('');
   const isNext = ui.nextTask === k && ui.taskFilter !== 'terminados';
   const tickLabel = k.estado === 'completado' ? 'Quitar la marca de terminado' : 'Marcar como terminado';
-  return `<article class="task is-${k.estado} ${open ? 'is-open' : ''}" data-task="${esc(k.id)}">
+  return `<article class="task is-${k.estado} ${open ? 'is-open' : ''} ${ui.selMode && ui.sel.has(k.id) ? 'is-picked' : ''}" data-task="${esc(k.id)}">
     <div class="task-row">
       <button class="st-btn" type="button" data-action="toggle-done" aria-pressed="${k.estado === 'completado'}" title="${tickLabel}" aria-label="${tickLabel}: ${esc(k.titulo)}">${stIcon(k.estado)}</button>
       <button class="task-main" type="button" data-action="toggle-open" aria-expanded="${open}">
@@ -1092,7 +1117,21 @@ main.addEventListener('click', async e => {
       log(st, p.pid, `Cargó la plantilla de ${p.nombre}`); return commit();
     }
     case 'new-task-full': return openTaskDlg(st, p, null, ui.curSub || '');
-    case 'toggle-open': if (ui.open.has(k.id)) ui.open.delete(k.id); else { ui.open.add(k.id); ui.justOpened = k.id; } return render();
+    case 'sel-mode': ui.selMode = !ui.selMode; ui.sel.clear(); if (ui.selMode) ui.open.clear(); return render();
+    case 'sel-all': { const vis = $$('.task-list [data-task]', main).map(x => x.dataset.task); const all = vis.every(id => ui.sel.has(id)); vis.forEach(id => all ? ui.sel.delete(id) : ui.sel.add(id)); return render(); }
+    case 'bulk-status': {
+      const ids = [...ui.sel]; const e2 = el.dataset.v; if (!ids.length) return;
+      const before = stats(p.tasks).pct; let n = 0;
+      ids.forEach(id => { const t2 = p.tasks.find(x => x.id === id); if (!t2 || t2.estado === e2) return; t2.historial.push({ id: uid('h'), tipo: 'estado', autor: author(), de: t2.estado, a: e2, fecha: Date.now() }); t2.estado = e2; t2.actualizado = Date.now(); n++; });
+      log(st, p.pid, `Marcó ${plural(n, 'paso', 'pasos')} como ${STATUS[e2].label.toLowerCase()}`);
+      ui.selMode = false; ui.sel.clear(); commit();
+      const after = stats(p.tasks).pct;
+      if (after === 100 && before < 100) { log(st, p.pid, `${p.nombre} completó su check list`); save(); setTimeout(() => confetti(stats(allTasks(st)).pct === 100), 120); }
+      return toast(`${plural(n, 'paso actualizado', 'pasos actualizados')} a ${STATUS[e2].label.toLowerCase()}`);
+    }
+    case 'home-view': Pref.set('ap-home-view', el.dataset.v === 'lista' ? 'lista' : ''); return render();
+    case 'toggle-open': if (ui.selMode) { ui.sel.has(k.id) ? ui.sel.delete(k.id) : ui.sel.add(k.id); return render(); }
+      if (ui.open.has(k.id)) ui.open.delete(k.id); else { ui.open.add(k.id); ui.justOpened = k.id; } return render();
     case 'set-status': return setStatus(st, p, k, el.dataset.v);
     case 'edit-plat': ui.editPlat = !ui.editPlat; return render();
     case 'toggle-plat': ui.selPlat = ui.selPlat === el.dataset.pid ? null : el.dataset.pid; render(); $('.pl-detail', main)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return;
@@ -1845,7 +1884,7 @@ document.addEventListener('keydown', e => {
   else if (e.key.toLowerCase() === 'n' && route().view === 'home') { e.preventDefault(); openStoreDlg(); }
   else if (e.key.toLowerCase() === 'n' && route().view === 'plat') { e.preventDefault(); $('.quick-add input')?.focus(); }
 });
-window.addEventListener('hashchange', () => { ui.taskFilter = 'todos'; ui.editPlat = false; ui.selPlat = null; render(); });
+window.addEventListener('hashchange', () => { ui.taskFilter = 'todos'; ui.editPlat = false; ui.selPlat = null; ui.selMode = false; ui.sel.clear(); render(); });
 window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.set('kv', 'state', S).catch(() => {}); });
 
 /* ---------- Inicio ---------- */

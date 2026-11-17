@@ -6,6 +6,9 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 
 ## [Sin publicar]
 
+- Tiendas en **Tarjetas o Lista** (la lista muestra plaza, apertura, avance y bloqueos en una fila; la elección se recuerda).
+- **Seleccionar varios pasos** y marcarlos juntos como completados, en proceso, pendientes o no aplica.
+- Las ayudas en pantalla se ocultan solas después de verlas en 3 sesiones.
 - Auditoría UI/UX (docs/auditoria-ui-ux.md) y sus correcciones: contraste AA en textos secundarios en ambos temas, check list de plataforma más arriba en celular (de 1,582 a 919 px), tiendas abiertas sin alarma falsa, animaciones que no se repiten al buscar, ventanas tipo hoja en celular, áreas táctiles mínimas de 28 px y barra lateral con fecha y color de plaza.
 - Animaciones y efectos en toda la app: entrada escalonada al cambiar de pantalla, porcentajes que suben desde 0, barras que se llenan, efectos al pasar el cursor y al presionar, paso completado con destello y palomita animada, detalle del paso que se despliega suave, confeti al completar una plataforma o la tienda, encabezado de tienda con el color de su plaza, menús y ventanas con transición y avisos con ícono. Respeta la opción de reducir movimiento.
 - Check list de **Procesos Comerciales** (9 pasos de aperturas POS con su detalle).

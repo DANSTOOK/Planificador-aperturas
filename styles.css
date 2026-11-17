@@ -1196,3 +1196,59 @@ a.store-tile:hover .tile-ic img { animation: store-float 2.4s ease-in-out infini
   .sub-banner p { display: none; }
   .meta-strip .ms-prog { min-width: 180px; }
 }
+
+
+/* Tiendas en lista */
+.f-foot { grid-template-columns: minmax(0, 340px) minmax(0, 1fr) auto; }
+.view-toggle button { gap: 6px; }
+.view-toggle .ic { width: 14px; height: 14px; }
+.store-list { overflow: hidden; }
+.sl-row { display: grid; grid-template-columns: minmax(220px, 1.6fr) minmax(130px, .8fr) 150px minmax(180px, 1.2fr) 70px; gap: 16px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--line); transition: background .15s; }
+.sl-row:first-child { border-top: 0; }
+.sl-head { background: var(--surface-2); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding-top: 9px; padding-bottom: 9px; }
+a.sl-row:hover { background: color-mix(in srgb, var(--glow, var(--accent)) 6%, var(--surface)); }
+a.sl-row:hover .chev { transform: translateX(3px); color: var(--ink); }
+.sl-row.is-off { opacity: .55; filter: grayscale(.8); }
+.sl-row.is-off:hover { opacity: 1; filter: none; }
+.sl-name { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.sl-name img { width: 52px; height: 29px; object-fit: contain; flex: none; }
+.sl-name > span { display: flex; flex-direction: column; min-width: 0; }
+.sl-name b { font-size: 14.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-name small { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+.sl-plaza { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-2); }
+.sl-date { display: flex; flex-direction: column; font-size: 13px; }
+.sl-prog { display: grid; grid-template-columns: 40px 1fr 44px; gap: 10px; align-items: center; }
+.sl-prog small { font-family: var(--mono); font-size: 11.5px; color: var(--muted); text-align: right; }
+.sl-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.main.route-in .sl-row { animation: rise .4s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(min(var(--i, 0), 14) * 30ms); }
+
+/* Seleccionar varios pasos */
+.lb-actions { display: inline-flex; gap: 6px; align-items: center; }
+.task-list.is-selecting .task-main { cursor: copy; }
+.task-list.is-selecting .task-row { position: relative; }
+.task-list.is-selecting .task-n { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--line-2); display: grid; place-items: center; color: transparent; padding: 0; font-size: 0; }
+.task.is-picked .task-n { background: var(--accent); border-color: var(--accent); }
+.task.is-picked .task-n::after { content: '✓'; color: #fff; font-size: 13px; font-weight: 700; }
+.task.is-picked { background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
+.bulk-bar { position: sticky; bottom: 16px; z-index: 25; margin-top: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; background: var(--ink); color: var(--bg); border-radius: 14px; box-shadow: var(--shadow-dlg); animation: rise .3s cubic-bezier(.2, .8, .2, 1); }
+.bb-count { font-size: 13.5px; margin-right: 4px; }
+.bb-count b { font-size: 16px; }
+.bulk-bar .btn { background: color-mix(in srgb, var(--bg) 12%, var(--ink)); border-color: transparent; color: var(--bg); }
+.bulk-bar .btn:hover { background: color-mix(in srgb, var(--bg) 22%, var(--ink)); }
+.bulk-bar .btn:disabled { opacity: .45; pointer-events: none; }
+.bulk-bar .st-ic { width: 15px; height: 15px; }
+.bulk-bar .icon-btn { color: var(--bg); margin-left: auto; }
+.bulk-bar .icon-btn:hover { background: color-mix(in srgb, var(--bg) 15%, var(--ink)); }
+.bb-sep { width: 1px; height: 22px; background: color-mix(in srgb, var(--bg) 25%, transparent); }
+@media (max-width: 860px) {
+  .f-foot { grid-template-columns: minmax(0, 1fr) auto; }
+  .f-foot .search { grid-column: 1 / -1; }
+  .sl-row { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; }
+  .sl-head { display: none; }
+  .sl-plaza, .sl-date { grid-column: 1; font-size: 12.5px; }
+  .sl-date { flex-direction: row; gap: 8px; }
+  .sl-prog { grid-column: 1 / -1; }
+  .sl-end { grid-column: 2; grid-row: 1; }
+  .bulk-bar { bottom: 8px; }
+  .bb-sep { display: none; }
+}

@@ -52,9 +52,9 @@ Fecha: 16 nov 2026 · Versión revisada: 1.0.0 + cambios sin publicar
 
 | # | Idea | Por qué |
 |---|---|---|
-| D1 | Vista compacta (lista) en Tiendas además de las tarjetas. | Con 13 aperturas en un mes, las tarjetas grandes obligan a bajar mucho; una lista ayuda a quien revisa todo. |
-| D2 | El aviso de ayuda de la plataforma ocupa 4 líneas en celular. | Se puede ocultar con "x", pero podría mostrarse solo la primera vez que se abre la app. |
-| D3 | Atajos para marcar varios pasos a la vez (selección múltiple). | Útil cuando un área termina varios pasos juntos. |
+| D1 | ✅ Hecho: vista en Lista en Tiendas además de las tarjetas. | Con 13 aperturas en un mes, las tarjetas grandes obligan a bajar mucho; una lista ayuda a quien revisa todo. |
+| D2 | ✅ Hecho: las ayudas se ocultan solas tras verlas en 3 sesiones. | Se puede ocultar con "x", pero podría mostrarse solo la primera vez que se abre la app. |
+| D3 | ✅ Hecho: “Seleccionar varios” para cambiar el estatus de varios pasos juntos. | Útil cuando un área termina varios pasos juntos. |
 | D4 | Datos compartidos en tiempo real. | Hoy el avance vive en el navegador de cada persona; es la mayor limitante de uso entre plataformas (no es visual, pero afecta toda la experiencia). |
 
 ## Lo que ya estaba bien
