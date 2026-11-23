@@ -4,7 +4,9 @@ Cada versión publicada tiene su etiqueta (`vX.Y.Z`) y su release en GitHub con 
 
 Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El texto de esa sección se usa como notas del release.
 
-## [Sin publicar]
+## [1.1.0] - 2026-11-23
+
+Versión para pruebas con usuarios de la Región Tijuana: 4 plazas y 24 tiendas, check lists reales de TI, Precios y Promociones, Seguimiento Abasto, Procesos Comerciales y Food Service, nuevo diseño, resumen por correo y sitio publicado en GitHub Pages.
 
 - Tiendas en **Tarjetas o Lista** (la lista muestra plaza, apertura, avance y bloqueos en una fila; la elección se recuerda).
 - **Seleccionar varios pasos** y marcarlos juntos como completados, en proceso, pendientes o no aplica.
