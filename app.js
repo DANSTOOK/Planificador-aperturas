@@ -215,9 +215,16 @@ const ui = { selMode: false, sel: new Set(), tipsSeen: new Set(), plaza: '', hom
 let saveTimer = 0;
 function save() {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => DB.set('kv', 'state', S).catch(() => toast('No se pudieron guardar los cambios', true)), 60);
+  saveTimer = setTimeout(() => DB.set('kv', 'state', S).then(savedPing).catch(() => toast('No se pudieron guardar los cambios', true)), 60);
 }
 function commit() { save(); render(); }
+/* Aviso discreto "Guardado" después de cada cambio */
+let savedTimer = 0;
+function savedPing() {
+  if (!ui.booted) return;
+  const el = $('#savedPill'); el.classList.add('show');
+  clearTimeout(savedTimer); savedTimer = setTimeout(() => el.classList.remove('show'), 1400);
+}
 
 function me() {
   const n = Pref.get('ap-user').trim(); if (!n) return '';
@@ -489,6 +496,7 @@ function render() {
     if (ta) { ta.placeholder = '¿Qué lo está bloqueando y quién debe resolverlo?'; ta.focus(); ta.closest('.task').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
     ui.focusComposer = null;
   }
+  if (ui.scrollCal) { ui.scrollCal = false; setTimeout(() => { const el = $('.sv-more[data-toggle="openCrono"]', main); if (!el) return; const off = ($('.store-nav', main)?.getBoundingClientRect().bottom || 0) + 10; window.scrollTo(0, el.getBoundingClientRect().top + scrollY - off); }, 350); }
 }
 
 /* Tienda abierta: acceso directo a su resumen y a cada plataforma */
@@ -506,6 +514,8 @@ function sideCurrent(st, pid) {
   </div>`;
 }
 function renderSidebar(r) {
+  const myPid = Pref.get('ap-user-plat').split(':')[0];
+  $$('.bn').forEach(b => b.classList.toggle('is-active', (b.dataset.bn === 'home' && r.view === 'home') || (b.dataset.bn === 'mine' && r.view === 'plat' && !!myPid && r.pid === myPid)));
   $$('.nav').forEach(n => n.classList.toggle('is-active', (n.dataset.nav === 'tpl' && r.view === 'tpl') || (n.dataset.nav === 'home' && r.view === 'home')));
   $('#countStores').textContent = S.tiendas.length;
   const cur = r.tid ? getStore(r.tid) : null;
@@ -565,6 +575,9 @@ const ICONS = {
   clip: '<path d="m19.5 11.5-7.6 7.6a4.6 4.6 0 0 1-6.5-6.5l7.6-7.6a3.1 3.1 0 0 1 4.4 4.4l-7.6 7.6a1.5 1.5 0 0 1-2.2-2.2l7-7"/>',
   check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
   phone: '<path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A16 16 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/>',
+  camera: '<path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3v10.5H4z"/><circle cx="12" cy="13.5" r="3.4"/>',
+  mic: '<rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5"/>',
+  filter: '<path d="M4 6h16M7 12h10M10 18h4"/>',
   lock: '<rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
   mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4.5 7 7.5 6 7.5-6"/>',
   list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r=".9" fill="currentColor"/><circle cx="4.8" cy="12" r=".9" fill="currentColor"/><circle cx="4.8" cy="17.5" r=".9" fill="currentColor"/>',
@@ -633,7 +646,9 @@ function homeResult() {
   const n = homeRows().length, total = S.tiendas.length;
   const { mes, plaza, q } = homeFilters();
   const partes = [plaza ? `Plaza ${esc(plaza)}` : 'todas las plazas', mes ? `abren en ${monthName(mes).toLowerCase()}` : 'todos los meses'];
-  return `<b>${n}</b> de ${plural(total, 'tienda', 'tiendas')} · ${partes.join(' · ')}${q ? ' · con búsqueda' : ''}${plaza || ui.homeMonth === 'all' || ui.homeMonth && ui.homeMonth !== monthKey(todayISO()) || q ? ` <button class="link-btn" type="button" data-action="clear-filters">Restablecer</button>` : ''}`;
+  void partes;
+  const chips = [plaza && `<button type="button" class="af-chip" data-action="plaza-filter" data-v="" data-plaza="${esc(plaza)}" title="Quitar filtro"><i class="f-dot"></i>${esc(plaza)}${ic('x')}</button>`, mes && `<button type="button" class="af-chip" data-action="home-month" data-v="all" title="Quitar filtro">${ic('calendar')}${monthName(mes)}${ic('x')}</button>`].filter(Boolean).join('');
+  return `<span class="fr-count"><b>${n}</b> de ${plural(total, 'tienda', 'tiendas')}${q ? ' con tu búsqueda' : ''}</span>${chips ? `<span class="af-chips">${chips}</span>` : '<span class="fr-all">Todas las plazas y meses</span>'}${plaza || ui.homeMonth === 'all' || ui.homeMonth && ui.homeMonth !== monthKey(todayISO()) || q ? ` <button class="link-btn" type="button" data-action="clear-filters">Restablecer</button>` : ''}`;
 }
 
 function viewHome() {
@@ -653,15 +668,21 @@ function viewHome() {
   const enMes = (m, p) => S.tiendas.filter(x => (!m || monthKey(x.apertura) === m) && (!p || x.plaza === p)).length;
   return `
   <header class="home-head">
-    <h1>Aperturas</h1>
-    <div class="hh-stats" aria-label="Resumen">
-      <span class="hs" title="Tiendas que aún no abren y tienen pasos pendientes"><b>${curso.length}</b>por abrir</span>
-      <span class="hs" title="${prox ? `${esc(prox.st.nombre)} · ${fmtDate(prox.st.apertura)}` : 'Sin aperturas próximas'}"><b>${prox ? (dProx === 0 ? 'Hoy' : `${dProx} d`) : '—'}</b>${prox ? `próxima: ${esc(prox.st.nombre.replace(/^OXXO\s+/i, ''))}` : 'próxima apertura'}</span>
-      <span class="hs ${bloq ? 'is-alert' : ''}"><b>${bloq}</b>${bloq === 1 ? 'paso bloqueado' : 'pasos bloqueados'}</span>
+    <div class="hh-title">
+      <h1>Aperturas</h1>
+      <p>${(() => { const hr = new Date().getHours(); const n = Pref.get('ap-user').trim().split(/\s+/)[0]; return `${hr < 12 ? 'Buenos días' : hr < 19 ? 'Buenas tardes' : 'Buenas noches'}${n ? `, ${esc(n)}` : ''}`; })()} · ${fmtDate(t, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
     </div>
-    <button class="btn btn-primary btn-sm" data-action="new-store" type="button">${ic('plus')}Nueva tienda</button>
+    <button class="btn btn-primary hh-new" data-action="new-store" type="button">${ic('plus')}Nueva tienda</button>
+    <div class="hh-cards" aria-label="Resumen">
+      <div class="hc" title="Tiendas que aún no abren y tienen pasos pendientes"><span class="hc-ic">${ic('store')}</span><span class="hc-txt"><b>${curso.length}</b><small>${curso.length === 1 ? 'tienda por abrir' : 'tiendas por abrir'}</small></span></div>
+      ${prox ? `<a class="hc hc-link" href="${storeHref(prox.st)}" data-plaza="${esc(prox.st.plaza || '')}" title="Abrir ${esc(prox.st.nombre)}"><span class="hc-ic">${ic('calendar')}</span><span class="hc-txt"><b>${dProx === 0 ? 'Hoy' : dProx === 1 ? 'Mañana' : `En ${dProx} días`}</b><small>Próxima: ${esc(prox.st.nombre.replace(/^OXXO\s+/i, ''))} · ${fmtShort(prox.st.apertura)}</small></span>${ic('chevron', 'hc-go')}</a>` : `<div class="hc"><span class="hc-ic">${ic('calendar')}</span><span class="hc-txt"><b>—</b><small>Sin aperturas próximas</small></span></div>`}
+      <div class="hc ${bloq ? 'is-alert' : 'is-ok'}"><span class="hc-ic">${ic(bloq ? 'alert' : 'check')}</span><span class="hc-txt"><b>${bloq || 'Sin bloqueos'}</b><small>${bloq ? (bloq === 1 ? 'paso bloqueado' : 'pasos bloqueados') : 'todo avanza'}</small></span></div>
+    </div>
   </header>
+  ${ui.filtersOpen ? '<div class="f-backdrop" data-action="filters-close"></div>' : ''}
   <section class="filters" aria-label="Filtros">
+    <div class="f-sheet ${ui.filtersOpen ? 'is-open' : ''}">
+    <div class="f-sheet-head"><b>Filtrar tiendas</b><button class="icon-btn" type="button" data-action="filters-close" aria-label="Cerrar filtros">${ic('x')}</button></div>
     <div class="f-row">
       <span class="f-label">${ic('store')}Plaza</span>
       <div class="f-chips" role="group" aria-label="Plaza">
@@ -677,7 +698,10 @@ function viewHome() {
         ${meses.map(m => { const [y, mm] = m.split('-').map(Number); const n = enMes(m, plaza); return `<button type="button" class="f-chip f-month ${mes === m ? 'is-active' : ''} ${m === hoyMes ? 'is-now' : ''} ${n ? '' : 'is-empty'}" data-action="home-month" data-v="${m}" title="${monthName(m)}${m === hoyMes ? ' (mes actual)' : ''}"><span class="fm-name">${MES_CORTO[mm - 1]}<small>${String(y).slice(2)}</small></span><span class="f-n">${n}</span></button>`; }).join('')}
       </div>
     </div>
+    <div class="f-sheet-foot"><button class="btn" type="button" data-action="clear-filters">Restablecer</button><button class="btn btn-primary" type="button" data-action="filters-close">Ver ${plural(homeRows().length, 'tienda', 'tiendas')}</button></div>
+    </div>
     <div class="f-row f-foot">
+      <button class="btn btn-sm f-open" type="button" data-action="filters-open">${ic('filter')}Filtrar${(() => { const n = (plaza ? 1 : 0) + (ui.homeMonth && ui.homeMonth !== monthKey(todayISO()) ? 1 : 0); return n ? `<b class="f-badge">${n}</b>` : ''; })()}<span class="f-open-sub">${plaza ? esc(plaza) : 'Todas las plazas'} · ${mes ? monthName(mes) : 'Todos los meses'}</span></button>
       <label class="search">${ic('search')}<input id="q" type="search" placeholder="Buscar por nombre o CR" value="${esc(ui.q)}" autocomplete="off" aria-label="Buscar tienda"></label>
       <p class="f-result" id="fResult" aria-live="polite">${homeResult()}</p>
       <div class="seg view-toggle" role="group" aria-label="Vista">${[['tarjetas', 'store', 'Tarjetas'], ['lista', 'list', 'Lista']].map(([k, i, l]) => `<button type="button" class="${homeView() === k ? 'is-active' : ''}" data-action="home-view" data-v="${k}" title="Ver como ${l.toLowerCase()}">${ic(i)}${l}</button>`).join('')}</div>
@@ -1134,6 +1158,8 @@ function taskBody(k) {
           ${pend.length ? `<div class="thumbs">${pend.map(x => `<div class="thumb sm"><img src="${x.data}" alt=""><button class="rm" type="button" data-action="rm-pending" data-id="${x.id}" aria-label="Quitar">${ic('x')}</button></div>`).join('')}</div>` : ''}
           <div class="composer-foot">
             <label class="btn btn-ghost btn-sm" title="Adjuntar foto (también puedes pegarla con Ctrl+V)">${ic('clip')}Adjuntar<input type="file" accept="image/*" multiple data-change="comment-img" hidden></label>
+            <label class="btn btn-ghost btn-sm cam-only" title="Tomar foto con la cámara">${ic('camera')}Foto<input type="file" accept="image/*" capture="environment" data-change="comment-img" hidden></label>
+            ${SpeechRec ? `<button class="btn btn-ghost btn-sm dictate-btn" type="button" data-action="dictate" title="Dictar el comentario con tu voz">${ic('mic')}<span>Dictar</span></button>` : ''}
             <span class="as">Como ${esc(author())}</span>
             <button class="btn btn-primary btn-sm" type="submit">Comentar</button>
           </div>
@@ -1143,7 +1169,7 @@ function taskBody(k) {
     <div class="tb-sec">
       <span class="tb-label">Fotos</span>
       <div class="gallery">${k.imagenes.map((id, i) => `<div class="thumb"><button class="thumb-btn" type="button" data-action="view-img" data-i="${i}" aria-label="Ver foto ${i + 1}"><img data-img="${esc(id)}" alt=""></button><button class="rm" type="button" data-action="rm-task-img" data-id="${esc(id)}" aria-label="Quitar foto">${ic('x')}</button></div>`).join('')}
-        <label class="thumb add" title="Subir foto">${ic('image')}<span>Subir</span><input type="file" accept="image/*" multiple data-change="task-img" hidden></label></div>
+        <label class="thumb add cam-only" title="Tomar foto">${ic('camera')}<span>Cámara</span><input type="file" accept="image/*" capture="environment" data-change="task-img" hidden></label><label class="thumb add" title="Subir foto">${ic('image')}<span>Subir</span><input type="file" accept="image/*" multiple data-change="task-img" hidden></label></div>
     </div>
     <div class="tb-foot">
       <span class="tb-facts"><span>${ic('clock')}Actualizado ${rel(k.actualizado)}</span></span>
@@ -1245,6 +1271,9 @@ main.addEventListener('click', async e => {
     case 'clear-filters': ui.plaza = ''; ui.homeMonth = ''; ui.q = ''; return render();
     case 'month-scope': ui.monthScope = el.dataset.v; return render();
     case 'plaza-filter': ui.plaza = el.dataset.v; return render();
+    case 'filters-open': ui.filtersOpen = true; return render();
+    case 'filters-close': ui.filtersOpen = false; return render();
+    case 'dictate': return dictate(el);
     case 'cal-nav': {
       const cur = ui.calMonth[st.id] || monthKey(st.apertura) || monthKey(todayISO());
       ui.calMonth[st.id] = el.dataset.d === 'open' ? monthKey(st.apertura) : addMonths(cur, Number(el.dataset.d)); return render();
@@ -1673,7 +1702,8 @@ function openUserDlg(note) {
 $('#userForm').addEventListener('submit', e => {
   if (e.submitter?.value !== 'ok') return;
   Pref.set('ap-user', e.target.nombre.value.trim()); Pref.set('ap-user-plat', e.target.plataforma.value);
-  render(); toast('Listo, ya puedes comentar');
+  render();
+  if (ui.afterUser === 'mine') { ui.afterUser = null; goMine(); } else toast('Listo, ya puedes comentar');
 });
 
 /* ---------- Confirmación, visor y avisos ---------- */
@@ -2039,6 +2069,76 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') $$('details.menu[open]').forEach(d => { d.open = false; }); });
 
+/* ---------- Celular: barra inferior, Más, instalar y dictado ---------- */
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+let recog = null;
+function dictate(btn) {
+  const ta = btn.closest('form')?.querySelector('textarea'); if (!ta) return;
+  if (recog) { recog.stop(); return; }
+  try { recog = new SpeechRec(); } catch { return toast('Tu navegador no permite dictar', true); }
+  recog.lang = 'es-MX'; recog.interimResults = true; recog.continuous = true;
+  const base = ta.value.trim() ? ta.value.replace(/\s*$/, ' ') : '';
+  recog.onresult = e => { let t = ''; for (const r of e.results) t += r[0].transcript; ta.value = base + t; ta.dispatchEvent(new Event('input', { bubbles: true })); };
+  recog.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('Permite el micrófono para dictar', true); };
+  recog.onend = () => { recog = null; btn.classList.remove('is-rec'); btn.querySelector('span').textContent = 'Dictar'; };
+  btn.classList.add('is-rec'); btn.querySelector('span').textContent = 'Escuchando… toca para terminar';
+  recog.start();
+}
+/* Tienda que conviene abrir: la que estás viendo o la próxima en abrir */
+function targetStore(pid = '') {
+  const r = route(); const cur = r.tid && getStore(r.tid);
+  if (cur && (!pid || getPlat(cur, pid))) return cur;
+  const t = todayISO(); const c = sortedStores().filter(x => !pid || getPlat(x, pid));
+  return c.find(x => x.apertura && x.apertura >= t) || c[c.length - 1];
+}
+function goMine() {
+  const [pid, sid] = Pref.get('ap-user-plat').split(':');
+  if (!pid) { ui.afterUser = 'mine'; return openUserDlg('Elige tu plataforma (y tu subdepartamento) para abrir tu check list con un toque desde “Mi plataforma”.'); }
+  const st = targetStore(pid); const p = st && getPlat(st, pid);
+  if (!p) return toast('Ninguna tienda tiene tu plataforma', true);
+  if (isLocked(p)) return toast(`${p.nombre} aún no está habilitada`, true);
+  if (sid && p.subs.some(x => x.id === sid)) ui.subSel[pid] = sid;
+  location.hash = platHref(st, p);
+}
+function goCalendar() {
+  const st = targetStore(); if (!st) return toast('Aún no hay tiendas', true);
+  ui.openCrono = true;
+  ui.scrollCal = true;
+  if (location.hash === storeHref(st)) render(); else location.hash = storeHref(st);
+}
+let installEvt = null;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
+window.addEventListener('appinstalled', () => { installEvt = null; toast('App instalada. Búscala en tu pantalla de inicio.'); });
+function openMore() {
+  $('#moreInstall').hidden = standalone() || !(installEvt || isIOS);
+  const n = Pref.get('ap-user').trim(); $('#moreUser').textContent = n ? `${n}${userArea() ? ` · ${userArea()}` : ''}` : 'Tu nombre y plataforma';
+  const th = Pref.get('ap-theme'); $('#moreTheme').textContent = `Ahora: ${th === 'dark' ? 'oscuro' : th === 'light' ? 'claro' : 'automático'}`;
+  $('#moreVer').textContent = $('#appVersion').textContent;
+  $('#moreDlg').showModal();
+}
+$('.bottom-nav').addEventListener('click', e => {
+  const b = e.target.closest('[data-bn]'); if (!b) return;
+  const k = b.dataset.bn;
+  if (k === 'mine') goMine(); else if (k === 'cal') goCalendar(); else if (k === 'more') openMore();
+});
+$('#moreDlg').addEventListener('click', async e => {
+  const b = e.target.closest('[data-more]'); if (!b) return;
+  const k = b.dataset.more; $('#moreDlg').close();
+  if (k === 'install') {
+    if (installEvt) { installEvt.prompt(); await installEvt.userChoice.catch(() => {}); installEvt = null; }
+    else toast('En iPhone: toca Compartir y luego “Agregar a inicio”.');
+  }
+  if (k === 'user') openUserDlg();
+  if (k === 'new') openStoreDlg();
+  if (k === 'tpl') location.hash = '#/plantillas';
+  if (k === 'export') $('#exportAll').click();
+  if (k === 'import') $('#importInput').click();
+  if (k === 'theme') { $('#themeBtn').click(); }
+  if (k === 'help') openHelp();
+});
+
 /* ---------- Barra lateral ---------- */
 $('#newStoreSide').addEventListener('click', () => openStoreDlg());
 $('#sideStoresBtn').addEventListener('click', () => { Pref.set('ap-side-stores', Pref.get('ap-side-stores') === '1' ? '' : '1'); renderSidebar(route()); if (Pref.get('ap-side-stores')) $('#sideSearch').focus(); });
@@ -2062,7 +2162,7 @@ document.addEventListener('keydown', e => {
   else if (e.key.toLowerCase() === 'n' && route().view === 'home') { e.preventDefault(); openStoreDlg(); }
   else if (e.key.toLowerCase() === 'n' && route().view === 'plat') { e.preventDefault(); $('.quick-add input')?.focus(); }
 });
-window.addEventListener('hashchange', () => { ui.taskFilter = 'todos'; ui.editPlat = false; ui.selPlat = null; ui.selMode = false; ui.sel.clear(); render(); });
+window.addEventListener('hashchange', () => { ui.filtersOpen = false; ui.taskFilter = 'todos'; ui.editPlat = false; ui.selPlat = null; ui.selMode = false; ui.sel.clear(); render(); });
 window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.set('kv', 'state', S).catch(() => {}); });
 
 /* ---------- Inicio ---------- */
@@ -2184,6 +2284,9 @@ window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.s
   if (!Pref.get('ap-help-seen')) openHelp();
   if (!DB.persistent) toast('Este navegador no permite guardar imágenes; exporta un respaldo antes de cerrar.', true);
   navigator.storage?.persist?.().catch(() => {});
+  ui.booted = true;
+  // App instalable y sin internet (en el sitio publicado; en local solo con ?sw)
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || new URLSearchParams(location.search).has('sw'))) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
 /* Altura real de la barra superior en celular, para que la barra de la tienda quede justo debajo */
 if ('ResizeObserver' in window) new ResizeObserver(([e]) => document.documentElement.style.setProperty('--topbar', `${Math.round(e.target.getBoundingClientRect().height)}px`)).observe($('.sidebar'));

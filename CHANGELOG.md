@@ -4,6 +4,16 @@ Cada versión publicada tiene su etiqueta (`vX.Y.Z`) y su release en GitHub con 
 
 Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El texto de esa sección se usa como notas del release.
 
+## [Sin publicar]
+
+- **App instalable**: se puede agregar a la pantalla de inicio del celular con su ícono y **abre sin internet** (el avance ya se guarda en el teléfono).
+- **Barra inferior en celular**: Tiendas, **Mi plataforma** (abre directo tu check list en la próxima apertura), **Calendario** (el de la próxima apertura) y **Más** (nombre, nueva tienda, plantillas, respaldos, tema, ayuda e instalar).
+- **Fotos y comentarios desde la tienda**: botón **Foto** que abre la cámara y botón **Dictar** para escribir el comentario con la voz.
+- **Celular más cómodo**: tarjetas de tienda compactas (4–5 por pantalla), filtros de plaza y mes en una hoja que sube desde abajo, botones de al menos 44 px, letra más grande en los pasos y pestañas de plataforma más compactas.
+- **Inicio renovado**: saludo con la fecha, tarjetas de resumen (por abrir, próxima apertura con acceso directo y bloqueos), meses como línea de tiempo y filtros activos que se quitan con un toque.
+- Aviso discreto **“Guardado”** después de cada cambio, estados vacíos más claros y más contraste en tema oscuro en celular.
+- El nombre ya es opcional al elegir tu plataforma; solo se pide para comentar.
+
 ## [1.2.0] - 2026-11-23
 
 Responsables por área, check list de Ejecución Comercial, edición y navegación más sencillas, y avance enfocado en TI y Comercial.

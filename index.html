@@ -2,13 +2,20 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="light dark" />
   <title>Aperturas | Check list por plataforma</title>
   <script>try{const t=localStorage.getItem('ap-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#1c1b18" />
+  <link rel="icon" type="image/png" href="assets/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Aperturas" />
 </head>
 <body>
   <div class="app">
@@ -203,7 +210,7 @@
       <header class="dlg-head"><h2 id="userDlgTitle">¿Quién está actualizando?</h2><button class="x" value="cancel" formnovalidate aria-label="Cerrar"><span data-ic="x"></span></button></header>
       <div class="dlg-body">
         <p class="dlg-note" id="userNote">Tu nombre y plataforma aparecen en los comentarios y cambios de estatus para que todos sepan quién avanzó cada paso.</p>
-        <label class="field">Nombre<input name="nombre" required autocomplete="name" placeholder="Ej. Ana López"></label>
+        <label class="field"><span>Nombre <span class="opt">(para comentar)</span></span><input name="nombre" autocomplete="name" placeholder="Ej. Ana López"></label>
         <label class="field">Mi plataforma<select name="plataforma"></select></label>
       </div>
       <footer class="dlg-foot"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn btn-primary" value="ok">Guardar</button></footer>
@@ -226,6 +233,33 @@
     <p class="lb-count" id="lbCount"></p>
   </dialog>
 
+  <!-- Navegación inferior (celular) -->
+  <nav class="bottom-nav" aria-label="Navegación">
+    <a class="bn" data-bn="home" href="#/"><span data-ic="store"></span><span>Tiendas</span></a>
+    <button class="bn" data-bn="mine" type="button"><span data-ic="user"></span><span>Mi plataforma</span></button>
+    <button class="bn" data-bn="cal" type="button"><span data-ic="calendar"></span><span>Calendario</span></button>
+    <button class="bn" data-bn="more" type="button"><span data-ic="more"></span><span>Más</span></button>
+  </nav>
+
+  <!-- Más opciones (celular) -->
+  <dialog id="moreDlg" class="dlg" aria-labelledby="moreTitle">
+    <form method="dialog">
+      <header class="dlg-head"><h2 id="moreTitle">Más opciones</h2><button class="x" value="cancel" aria-label="Cerrar"><span data-ic="x"></span></button></header>
+      <div class="dlg-body more-list">
+        <button type="button" class="more-item is-hl" data-more="install" id="moreInstall" hidden><span data-ic="download"></span><span><b>Instalar la app</b><small>Queda como ícono en tu pantalla de inicio y abre sin señal</small></span></button>
+        <button type="button" class="more-item" data-more="user"><span data-ic="user"></span><span><b id="moreUser">Tu nombre y plataforma</b><small>Para comentar y para el botón Mi plataforma</small></span></button>
+        <button type="button" class="more-item" data-more="new"><span data-ic="plus"></span><span><b>Nueva tienda</b><small>Dar de alta una apertura</small></span></button>
+        <button type="button" class="more-item" data-more="tpl"><span data-ic="template"></span><span><b>Plantillas</b><small>Pasos base de cada plataforma</small></span></button>
+        <button type="button" class="more-item" data-more="export"><span data-ic="download"></span><span><b>Guardar copia de todo</b><small>Archivo con todas las tiendas</small></span></button>
+        <button type="button" class="more-item" data-more="import"><span data-ic="upload"></span><span><b>Recibir avance</b><small>Juntar el archivo que te enviaron</small></span></button>
+        <button type="button" class="more-item" data-more="theme"><span data-ic="auto"></span><span><b>Cambiar tema</b><small id="moreTheme">Claro, oscuro o automático</small></span></button>
+        <button type="button" class="more-item" data-more="help"><span data-ic="help"></span><span><b>Cómo se usa</b><small>Guía rápida</small></span></button>
+        <p class="more-ver" id="moreVer"></p>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="saved-pill" id="savedPill" aria-hidden="true"><span data-ic="check"></span>Guardado</div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="version.js"></script>
   <script src="data/base.js"></script>
