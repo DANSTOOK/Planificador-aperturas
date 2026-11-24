@@ -13,7 +13,7 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 - **Inicio renovado**: saludo con la fecha, tarjetas de resumen (por abrir, próxima apertura con acceso directo y bloqueos), meses como línea de tiempo y filtros activos que se quitan con un toque.
 - Aviso discreto **“Guardado”** después de cada cambio, estados vacíos más claros y más contraste en tema oscuro en celular.
 - El nombre ya es opcional al elegir tu plataforma; solo se pide para comentar.
-- **Tienda en 3D**: en cada tienda, el botón “Ver en 3D” abre la tienda OXXO en 3D para girarla y acercarla (visor de Sketchfab, modelo de ChicaliModz; necesita internet).
+- **Tiendas en 3D**: las tarjetas de tienda muestran una tienda OXXO en 3D que gira al pasar el cursor, y en cada tienda “Ver en 3D” la abre en grande para girarla y acercarla. Funciona sin internet; en celular las tarjetas usan la imagen para ir rápido. Modelo “OXXO” de ForgotMyPassword (Sketchfab, licencia CC BY 4.0).
 
 ## [1.2.0] - 2026-11-23
 

@@ -730,7 +730,7 @@ function homeCards() {
     ${rows.map(({ st, s }, i) => { const off = !mes && monthKey(st.apertura) !== hoyMes; return `<a class="store-tile ${off ? 'is-off' : 'is-month'}" href="${storeHref(st)}" data-plaza="${esc(st.plaza || '')}" title="Abrir ${esc(st.nombre)}" style="--i:${i}">
       ${s.bloqueado ? `<span class="flag tile-flag" title="${plural(s.bloqueado, 'paso bloqueado', 'pasos bloqueados')}">${ic('alert')}${s.bloqueado}</span>` : ''}
       ${st.plaza ? `<span class="tile-plaza">${ic('store')}Plaza ${esc(st.plaza)}</span>` : ''}
-      <div class="tile-top"><span class="tile-ic"><img src="assets/tienda.png" alt=""></span></div>
+      <div class="tile-top"><span class="tile-ic">${storeModel('mv-tile')}<img class="tile-png" src="assets/tienda.png" alt=""></span></div>
       <div class="tile-id"><h3 class="tile-name">${esc(st.nombre)}</h3><span class="tile-cr">CR ${esc(st.cr)}</span></div>
       <div class="tile-stats">
         <div class="ts"><span class="ts-l">Avance</span><span class="ts-v ${s.aplic && s.pct === 100 ? 'is-done' : ''}">${s.pct}<small>%</small></span></div>
@@ -770,7 +770,7 @@ function viewStore(st) {
   ${storeNav(st)}
   <section class="sv-hero" data-plaza="${esc(st.plaza || '')}">
     <button class="sv-3d" type="button" data-action="view-3d" title="Ver la tienda en 3D" aria-label="Ver la tienda en 3D">
-      <img class="sv-img" src="assets/tienda.png" alt="">
+      ${storeModel('mv-hero')}
       <span class="sv-3d-badge">${ic('cube')}Ver en 3D</span>
     </button>
     <div class="sv-main">
@@ -2074,22 +2074,23 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') $$('details.menu[open]').forEach(d => { d.open = false; }); });
 
-/* ---------- Tienda en 3D (visor oficial de Sketchfab; el modelo no se descarga) ---------- */
-const MODEL_3D = 'a22bbbbbe79c45638d1a990d1036ebc1';
+/* ---------- Tienda en 3D ----------
+   Modelo "OXXO" de ForgotMyPassword (Sketchfab, CC BY 4.0), guardado en assets/tienda.glb.
+   Se muestra con <model-viewer>; si el navegador no puede, queda la imagen tienda.png. */
+/* Modelo para tarjetas y encabezado: sin controles, gira solo al pasar el cursor */
+const storeModel = (cls = '') => `<model-viewer class="mv ${cls}" src="assets/tienda.glb" poster="assets/tienda.png" alt="" loading="eager" reveal="auto" camera-orbit="-25deg 75deg ${cls === 'mv-hero' ? '90%' : '72%'}" rotation-per-second="40deg" interaction-prompt="none" disable-zoom disable-pan disable-tap shadow-intensity=".9" shadow-softness=".9" exposure="1.05" tabindex="-1" aria-hidden="true"></model-viewer>`;
 function open3D(st) {
-  const dark = document.documentElement.dataset.theme === 'dark' || (!document.documentElement.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
   $('#v3dTitle').textContent = st ? st.nombre : 'Tienda OXXO';
   $('#v3dSub').textContent = st ? [st.plaza && `Plaza ${st.plaza}`, st.apertura && `Abre ${fmtDate(st.apertura)}`].filter(Boolean).join(' · ') : '';
-  const fr = $('#v3dFrame');
-  if (!navigator.onLine) { $('#v3dOff').hidden = false; fr.hidden = true; }
-  else {
-    $('#v3dOff').hidden = true; fr.hidden = false; $('#v3dLoad').hidden = false;
-    fr.onload = () => { $('#v3dLoad').hidden = true; };
-    fr.src = `https://sketchfab.com/models/${MODEL_3D}/embed?autostart=1&preload=1&transparent=1&ui_theme=${dark ? 'dark' : 'light'}&ui_infos=0&ui_controls=1&ui_stop=0&ui_inspector=0&ui_settings=0&ui_help=0&ui_vr=0&ui_ar=0&ui_annotations=0&dnt=1`;
-  }
+  const mv = $('#v3dModel'); if (reduceMotion()) mv.removeAttribute('auto-rotate');
   $('#v3dDlg').showModal();
+  mv.cameraOrbit = '-25deg 75deg auto'; mv.jumpCameraToGoal?.();
 }
-$('#v3dDlg').addEventListener('close', () => { $('#v3dFrame').src = 'about:blank'; });
+/* Doble toque o doble clic: regresar a la vista inicial */
+$('#v3dModel').addEventListener('dblclick', e => { e.currentTarget.cameraOrbit = '-25deg 75deg auto'; e.currentTarget.fieldOfView = 'auto'; });
+/* Girar el modelo de la tarjeta mientras el cursor está encima */
+main.addEventListener('pointerover', e => { if (reduceMotion() || e.pointerType === 'touch') return; const t = e.target.closest('.store-tile, .sv-3d'); const mv = t && t.querySelector('model-viewer'); if (mv && !mv.hasAttribute('auto-rotate')) mv.setAttribute('auto-rotate', ''); });
+main.addEventListener('pointerout', e => { const t = e.target.closest('.store-tile, .sv-3d'); if (!t || t.contains(e.relatedTarget)) return; const mv = t.querySelector('model-viewer'); if (mv) { mv.removeAttribute('auto-rotate'); mv.cameraOrbit = '-25deg 75deg 72%'; } });
 
 /* ---------- Celular: barra inferior, Más, instalar y dictado ---------- */
 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition || null;

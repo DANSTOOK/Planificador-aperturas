@@ -1660,3 +1660,25 @@ a.sl-row:hover .chev { transform: translateX(3px); color: var(--ink); }
 .v3d-credit { text-align: center; font-size: 11.5px; color: var(--muted); padding: 4px 16px 14px; }
 .v3d-credit a { color: var(--ink-2); text-decoration: underline; }
 @media (max-width: 600px) { .v3d-stage { aspect-ratio: 4 / 5; } }
+
+/* ---------- Modelo 3D de la tienda ---------- */
+model-viewer.mv { display: block; background: transparent; --poster-color: transparent; --progress-bar-color: var(--accent); --progress-bar-height: 2px; }
+model-viewer.mv:not(:defined) { background: url(assets/tienda.png) center / contain no-repeat; }
+.tile-ic { position: relative; }
+.mv-tile { width: 230px; height: 150px; margin: -10px 0 -6px; pointer-events: none; }
+.tile-png { display: none; }
+.mv-hero { width: 190px; height: 140px; pointer-events: none; }
+.sv-3d { margin: -10px -6px; }
+.sv-3d .sv-img { display: none; }
+.dlg-3d .v3d-stage { background: radial-gradient(ellipse at 50% 70%, color-mix(in srgb, var(--accent) 12%, var(--surface-2)), var(--surface)); }
+.mv-big { position: absolute; inset: 0; width: 100%; height: 100%; --poster-color: transparent; }
+/* En celular las tarjetas usan la imagen (más ligero) y el 3D queda en la tienda */
+@media (max-width: 600px) {
+  .mv-tile { display: none; }
+  .tile-png { display: block; width: 58px; height: auto; }
+  .mv-hero { width: 150px; height: 112px; }
+}
+.store-tile .tile-ic img.tile-png { display: none; }
+.store-tile .tile-ic:has(model-viewer.mv-tile) { width: auto; height: auto; background: none; box-shadow: none; padding: 0; }
+@media (max-width: 600px) { .store-tile .tile-ic img.tile-png { display: block; width: 58px; height: auto; } }
+@media (max-width: 600px) { .store-tile model-viewer.mv-tile { display: none; } }

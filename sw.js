@@ -5,7 +5,7 @@
    Al publicar, GitHub Actions cambia BUILD para estrenar caché y borrar la anterior. */
 const BUILD = 'local';
 const CACHE = `aperturas-${BUILD}`;
-const CORE = ['./', 'index.html', 'manifest.webmanifest', 'assets/tienda.png', 'assets/icon-192.png', 'assets/icon-512.png'];
+const CORE = ['./', 'index.html', 'manifest.webmanifest', 'assets/tienda.png', 'assets/tienda.glb', 'assets/icon-192.png', 'assets/icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).catch(() => {}).then(() => self.skipWaiting()));
@@ -22,7 +22,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   const mismoSitio = url.origin === self.location.origin;
-  const fuentes = /fonts\.(googleapis|gstatic)\.com$/.test(url.hostname);
+  const fuentes = /fonts\.(googleapis|gstatic)\.com$|cdn\.jsdelivr\.net$/.test(url.hostname);
   if (!mismoSitio && !fuentes) return;
 
   // Página: red primero, guardada si no hay señal
