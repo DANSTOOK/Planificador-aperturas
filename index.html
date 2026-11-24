@@ -21,12 +21,18 @@
         <button class="nav" id="newStoreSide" type="button"><span data-ic="plus"></span><span class="nav-text">Nueva tienda</span></button>
       </nav>
 
+      <div id="sideCurrent"></div>
+
       <div class="side-section side-stores">
-        <div class="side-label">Aperturas</div>
-        <div id="sideStores"></div>
+        <button class="side-toggle" id="sideStoresBtn" type="button" aria-expanded="false" aria-controls="sideStorePanel"><span data-ic="list"></span><span class="st-txt">Lista rápida de tiendas</span><span data-ic="chevron" class="st-chev"></span></button>
+        <div class="side-panel" id="sideStorePanel" hidden>
+          <input class="side-search" id="sideSearch" type="search" placeholder="Buscar tienda o CR…" autocomplete="off" aria-label="Buscar tienda">
+          <div id="sideStores"></div>
+        </div>
       </div>
 
       <div class="side-foot">
+        <div class="side-label">Herramientas</div>
         <button class="side-action" id="helpBtn" type="button"><span data-ic="help"></span><span>Cómo se usa</span></button>
         <button class="side-action" id="exportAll" type="button" title="Descarga un archivo con todas las tiendas para guardarlo o pasarlo a otra computadora"><span data-ic="download"></span><span>Guardar copia de todo</span></button>
         <label class="side-action" title="Carga el archivo que te envió otra persona y junta su avance con el tuyo"><span data-ic="upload"></span><span>Recibir avance</span><input id="importInput" type="file" accept="application/json,.json" hidden></label>

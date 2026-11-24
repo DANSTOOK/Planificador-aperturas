@@ -12,6 +12,8 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 - Ya no se pide el nombre al abrir la app; se pide solo al comentar.
 - Tarjeta **Responsable** en cada subdepartamento: botón “Asignar responsable”, sugerencias de personas ya usadas y opción de asignarlo en las demás tiendas de una vez.
 - **Editar un paso es más directo**: lápiz en cada paso, responsable y fecha arriba al abrirlo (se tocan para cambiarlos), y ventana ordenada en 3 preguntas con botones rápidos de plazo (N-30 … día de apertura).
+- **Navegación de la tienda más clara**: botón “Volver a …” arriba, ruta Tiendas › Tienda › Plataforma y pestañas fijas con Resumen y cada plataforma (ícono y avance) para cambiar de sección sin perderse.
+- **Barra lateral más limpia**: ya no muestra todas las tiendas; cuando estás en una tienda aparece “Estás en” con acceso a cada plataforma, y la lista de tiendas queda en una pestaña plegable con buscador.
 
 ## [1.1.0] - 2026-11-23
 

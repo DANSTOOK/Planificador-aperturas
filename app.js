@@ -486,17 +486,37 @@ function render() {
   }
 }
 
+/* Tienda abierta: acceso directo a su resumen y a cada plataforma */
+function sideCurrent(st, pid) {
+  const s = stats(allTasks(st));
+  const dA = st.apertura ? daysFrom(todayISO(), st.apertura) : null;
+  return `<div class="side-cur" data-plaza="${esc(st.plaza || '')}">
+    <p class="side-label">Estás en</p>
+    <a class="sc-head ${pid ? '' : 'is-active'}" href="${storeHref(st)}" title="Ver el resumen de la tienda">
+      <img src="assets/tienda.png" alt="">
+      <span><b>${esc(st.nombre.replace(/^OXXO\s+/i, ''))}</b><small>${st.apertura ? `Abre ${fmtShort(st.apertura)} · ${nTxt(nOf(todayISO(), st.apertura))}` : 'Sin fecha'}${dA != null && dA >= 0 ? '' : ''}</small></span>
+      <span class="sc-pct">${s.pct}%</span>
+    </a>
+    <div class="sc-plats">${st.plataformas.map(p => { const y = stats(p.tasks); return `<a class="sc-plat ${p.pid === pid ? 'is-active' : ''}" href="${platHref(st, p)}" style="--c:${safeColor(p.color)}">${platIcon(p)}<span>${esc(p.nombre)}</span><small>${y.pct}%</small></a>`; }).join('')}</div>
+  </div>`;
+}
 function renderSidebar(r) {
   $$('.nav').forEach(n => n.classList.toggle('is-active', (n.dataset.nav === 'tpl' && r.view === 'tpl') || (n.dataset.nav === 'home' && r.view === 'home')));
   $('#countStores').textContent = S.tiendas.length;
-  const list = sortedStores();
+  const cur = r.tid ? getStore(r.tid) : null;
+  $('#sideCurrent').innerHTML = cur ? sideCurrent(cur, r.pid) : '';
+  const abierta = Pref.get('ap-side-stores') === '1';
+  $('#sideStoresBtn').setAttribute('aria-expanded', abierta);
+  $('#sideStorePanel').hidden = !abierta;
+  const q = norm($('#sideSearch').value);
+  const list = sortedStores().filter(st => !q || norm(`${st.nombre} ${st.cr} ${st.plaza}`).includes(q));
   $('#sideStores').innerHTML = list.length ? list.map(st => {
     const s = stats(allTasks(st));
     return `<a class="side-store ${r.tid === st.id ? 'is-active' : ''}" href="${storeHref(st)}" data-plaza="${esc(st.plaza || '')}" title="${esc(st.nombre)} · ${s.pct}% · ${st.plaza ? `Plaza ${esc(st.plaza)}` : ''}"><span class="ss-ring" style="--p:${s.pct}"></span><span class="ss-name">${esc(st.nombre.replace(/^OXXO\s+/i, ''))}</span><span class="ss-pct">${st.apertura ? fmtShort(st.apertura) : `${s.pct}%`}</span></a>`;
-  }).join('') : '<p class="side-empty">Sin tiendas todavía</p>';
+  }).join('') : `<p class="side-empty">${q ? 'Ninguna tienda coincide' : 'Sin tiendas todavía'}</p>`;
   const n = Pref.get('ap-user').trim();
   const area = userArea();
-  $('#userBtn').innerHTML = `<span class="avatar">${esc(n ? initials(n) : '?')}</span><span class="u-txt"><b>${n ? esc(n) : 'Configura tu nombre'}</b><small>${area ? esc(area) : 'Sin plataforma'}</small></span>`;
+  $('#userBtn').innerHTML = `<span class="avatar">${esc(n ? initials(n) : '?')}</span><span class="u-txt"><b>${n ? esc(n) : 'Tu nombre'}</b><small>${area ? esc(area) : 'Opcional · para comentar'}</small></span>`;
   const th = Pref.get('ap-theme');
   $('#themeBtn').innerHTML = `${ic(th === 'dark' ? 'moon' : th === 'light' ? 'sun' : 'auto')}<span>Tema ${th === 'dark' ? 'oscuro' : th === 'light' ? 'claro' : 'automático'}</span>`;
 }
@@ -693,6 +713,21 @@ function homeCards() {
 /* Vista de la tienda, pensada para quien la abre por primera vez:
    1) cómo va la tienda en una frase, 2) elige tu plataforma,
    3) cronograma y movimientos guardados en secciones plegables. */
+/* Barra de la tienda: regresar, dónde estás y cambiar de plataforma */
+function storeNav(st, p = null) {
+  const s = stats(allTasks(st));
+  const back = p ? [storeHref(st), `Volver a ${st.nombre.replace(/^OXXO\s+/i, '')}`] : ['#/', 'Todas las tiendas'];
+  return `<div class="store-nav" data-plaza="${esc(st.plaza || '')}">
+    <div class="sn-top">
+      <a class="sn-back" href="${back[0]}">${ic('chevron', 'sn-back-ic')}<span>${esc(back[1])}</span></a>
+      <nav class="sn-path" aria-label="Ruta"><a href="#/">Tiendas</a>${ic('chevron', 'sn-sep')}${p ? `<a href="${storeHref(st)}">${esc(st.nombre)}</a>${ic('chevron', 'sn-sep')}<span aria-current="page">${esc(p.nombre)}</span>` : `<span aria-current="page">${esc(st.nombre)}</span>`}</nav>
+    </div>
+    <nav class="sn-tabs" aria-label="Secciones de la tienda">
+      <a class="sn-tab sn-home ${p ? '' : 'is-active'}" href="${storeHref(st)}" ${p ? '' : 'aria-current="page"'}><span class="sn-ic">${ic('store')}</span><span class="sn-txt"><b>Resumen</b><small>${s.pct}% de la tienda</small></span></a>
+      ${st.plataformas.map(x => { const y = stats(x.tasks); const on = x === p; return `<a class="sn-tab ${on ? 'is-active' : ''}" href="${platHref(st, x)}" style="--c:${safeColor(x.color)}" ${on ? 'aria-current="page"' : ''}><span class="sn-ic">${platIcon(x)}</span><span class="sn-txt"><b>${esc(x.nombre)}</b><small><span class="sn-bar"><i style="width:${y.pct}%"></i></span>${y.pct}%</small></span></a>`; }).join('')}
+    </nav>
+  </div>`;
+}
 function viewStore(st) {
   const s = stats(allTasks(st));
   const plats = st.plataformas.slice().sort((a, b) => (a.ingreso || '9999').localeCompare(b.ingreso || '9999'));
@@ -701,7 +736,7 @@ function viewStore(st) {
   const bloqTasks = st.plataformas.flatMap(p => p.tasks.filter(k => k.estado === 'bloqueado').map(k => ({ p, k })));
   const acts = st.actividad.slice(0, 12);
   return `
-  <nav class="crumbs" aria-label="Ruta"><a href="#/">Aperturas</a><span class="sep">${ic('chevron')}</span><span aria-current="page">${esc(st.nombre)}</span></nav>
+  ${storeNav(st)}
   <section class="sv-hero" data-plaza="${esc(st.plaza || '')}">
     <img class="sv-img" src="assets/tienda.png" alt="">
     <div class="sv-main">
@@ -857,13 +892,11 @@ function viewPlat(st, p) {
   const scope = multi ? subTasks(p, selSid) : p.tasks;
   ui.nextTask = scope.find(k => k.estado === 'proceso') || scope.find(k => k.estado === 'pendiente');
   const cnt = { todos: scope.length, pendientes: scope.filter(k => !done(k)).length, terminados: scope.filter(done).length };
-  return pageHead({
-    crumbs: [['Aperturas', '#/'], [st.nombre, storeHref(st)], [p.nombre]],
+  return storeNav(st, p) + pageHead({
     title: `${sw(p.color, 'lg')}${esc(p.nombre)}`,
     sub: sentence,
     actions: `<button class="btn" data-action="new-sub" type="button">${ic('layers')}Subdepartamento</button><button class="btn btn-primary" data-action="new-task-full" type="button">${ic('plus')}Agregar paso</button>`,
   }) + `
-  <nav class="tabs" aria-label="Plataformas de la tienda">${st.plataformas.map(x => { const y = stats(x.tasks); return `<a class="tab ${x === p ? 'is-active' : ''}" href="${platHref(st, x)}" style="--c:${safeColor(x.color)}" ${x === p ? 'aria-current="page"' : ''}>${sw(x.color)}${esc(x.nombre)}<span class="tab-n">${y.pct}%</span></a>`; }).join('')}</nav>
   <section class="meta-strip" style="--c:${safeColor(p.color)}">
     <div class="ms-prog"><span class="kpi-l">Avance</span><div class="ms-prog-row"><span class="num-lg">${s.pct}%</span>${stackBar(s)}</div></div>
     ${ui.editPlat ? `
@@ -1986,6 +2019,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') $$('details.
 
 /* ---------- Barra lateral ---------- */
 $('#newStoreSide').addEventListener('click', () => openStoreDlg());
+$('#sideStoresBtn').addEventListener('click', () => { Pref.set('ap-side-stores', Pref.get('ap-side-stores') === '1' ? '' : '1'); renderSidebar(route()); if (Pref.get('ap-side-stores')) $('#sideSearch').focus(); });
+$('#sideSearch').addEventListener('input', () => renderSidebar(route()));
 $('#helpBtn').addEventListener('click', openHelp);
 $('#helpDlg').addEventListener('close', () => {
   if (!Pref.get('ap-help-seen')) Pref.set('ap-help-seen', '1');
@@ -2128,3 +2163,5 @@ window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.s
   if (!DB.persistent) toast('Este navegador no permite guardar imágenes; exporta un respaldo antes de cerrar.', true);
   navigator.storage?.persist?.().catch(() => {});
 })();
+/* Altura real de la barra superior en celular, para que la barra de la tienda quede justo debajo */
+if ('ResizeObserver' in window) new ResizeObserver(([e]) => document.documentElement.style.setProperty('--topbar', `${Math.round(e.target.getBoundingClientRect().height)}px`)).observe($('.sidebar'));
