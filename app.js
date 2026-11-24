@@ -297,7 +297,7 @@ const PLAT_HITO = { mtto: 'entregaMtto', ti: 'mercadeoSistemas', com: 'mercadeoS
 const crKey = c => norm(c).replace(/o/g, '0');
 function setApertura(st, nueva) {
   if (!nueva || st.apertura === nueva) return;
-  allTasks(st).forEach(k => {
+  everyTask(st).forEach(k => {
     if (k.diasN == null) return;
     if (!k.limite || (st.apertura && k.limite === addDays(st.apertura, -k.diasN))) k.limite = addDays(nueva, -k.diasN);
   });
@@ -366,7 +366,12 @@ const subName = (p, sid) => p.subs.find(s => s.id === sid)?.nombre || '';
 
 const getStore = id => S.tiendas.find(t => t.id === id);
 const getPlat = (st, pid) => st.plataformas.find(p => p.pid === pid);
-const allTasks = st => st.plataformas.flatMap(p => p.tasks);
+/* Plataformas que por ahora no cuentan en el avance (se habilitan en una release futura) */
+const LOCKED_PLATS = ['mtto', 'adm'];
+const isLocked = p => LOCKED_PLATS.includes(p.pid);
+const activePlats = st => st.plataformas.filter(p => !isLocked(p));
+const everyTask = st => st.plataformas.flatMap(p => p.tasks);
+const allTasks = st => activePlats(st).flatMap(p => p.tasks);
 function log(st, pid, texto) {
   st.actividad.unshift({ fecha: Date.now(), autor: author(), pid, texto });
   if (st.actividad.length > 400) st.actividad.length = 400;
@@ -497,7 +502,7 @@ function sideCurrent(st, pid) {
       <span><b>${esc(st.nombre.replace(/^OXXO\s+/i, ''))}</b><small>${st.apertura ? `Abre ${fmtShort(st.apertura)} · ${nTxt(nOf(todayISO(), st.apertura))}` : 'Sin fecha'}${dA != null && dA >= 0 ? '' : ''}</small></span>
       <span class="sc-pct">${s.pct}%</span>
     </a>
-    <div class="sc-plats">${st.plataformas.map(p => { const y = stats(p.tasks); return `<a class="sc-plat ${p.pid === pid ? 'is-active' : ''}" href="${platHref(st, p)}" style="--c:${safeColor(p.color)}">${platIcon(p)}<span>${esc(p.nombre)}</span><small>${y.pct}%</small></a>`; }).join('')}</div>
+    <div class="sc-plats">${st.plataformas.map(p => { if (isLocked(p)) return `<span class="sc-plat is-locked" title="Próximamente">${ic('lock')}<span>${esc(p.nombre)}</span><small>—</small></span>`; const y = stats(p.tasks); return `<a class="sc-plat ${p.pid === pid ? 'is-active' : ''}" href="${platHref(st, p)}" style="--c:${safeColor(p.color)}">${platIcon(p)}<span>${esc(p.nombre)}</span><small>${y.pct}%</small></a>`; }).join('')}</div>
   </div>`;
 }
 function renderSidebar(r) {
@@ -560,6 +565,7 @@ const ICONS = {
   clip: '<path d="m19.5 11.5-7.6 7.6a4.6 4.6 0 0 1-6.5-6.5l7.6-7.6a3.1 3.1 0 0 1 4.4 4.4l-7.6 7.6a1.5 1.5 0 0 1-2.2-2.2l7-7"/>',
   check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
   phone: '<path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A16 16 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/>',
+  lock: '<rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
   mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4.5 7 7.5 6 7.5-6"/>',
   list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r=".9" fill="currentColor"/><circle cx="4.8" cy="12" r=".9" fill="currentColor"/><circle cx="4.8" cy="17.5" r=".9" fill="currentColor"/>',
   expand: '<path d="M8 9.5 12 5.5l4 4M8 14.5l4 4 4-4"/>',
@@ -724,16 +730,16 @@ function storeNav(st, p = null) {
     </div>
     <nav class="sn-tabs" aria-label="Secciones de la tienda">
       <a class="sn-tab sn-home ${p ? '' : 'is-active'}" href="${storeHref(st)}" ${p ? '' : 'aria-current="page"'}><span class="sn-ic">${ic('store')}</span><span class="sn-txt"><b>Resumen</b><small>${s.pct}% de la tienda</small></span></a>
-      ${st.plataformas.map(x => { const y = stats(x.tasks); const on = x === p; return `<a class="sn-tab ${on ? 'is-active' : ''}" href="${platHref(st, x)}" style="--c:${safeColor(x.color)}" ${on ? 'aria-current="page"' : ''}><span class="sn-ic">${platIcon(x)}</span><span class="sn-txt"><b>${esc(x.nombre)}</b><small><span class="sn-bar"><i style="width:${y.pct}%"></i></span>${y.pct}%</small></span></a>`; }).join('')}
+      ${st.plataformas.map(x => { if (isLocked(x)) return `<span class="sn-tab is-locked" aria-disabled="true" title="${esc(x.nombre)}: próximamente"><span class="sn-ic">${ic('lock')}</span><span class="sn-txt"><b>${esc(x.nombre)}</b><small>Próximamente</small></span></span>`; const y = stats(x.tasks); const on = x === p; return `<a class="sn-tab ${on ? 'is-active' : ''}" href="${platHref(st, x)}" style="--c:${safeColor(x.color)}" ${on ? 'aria-current="page"' : ''}><span class="sn-ic">${platIcon(x)}</span><span class="sn-txt"><b>${esc(x.nombre)}</b><small><span class="sn-bar"><i style="width:${y.pct}%"></i></span>${y.pct}%</small></span></a>`; }).join('')}
     </nav>
   </div>`;
 }
 function viewStore(st) {
   const s = stats(allTasks(st));
-  const plats = st.plataformas.slice().sort((a, b) => (a.ingreso || '9999').localeCompare(b.ingreso || '9999'));
+  const plats = st.plataformas.slice().sort((a, b) => isLocked(a) - isLocked(b) || (a.ingreso || '9999').localeCompare(b.ingreso || '9999'));
   const dA = st.apertura ? daysFrom(todayISO(), st.apertura) : null;
   const cuando = dA == null ? 'Sin fecha de apertura' : dA > 1 ? `Abre en <b>${dA} días</b>` : dA === 1 ? 'Abre <b>mañana</b>' : dA === 0 ? 'Abre <b>hoy</b>' : `Abrió hace ${plural(-dA, 'día', 'días')}`;
-  const bloqTasks = st.plataformas.flatMap(p => p.tasks.filter(k => k.estado === 'bloqueado').map(k => ({ p, k })));
+  const bloqTasks = activePlats(st).flatMap(p => p.tasks.filter(k => k.estado === 'bloqueado').map(k => ({ p, k })));
   const acts = st.actividad.slice(0, 12);
   return `
   ${storeNav(st)}
@@ -787,6 +793,14 @@ function platIcon(p) {
 
 /* Cada plataforma es un cuadro que abre directo su check list. */
 function platTile(st, p) {
+  if (isLocked(p)) return `<div class="plat-tile is-locked" style="--c:#8a877f" title="${esc(p.nombre)} se habilitará más adelante; por ahora no cuenta en el avance" aria-disabled="true">
+    <span class="pt-ic">${platIcon(p)}<span class="pt-lock">${ic('lock')}</span></span>
+    <span class="pt-name">${esc(p.nombre)}</span>
+    <span class="pt-pct">—</span>
+    ${bar(0)}
+    <span class="pt-count">No cuenta en el avance</span>
+    <span class="state locked">${ic('lock')}Próximamente</span>
+  </div>`;
   const s = stats(p.tasks); const ps = platState(st, p);
   const showState = ['danger', 'info', 'warn', 'done'].includes(ps.cls);
   return `<a class="plat-tile" href="${platHref(st, p)}" style="--c:${safeColor(p.color)}" title="Abrir el check list de ${esc(p.nombre)}">
@@ -873,6 +887,7 @@ function gantt(st) {
 
 /* ---------- Vista: Plataforma ---------- */
 function viewPlat(st, p) {
+  if (isLocked(p)) return storeNav(st, p) + `<div class="panel empty locked-panel">${ic('lock', 'empty-ic')}<h3>${esc(p.nombre)} aún no está habilitada</h3><p>Por ahora el avance de las aperturas solo considera TI y Comercial. Esta plataforma se habilitará en una próxima versión.</p><a class="btn btn-primary" href="${storeHref(st)}">Volver a la tienda</a></div>`;
   const s = stats(p.tasks);
   const f = ['todos', 'pendientes', 'terminados'].includes(ui.taskFilter) ? ui.taskFilter : 'todos';
   const done = k => k.estado === 'completado' || k.estado === 'na';
@@ -1239,7 +1254,7 @@ main.addEventListener('click', async e => {
     case 'del-store': {
       const ok = await ask('Eliminar tienda', `Se eliminará ${st.nombre} (CR ${st.cr}) con todos sus pasos, comentarios e imágenes. No se puede deshacer; exporta un respaldo antes si lo necesitas.`, [{ label: 'Cancelar' }, { label: 'Eliminar tienda', value: true, cls: 'danger' }]);
       if (!ok) return;
-      dropImgs(allTasks(st).flatMap(taskImages));
+      dropImgs(everyTask(st).flatMap(taskImages));
       S.tiendas = S.tiendas.filter(t => t !== st); save(); location.hash = '#/'; return toast('Tienda eliminada');
     }
     case 'load-tpl': {
@@ -1471,7 +1486,7 @@ $('#storeForm').addEventListener('submit', e => {
     removed.forEach(p => { dropImgs(p.tasks.flatMap(taskImages)); log(st, null, `Quitó la plataforma ${p.nombre}`); });
     if (st.apertura !== data.apertura) {
       log(st, null, `Cambió la apertura: ${fmtDate(st.apertura)} → ${fmtDate(data.apertura)}`);
-      allTasks(st).forEach(k => {
+      everyTask(st).forEach(k => {
         if (k.diasN == null || !data.apertura) return;
         if (!k.limite || (st.apertura && k.limite === addDays(st.apertura, -k.diasN))) k.limite = addDays(data.apertura, -k.diasN);
       });
@@ -1696,12 +1711,14 @@ function toast(msg, err = false) {
 function summary(st) {
   const s = stats(allTasks(st)); const cd = countdown(st);
   const lines = [`${st.nombre} (CR ${st.cr})`, `Apertura: ${fmtDate(st.apertura)} · ${cd.label}`, `Avance general: ${s.pct}% (${s.completado}/${s.aplic} pasos)`, '', 'Por plataforma:'];
-  st.plataformas.forEach(p => {
+  activePlats(st).forEach(p => {
     const x = stats(p.tasks);
     lines.push(`• ${p.nombre}: ${x.pct}% (${x.completado}/${x.aplic})${x.bloqueado ? ` · ${x.bloqueado} bloqueado(s)` : ''}${p.ingreso ? ` · ingreso ${fmtShort(p.ingreso)}` : ''}`);
     p.subs.forEach(sb => { const y = stats(subTasks(p, sb.id)); lines.push(`    ◦ ${sb.nombre}${sb.rol ? ` (${sb.rol})` : ''}: ${y.pct}% (${y.completado}/${y.aplic})${y.bloqueado ? ` · ${y.bloqueado} bloqueado(s)` : ''}`); });
   });
-  const bloq = st.plataformas.flatMap(p => p.tasks.filter(k => k.estado === 'bloqueado').map(k => ({ p, k })));
+  const lock = st.plataformas.filter(isLocked);
+  if (lock.length) lines.push(`• ${lock.map(p => p.nombre).join(' y ')}: próximamente (no cuentan en el avance)`);
+  const bloq = activePlats(st).flatMap(p => p.tasks.filter(k => k.estado === 'bloqueado').map(k => ({ p, k })));
   if (bloq.length) {
     lines.push('', 'Bloqueos:');
     bloq.forEach(({ p, k }) => { const c = [...k.historial].reverse().find(h => h.tipo === 'comentario' && h.texto); lines.push(`- [${p.nombre}${k.sub ? ` › ${subName(p, k.sub)}` : ''}] ${k.titulo}${c ? ` — ${c.texto} (${c.autor})` : ''}`); });
@@ -1736,7 +1753,7 @@ function exportCSV(st) {
 }
 async function exportData(tiendas, name) {
   const images = {};
-  for (const id of new Set(tiendas.flatMap(st => allTasks(st).flatMap(taskImages)))) { const d = await imgData(id); if (d) images[id] = d; }
+  for (const id of new Set(tiendas.flatMap(st => everyTask(st).flatMap(taskImages)))) { const d = await imgData(id); if (d) images[id] = d; }
   const payload = { app: 'aperturas-checklist', version: 1, exportado: new Date().toISOString(), autor: author(), catalogo: S.catalogo, tiendas, images };
   download(name, JSON.stringify(payload), 'application/json');
   toast(tiendas.length === 1 ? 'Respaldo descargado: compártelo para que lo combinen' : 'Respaldo completo descargado');
@@ -1806,7 +1823,7 @@ function emailSummary(st) {
   const dA = st.apertura ? daysFrom(t, st.apertura) : null;
   const cuando = dA == null ? 'Sin fecha de apertura' : dA > 1 ? `Faltan ${dA} días` : dA === 1 ? 'Abre mañana' : dA === 0 ? 'Abre hoy' : `Abrió hace ${plural(-dA, 'día', 'días')}`;
   const nHoy = st.apertura ? nTxt(nOf(t, st.apertura)) : '';
-  const plats = st.plataformas.slice().sort((a, b) => (a.ingreso || '9999').localeCompare(b.ingreso || '9999'));
+  const plats = activePlats(st).slice().sort((a, b) => (a.ingreso || '9999').localeCompare(b.ingreso || '9999'));
   const done = k => k.estado === 'completado' || k.estado === 'na';
   const lastNote = k => [...k.historial].reverse().find(h => h.tipo === 'comentario' && h.texto);
   const where = (p, k) => `${p.nombre}${k.sub ? ` › ${subName(p, k.sub)}` : ''}`;

@@ -1419,3 +1419,19 @@ a.sl-row:hover .chev { transform: translateX(3px); color: var(--ink); }
 }
 .side-foot { padding-top: 8px; border-top: 1px solid var(--line); }
 @media (max-width: 860px) { .side-foot { border-top: 0; padding-top: 0; } }
+
+/* ---------- Plataformas bloqueadas (próximamente) ---------- */
+.plat-tile.is-locked { cursor: not-allowed; background: var(--surface-2); border-style: dashed; filter: grayscale(1); opacity: .72; box-shadow: none; }
+.plat-tile.is-locked:hover { transform: none; box-shadow: none; border-color: var(--line); }
+.plat-tile.is-locked .pt-ic { position: relative; }
+.pt-lock { position: absolute; right: -6px; bottom: -6px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ink-2); color: var(--surface); box-shadow: 0 0 0 2px var(--surface-2); }
+.pt-lock svg { width: 12px; height: 12px; }
+.state.locked { display: inline-flex; align-items: center; gap: 4px; background: var(--surface-3); color: var(--ink-2); }
+.state.locked svg { width: 12px; height: 12px; }
+.sn-tab.is-locked { cursor: not-allowed; border-style: dashed; background: var(--surface-2); color: var(--muted); opacity: .75; }
+.sn-tab.is-locked:hover { transform: none; border-color: var(--line); }
+.sn-tab.is-locked .sn-ic { background: var(--surface-3); color: var(--muted); }
+.sc-plat.is-locked { color: var(--muted); opacity: .7; cursor: not-allowed; }
+.sc-plat.is-locked svg { color: var(--muted); }
+.sc-plat.is-locked:hover { background: none; }
+.locked-panel .empty-ic { color: var(--muted); }
