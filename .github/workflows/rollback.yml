@@ -39,11 +39,11 @@ jobs:
           git fetch origin main --depth=1
           git show origin/main:scripts/build-site.sh > /tmp/build-site.sh
           bash /tmp/build-site.sh "${{ inputs.version }}-rollback"
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
       - name: Resumen
         run: echo "### Publicada la versión ${{ inputs.version }}" >> "$GITHUB_STEP_SUMMARY"
