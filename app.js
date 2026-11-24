@@ -2078,7 +2078,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') $$('details.
    Modelo "OXXO" de ForgotMyPassword (Sketchfab, CC BY 4.0), guardado en assets/tienda.glb.
    Se muestra con <model-viewer>; si el navegador no puede, queda la imagen tienda.png. */
 /* Modelo para tarjetas y encabezado: sin controles, gira solo al pasar el cursor */
-const storeModel = (cls = '') => `<model-viewer class="mv ${cls}" src="assets/tienda.glb" poster="assets/tienda.png" alt="" loading="eager" reveal="auto" camera-orbit="-25deg 75deg ${cls === 'mv-hero' ? '90%' : '72%'}" rotation-per-second="40deg" interaction-prompt="none" disable-zoom disable-pan disable-tap shadow-intensity=".9" shadow-softness=".9" exposure="1.05" tabindex="-1" aria-hidden="true"></model-viewer>`;
+const storeModel = (cls = '') => `<model-viewer class="mv ${cls}" src="assets/tienda.glb" alt="" loading="eager" reveal="auto" camera-orbit="-25deg 75deg ${cls === 'mv-hero' ? '90%' : '82%'}" rotation-per-second="40deg" interaction-prompt="none" disable-zoom disable-pan disable-tap shadow-intensity=".9" shadow-softness=".9" exposure="1.05" tabindex="-1" aria-hidden="true"></model-viewer>`;
 function open3D(st) {
   $('#v3dTitle').textContent = st ? st.nombre : 'Tienda OXXO';
   $('#v3dSub').textContent = st ? [st.plaza && `Plaza ${st.plaza}`, st.apertura && `Abre ${fmtDate(st.apertura)}`].filter(Boolean).join(' · ') : '';
@@ -2086,11 +2086,14 @@ function open3D(st) {
   $('#v3dDlg').showModal();
   mv.cameraOrbit = '-25deg 75deg auto'; mv.jumpCameraToGoal?.();
 }
+/* El modelo aparece suave cuando ya cargó (sin destello de la imagen anterior) */
+document.addEventListener('load', e => { if (e.target.matches?.('model-viewer.mv')) e.target.classList.add('is-ready'); }, true);
+document.addEventListener('error', e => { if (e.target.matches?.('model-viewer.mv')) e.target.closest('.tile-ic')?.classList.add('mv-failed'); }, true);
 /* Doble toque o doble clic: regresar a la vista inicial */
 $('#v3dModel').addEventListener('dblclick', e => { e.currentTarget.cameraOrbit = '-25deg 75deg auto'; e.currentTarget.fieldOfView = 'auto'; });
 /* Girar el modelo de la tarjeta mientras el cursor está encima */
 main.addEventListener('pointerover', e => { if (reduceMotion() || e.pointerType === 'touch') return; const t = e.target.closest('.store-tile, .sv-3d'); const mv = t && t.querySelector('model-viewer'); if (mv && !mv.hasAttribute('auto-rotate')) mv.setAttribute('auto-rotate', ''); });
-main.addEventListener('pointerout', e => { const t = e.target.closest('.store-tile, .sv-3d'); if (!t || t.contains(e.relatedTarget)) return; const mv = t.querySelector('model-viewer'); if (mv) { mv.removeAttribute('auto-rotate'); mv.cameraOrbit = '-25deg 75deg 72%'; } });
+main.addEventListener('pointerout', e => { const t = e.target.closest('.store-tile, .sv-3d'); if (!t || t.contains(e.relatedTarget)) return; const mv = t.querySelector('model-viewer'); if (mv) { mv.removeAttribute('auto-rotate'); mv.cameraOrbit = '-25deg 75deg 82%'; } });
 
 /* ---------- Celular: barra inferior, Más, instalar y dictado ---------- */
 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition || null;
