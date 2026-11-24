@@ -89,24 +89,32 @@
     <form method="dialog" id="taskForm">
       <header class="dlg-head"><h2 id="taskDlgTitle">Nuevo paso</h2><button class="x" value="cancel" formnovalidate aria-label="Cerrar"><span data-ic="x"></span></button></header>
       <div class="dlg-body">
+        <p class="dlg-step"><b>1</b>¿Qué hay que hacer?</p>
         <label class="field">Paso<input name="titulo" required placeholder="Ej. Cajas (POS) instaladas y configuradas" autocomplete="off"></label>
-        <label class="field">Detalle<textarea name="descripcion" rows="3" placeholder="Qué hay que revisar, a quién contactar, criterios de aceptación…"></textarea></label>
-        <label class="field" id="taskSubField">Subdepartamento<select name="sub"></select></label>
-        <div class="grid-2">
-          <label class="field">Responsable<input name="responsable" autocomplete="off"></label>
-          <label class="field">Estatus<select name="estado"></select></label>
-        </div>
+        <label class="field"><span>Detalle <span class="opt">(opcional)</span></span><textarea name="descripcion" rows="2" placeholder="Qué hay que revisar, a quién contactar, criterios de aceptación…"></textarea></label>
+        <p class="dlg-step"><b>2</b>¿Quién lo hace?</p>
+        <label class="field">Responsable<input name="responsable" list="respOptions" placeholder="Nombre de quien lo atiende" autocomplete="off"><datalist id="respOptions"></datalist></label>
+        <div class="q-chips" id="taskPeople" aria-label="Personas de esta plataforma"></div>
+        <p class="dlg-step"><b>3</b>¿Para cuándo?</p>
         <div class="grid-2">
           <label class="field">Plazo (N-#)<input name="plazo" placeholder="N-5" autocomplete="off" title="Días antes de la apertura: N-5, N (día de apertura) o N+2"></label>
           <label class="field">Fecha límite<input type="date" name="limite"></label>
         </div>
+        <div class="q-chips" id="taskQuickN" aria-label="Plazos rápidos"><button type="button" class="q-chip" data-n="N-30">N-30</button><button type="button" class="q-chip" data-n="N-20">N-20</button><button type="button" class="q-chip" data-n="N-15">N-15</button><button type="button" class="q-chip" data-n="N-10">N-10</button><button type="button" class="q-chip" data-n="N-7">N-7</button><button type="button" class="q-chip" data-n="N-5">N-5</button><button type="button" class="q-chip" data-n="N-1">N-1</button><button type="button" class="q-chip" data-n="N">Día de apertura</button></div>
         <p class="field-hint" id="plazoHint"></p>
+        <details class="dlg-more">
+          <summary>Más opciones: estatus, subdepartamento e imágenes</summary>
+          <div class="grid-2">
+            <label class="field">Estatus<select name="estado"></select></label>
+            <label class="field" id="taskSubField">Subdepartamento<select name="sub"></select></label>
+          </div>
         <div class="field">Imágenes
           <div class="dropzone" id="taskDrop" tabindex="0">
             <span>Arrastra, pega con <kbd>Ctrl</kbd>+<kbd>V</kbd> o <label class="link">elige imágenes<input type="file" id="taskFiles" accept="image/*" multiple hidden></label></span>
           </div>
           <div class="thumbs" id="taskThumbs"></div>
         </div>
+        </details>
       </div>
       <footer class="dlg-foot"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn btn-primary" value="ok">Guardar paso</button></footer>
     </form>
@@ -125,14 +133,36 @@
           <p class="dlg-note">Con el nombre basta. El correo y el teléfono son opcionales y sirven para que las otras áreas lo contacten.</p>
           <label class="field">Nombre del responsable<input name="responsable" placeholder="Ej. Luis Carrillo" autocomplete="name"></label>
           <div class="grid-2">
-            <label class="field">Correo <span class="opt">(opcional)</span><input name="correo" type="email" placeholder="nombre@oxxo.com" autocomplete="off"></label>
-            <label class="field">Teléfono <span class="opt">(opcional)</span><input name="telefono" type="tel" placeholder="Ej. 664 123 4567" autocomplete="off"></label>
+            <label class="field"><span>Correo <span class="opt">(opcional)</span></span><input name="correo" type="email" placeholder="nombre@oxxo.com" autocomplete="off"></label>
+            <label class="field"><span>Teléfono <span class="opt">(opcional)</span></span><input name="telefono" type="tel" placeholder="Ej. 664 123 4567" autocomplete="off"></label>
           </div>
         </fieldset>
         <label class="check-line" id="subTplLine"><input type="checkbox" name="cargar" checked> <span id="subTplLabel">Cargar los pasos de la plantilla</span></label>
         <label class="check-line" id="subSaveLine"><input type="checkbox" name="guardar" checked> <span id="subSaveLabel">Guardarlo en la plantilla para las próximas tiendas</span></label>
       </div>
       <footer class="dlg-foot"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn btn-primary" value="ok">Guardar</button></footer>
+    </form>
+  </dialog>
+
+  <!-- Responsable de un subdepartamento -->
+  <dialog id="ownerDlg" class="dlg" aria-labelledby="ownerTitle">
+    <form method="dialog" id="ownerForm">
+      <header class="dlg-head"><div><h2 id="ownerTitle">¿Quién atiende este check list?</h2><p class="dlg-lead" id="ownerLead"></p></div><button class="x" value="cancel" formnovalidate aria-label="Cerrar"><span data-ic="x"></span></button></header>
+      <div class="dlg-body">
+        <div id="ownerSugBox" class="owner-sug">
+          <p class="tb-label">Elige a alguien</p>
+          <div id="ownerSug" class="person-chips"></div>
+          <p class="owner-or"><span>o escribe sus datos</span></p>
+        </div>
+        <label class="field">Nombre <input name="responsable" placeholder="Ej. Luis Carrillo" autocomplete="name"></label>
+        <div class="grid-2">
+          <label class="field"><span>Correo <span class="opt">(opcional)</span></span><input name="correo" type="email" placeholder="nombre@oxxo.com" autocomplete="off"></label>
+          <label class="field"><span>Teléfono <span class="opt">(opcional)</span></span><input name="telefono" type="tel" placeholder="Ej. 664 123 4567" autocomplete="off"></label>
+        </div>
+        <div id="ownerPrev" class="owner-card owner-prev"></div>
+        <label class="check-line" id="ownerAllLine"><input type="checkbox" name="todas"> <span id="ownerAllLabel"></span></label>
+      </div>
+      <footer class="dlg-foot"><button class="btn btn-ghost danger-txt" id="ownerClear" value="clear" formnovalidate>Quitar responsable</button><span class="dlg-sp"></span><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn btn-primary" value="ok">Guardar</button></footer>
     </form>
   </dialog>
 

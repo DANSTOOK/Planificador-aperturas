@@ -10,6 +10,8 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 - Cada subdepartamento tiene **a quién le pertenece**: nombre y, si se quiere, correo y teléfono (se pueden tocar para escribir o llamar). Lo agrega cada área con “Agregar responsable”.
 - El **último comentario** de cada paso pendiente se ve en la lista sin abrirlo, para que todos sepan qué falta y qué se va a hacer.
 - Ya no se pide el nombre al abrir la app; se pide solo al comentar.
+- Tarjeta **Responsable** en cada subdepartamento: botón “Asignar responsable”, sugerencias de personas ya usadas y opción de asignarlo en las demás tiendas de una vez.
+- **Editar un paso es más directo**: lápiz en cada paso, responsable y fecha arriba al abrirlo (se tocan para cambiarlos), y ventana ordenada en 3 preguntas con botones rápidos de plazo (N-30 … día de apertura).
 
 ## [1.1.0] - 2026-11-23
 

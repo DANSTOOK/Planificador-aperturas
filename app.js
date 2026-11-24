@@ -887,7 +887,7 @@ function viewPlat(st, p) {
       const sb = p.subs.find(x => x.id === sid); const x = stats(subTasks(p, sid)); const on = sid === selSid;
       return `<button type="button" role="tab" aria-selected="${on}" class="sub-tile ${on ? 'is-sel' : ''}" data-action="sel-sub" data-sid="${esc(sid)}">
         <span class="sbt-name">${sb ? esc(sb.nombre) : 'Pasos generales'}</span>
-        <span class="sbt-rol" title="${sb ? esc([sb.responsable, sb.rol].filter(Boolean).join(' · ')) : ''}">${sb ? (sb.responsable ? `${ic('user')}<b>${esc(sb.responsable)}</b>` : (sb.rol ? esc(sb.rol) : '&nbsp;')) : 'Toda la plataforma'}</span>
+        ${sb ? (sb.responsable ? `<span class="sbt-owner" title="${esc([sb.responsable, sb.rol].filter(Boolean).join(' · '))}"><span class="oc-av sm">${esc(initials(sb.responsable))}</span><b>${esc(sb.responsable)}</b></span>` : `<span class="sbt-owner is-empty" title="${esc(sb.rol || '')}">${ic('user')}Sin responsable</span>`) : '<span class="sbt-rol">Toda la plataforma</span>'}
         <span class="sbt-prog">${x.aplic ? `<span class="num">${x.pct}%</span>${bar(x.pct)}` : '<span class="muted">Sin pasos</span>'}</span>
         <span class="sbt-count">${x.aplic ? `${x.completado} de ${plural(x.aplic, 'paso', 'pasos')}` : ''}${on ? '<b class="sbt-on">Viendo</b>' : ''}</span>
         ${x.bloqueado ? `<span class="flag sbt-flag">${ic('alert')}${x.bloqueado}</span>` : ''}
@@ -897,8 +897,8 @@ function viewPlat(st, p) {
     <div class="sbn-text">
       <span class="sbn-kicker">${ic('list')}Estás viendo el check list de</span>
       <h2>${sb ? esc(sb.nombre) : `Pasos generales de ${esc(p.nombre)}`}</h2>
-      <p>${sb ? (sb.responsable || sb.rol ? `${ic('user')}${sb.responsable ? `<b>${esc(sb.responsable)}</b>` : ''}${sb.responsable && sb.rol ? ' · ' : ''}${esc(sb.rol)}` : '') : 'Pasos de toda la plataforma'}${sb && !sb.responsable ? ` <button class="link-btn sbn-own" type="button" data-action="edit-sub" data-sub-id="${esc(sb.id)}">${ic('plus')}Agregar responsable</button>` : ''}</p>
-      ${sb && (sb.correo || sb.telefono) ? `<p class="sbn-contact">${subContact(sb)}</p>` : ''}
+      ${sb ? (sb.rol ? `<p>${ic('list')}${esc(sb.rol)}</p>` : '') : '<p>Pasos de toda la plataforma</p>'}
+      ${sb ? ownerCard(sb) : ''}
     </div>
     <div class="sbn-prog"><span class="sbn-pct">${x.pct}<small>%</small></span><div>${bar(x.pct)}<span>${x.completado} de ${plural(x.aplic, 'paso terminado', 'pasos terminados')}</span></div></div>
     ${sb ? `<div class="grp-actions"><button class="icon-btn" type="button" data-action="edit-sub" data-sub-id="${esc(sb.id)}" title="Editar subdepartamento" aria-label="Editar subdepartamento">${ic('edit')}</button><button class="icon-btn danger" type="button" data-action="del-sub" title="Eliminar subdepartamento" aria-label="Eliminar subdepartamento">${ic('trash')}</button></div>` : ''}
@@ -925,6 +925,73 @@ function subContact(sb) {
     tel ? `<a class="sc-link" href="tel:${esc(tel)}" title="Llamar">${ic('phone')}${esc(sb.telefono)}</a>` : '',
   ].filter(Boolean).join('');
 }
+/* Tarjeta "¿Quién atiende este check list?" en la banda del subdepartamento */
+function ownerCard(sb) {
+  if (!sb.responsable) return `<div class="owner-card is-empty">
+      <span class="oc-av">${ic('user')}</span>
+      <span class="oc-txt"><small>Responsable</small><b>Sin asignar</b><span class="oc-sub">¿Quién atiende este check list?</span></span>
+      <button class="btn btn-primary btn-sm oc-btn" type="button" data-action="edit-owner">${ic('plus')}Asignar responsable</button>
+    </div>`;
+  return `<div class="owner-card">
+      <span class="oc-av">${esc(initials(sb.responsable))}</span>
+      <span class="oc-txt"><small>Responsable</small><b>${esc(sb.responsable)}</b>${sb.correo || sb.telefono ? `<span class="oc-links">${subContact(sb)}</span>` : '<span class="oc-sub">Sin correo ni teléfono</span>'}</span>
+      <button class="btn btn-ghost btn-sm oc-btn" type="button" data-action="edit-owner" aria-label="Cambiar responsable de ${esc(sb.nombre)}">${ic('edit')}Cambiar</button>
+    </div>`;
+}
+/* Personas ya usadas para el mismo subdepartamento (en otras tiendas o en la plantilla) */
+function ownerSuggestions(sid) {
+  const seen = new Map();
+  const add = x => { const n = (x?.responsable || '').trim(); if (!n) return; const key = norm(n); const prev = seen.get(key); seen.set(key, { responsable: n, correo: x.correo || prev?.correo || '', telefono: x.telefono || prev?.telefono || '' }); };
+  S.catalogo.forEach(c => (c.subs || []).filter(x => x.id === sid).forEach(add));
+  S.tiendas.forEach(t => t.plataformas.forEach(p => p.subs.filter(x => x.id === sid).forEach(add)));
+  return [...seen.values()];
+}
+let ownerCtx = null;
+function openOwnerDlg(st, p, sb) {
+  ownerCtx = { st, p, sb };
+  const f = $('#ownerForm'); f.reset();
+  $('#ownerDlg').style.setProperty('--c', safeColor(p.color));
+  $('#ownerTitle').textContent = `¿Quién atiende ${sb.nombre}?`;
+  $('#ownerLead').textContent = `${st.nombre} · ${p.nombre}${sb.rol ? ` · Rol: ${sb.rol}` : ''}`;
+  f.responsable.value = sb.responsable || ''; f.correo.value = sb.correo || ''; f.telefono.value = sb.telefono || '';
+  const me = Pref.get('ap-user').trim();
+  const sug = ownerSuggestions(sb.id);
+  if (me && !sug.some(x => norm(x.responsable) === norm(me))) sug.unshift({ responsable: me, correo: '', telefono: '', yo: true });
+  $('#ownerSugBox').hidden = !sug.length;
+  $('#ownerSug').innerHTML = sug.map((x, i) => `<button type="button" class="person-chip" data-i="${i}" aria-pressed="${norm(x.responsable) === norm(sb.responsable)}"><span class="oc-av sm">${esc(initials(x.responsable))}</span><span><b>${esc(x.responsable)}${x.yo ? ' (yo)' : ''}</b>${x.correo || x.telefono ? `<small>${esc(x.correo || x.telefono)}</small>` : ''}</span></button>`).join('');
+  $('#ownerSug').onclick = e => {
+    const b = e.target.closest('.person-chip'); if (!b) return;
+    const x = sug[+b.dataset.i];
+    f.responsable.value = x.responsable; f.correo.value = x.correo; f.telefono.value = x.telefono;
+    $$('#ownerSug .person-chip').forEach(c => c.setAttribute('aria-pressed', c === b)); syncOwner();
+  };
+  const otras = S.tiendas.filter(t => t !== st).map(t => getPlat(t, p.pid)?.subs.find(x => x.id === sb.id)).filter(x => x && !x.responsable).length;
+  $('#ownerAllLine').hidden = !otras;
+  $('#ownerAllLabel').textContent = `Asignarlo también en ${plural(otras, 'otra tienda', 'otras tiendas')} donde ${sb.nombre} no tiene responsable`;
+  f.todas.checked = false;
+  $('#ownerClear').hidden = !sb.responsable;
+  syncOwner();
+  $('#ownerDlg').showModal(); (sug.length && !sb.responsable ? $('#ownerSug .person-chip') : f.responsable)?.focus();
+}
+function syncOwner() {
+  const f = $('#ownerForm'); const n = f.responsable.value.trim();
+  const extra = [f.correo.value.trim(), f.telefono.value.trim()].filter(Boolean).join(' · ');
+  $('#ownerPrev').innerHTML = `<span class="oc-av">${n ? esc(initials(n)) : ic('user')}</span><span class="oc-txt"><small>Así se verá</small><b>${n ? esc(n) : 'Escribe un nombre'}</b>${extra ? `<span class="oc-sub">${esc(extra)}</span>` : ''}</span>`;
+  $('#ownerPrev').classList.toggle('is-empty', !n);
+}
+$('#ownerForm').addEventListener('input', e => { if (e.target.name !== 'todas') { $$('#ownerSug .person-chip').forEach(c => c.setAttribute('aria-pressed', 'false')); syncOwner(); } });
+$('#ownerForm').addEventListener('submit', e => {
+  const v = e.submitter?.value; if (v !== 'ok' && v !== 'clear') return;
+  const f = e.target; const { st, p, sb } = ownerCtx;
+  const data = v === 'clear' ? { responsable: '', correo: '', telefono: '' } : { responsable: f.responsable.value.trim(), correo: f.correo.value.trim(), telefono: f.telefono.value.trim() };
+  if (v === 'ok' && !data.responsable) { e.preventDefault(); f.responsable.focus(); return toast('Escribe el nombre del responsable', true); }
+  Object.assign(sb, data, { editado: Date.now() });
+  log(st, p.pid, v === 'clear' ? `Quitó el responsable de ${sb.nombre}` : `Asignó a ${data.responsable} como responsable de ${sb.nombre}`);
+  let n = 0;
+  if (v === 'ok' && f.todas.checked) S.tiendas.forEach(t => { if (t === st) return; const x = getPlat(t, p.pid)?.subs.find(y => y.id === sb.id); if (x && !x.responsable) { Object.assign(x, data, { editado: Date.now() }); log(t, p.pid, `Asignó a ${data.responsable} como responsable de ${sb.nombre}`); n++; } });
+  commit();
+  toast(v === 'clear' ? 'Responsable quitado' : `${data.responsable} quedó como responsable de ${sb.nombre}${n ? ` en esta y ${plural(n, 'otra tienda', 'otras tiendas')}` : ''}`);
+});
 function canLoadTpl(p) { const c = S.catalogo.find(x => x.id === p.pid); return !!c && (c.plantilla.length || c.subs.length); }
 function taskGroup(st, p, sid, items, multi, noHead = false) {
   const sb = p.subs.find(x => x.id === sid);
@@ -977,6 +1044,7 @@ function taskItem(st, p, k, n) {
           ${ic('chevron', 'chev')}
         </span>
       </button>
+      <button class="icon-btn task-edit" type="button" data-action="edit-task" title="Editar paso" aria-label="Editar: ${esc(k.titulo)}">${ic('edit')}</button>
     </div>
     ${open ? taskBody(k) : ''}
   </article>`;
@@ -992,7 +1060,14 @@ function taskBody(k) {
   }).join('');
   const pend = ui.pending[k.id] || [];
   return `<div class="task-body">
-    ${k.descripcion ? `<p class="task-desc">${esc(k.descripcion)}</p>` : ''}
+    <div class="tb-info">
+      ${k.descripcion ? `<p class="task-desc">${esc(k.descripcion)}</p>` : ''}
+      <div class="tb-chips">
+        <button type="button" class="info-chip ${k.responsable ? '' : 'is-empty'}" data-action="edit-task" data-focus="responsable" title="Cambiar responsable">${ic('user')}<span><small>Responsable</small>${k.responsable ? esc(k.responsable) : 'Agregar'}</span></button>
+        <button type="button" class="info-chip ${k.limite ? '' : 'is-empty'}" data-action="edit-task" data-focus="plazo" title="Cambiar fecha límite">${ic('calendar')}<span><small>Fecha límite</small>${k.limite ? `${fmtDate(k.limite)}${ap ? ` · ${nTxt(nOf(k.limite, ap))}` : ''}` : 'Agregar'}</span></button>
+        <button class="btn btn-sm tb-edit" type="button" data-action="edit-task">${ic('edit')}Editar paso</button>
+      </div>
+    </div>
     <div class="tb-sec">
       <span class="tb-label">Estatus</span>
       <div class="st-seg" role="group" aria-label="Cambiar estatus">${STATUS_KEYS.map(s => `<button type="button" class="st-opt ${k.estado === s ? 'is-on' : ''}" data-action="set-status" data-v="${s}" aria-pressed="${k.estado === s}" title="${STATUS[s].hint}">${stIcon(s)}<span>${STATUS[s].label}</span></button>`).join('')}</div>
@@ -1018,11 +1093,10 @@ function taskBody(k) {
         <label class="thumb add" title="Subir foto">${ic('image')}<span>Subir</span><input type="file" accept="image/*" multiple data-change="task-img" hidden></label></div>
     </div>
     <div class="tb-foot">
-      <span class="tb-facts"><span>${ic('user')}${esc(k.responsable) || 'Sin responsable'}</span><span>${ic('calendar')}${k.limite ? `${fmtDate(k.limite)}${ap ? ` · ${nTxt(nOf(k.limite, ap))}` : ''}` : 'Sin fecha límite'}</span><span>${ic('clock')}Actualizado ${rel(k.actualizado)}</span></span>
+      <span class="tb-facts"><span>${ic('clock')}Actualizado ${rel(k.actualizado)}</span></span>
       <span class="tb-actions">
         <button class="icon-btn" type="button" data-action="move" data-d="-1" title="Subir" aria-label="Subir paso">${ic('up')}</button>
         <button class="icon-btn" type="button" data-action="move" data-d="1" title="Bajar" aria-label="Bajar paso">${ic('down')}</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-action="edit-task">${ic('edit')}Editar</button>
         <button class="btn btn-ghost btn-sm danger" type="button" data-action="del-task">${ic('trash')}Eliminar</button>
       </span>
     </div>
@@ -1100,6 +1174,7 @@ main.addEventListener('click', async e => {
   switch (a) {
     case 'new-sub': return openSubDlg(st, p);
     case 'edit-sub': return openSubDlg(st, p, sb);
+    case 'edit-owner': return sb && openOwnerDlg(st, p, sb);
     case 'del-sub': {
       const ks = subTasks(p, sb.id);
       const v = await ask('Eliminar subdepartamento', `${sb.nombre} tiene ${plural(ks.length, 'paso', 'pasos')}. Puedes mover sus pasos a “General de ${p.nombre}” o eliminarlos junto con sus comentarios e imágenes.`,
@@ -1169,7 +1244,7 @@ main.addEventListener('click', async e => {
     case 'help': return openHelp();
     case 'hide-tip': Pref.set('ap-tip-' + el.dataset.v, '1'); return render();
     case 'toggle-done': return setStatus(st, p, k, k.estado === 'completado' ? 'pendiente' : 'completado');
-    case 'edit-task': return openTaskDlg(st, p, k);
+    case 'edit-task': return openTaskDlg(st, p, k, '', el.dataset.focus);
     case 'move': {
       const i = p.tasks.indexOf(k); const j = i + Number(el.dataset.d);
       if (j < 0 || j >= p.tasks.length) return;
@@ -1395,7 +1470,7 @@ $('#storeForm').addEventListener('submit', e => {
 /* ---------- Diálogo: paso ---------- */
 let taskCtx = null;
 $('#taskForm').estado.innerHTML = STATUS_KEYS.map(s => `<option value="${s}">${stLabel(s)}</option>`).join('');
-function openTaskDlg(st, p, k = null, sid = '') {
+function openTaskDlg(st, p, k = null, sid = '', focus = '') {
   taskCtx = { st, p, k, imgs: (k?.imagenes || []).map(id => ({ id, data: imgCache.get(id) || '', old: true })), removed: [] };
   const f = $('#taskForm'); f.reset();
   f.sub.innerHTML = `<option value="">General de ${esc(p.nombre)}</option>` + p.subs.map(s => `<option value="${esc(s.id)}">${esc(s.nombre)}${s.rol ? ` · ${esc(s.rol)}` : ''}</option>`).join('');
@@ -1410,8 +1485,26 @@ function openTaskDlg(st, p, k = null, sid = '') {
   $('#plazoHint').textContent = st.apertura ? `La tienda abre el ${fmtDate(st.apertura)}. Escribe N-5 para 5 días antes.` : 'Define la fecha de apertura de la tienda para usar N-#.';
   renderTaskThumbs();
   taskCtx.imgs.forEach(async x => { if (!x.data) { x.data = await imgData(x.id) || ''; renderTaskThumbs(); } });
-  $('#taskDlg').showModal(); f.titulo.focus();
+  const sbOwn = p.subs.find(x => x.id === f.sub.value)?.responsable;
+  const mismos = p.tasks.filter(t => (t.sub || '') === f.sub.value).map(t => t.responsable);
+  const nombres = new Set([sbOwn, ...mismos, p.responsable].map(x => (x || '').trim()).filter(Boolean));
+  $('#respOptions').innerHTML = [...nombres].map(n => `<option value="${esc(n)}">`).join('');
+  $('#taskPeople').innerHTML = [...nombres].slice(0, 6).map(n => `<button type="button" class="q-chip" data-resp="${esc(n)}">${esc(n)}</button>`).join('');
+  $('#taskQuickN').hidden = !st.apertura;
+  syncQuick();
+  $('#taskDlg').showModal();
+  const el = f[focus] && !f[focus].disabled ? f[focus] : f.titulo; el.focus(); if (focus) el.select?.();
 }
+/* Botones rápidos de la ventana del paso: plazo N-# y responsable */
+function syncQuick() {
+  const f = $('#taskForm');
+  $$('#taskQuickN .q-chip').forEach(b => b.setAttribute('aria-pressed', norm(b.dataset.n) === norm(f.plazo.value)));
+  $$('#taskPeople .q-chip').forEach(b => b.setAttribute('aria-pressed', norm(b.dataset.resp) === norm(f.responsable.value)));
+}
+$('#taskQuickN').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (!b) return; const f = $('#taskForm'); f.plazo.value = b.dataset.n; f.plazo.dispatchEvent(new Event('input')); syncQuick(); });
+$('#taskPeople').addEventListener('click', e => { const b = e.target.closest('[data-resp]'); if (!b) return; $('#taskForm').responsable.value = b.dataset.resp; syncQuick(); });
+$('#taskForm').responsable.addEventListener('input', syncQuick);
+$('#taskForm').limite.addEventListener('input', syncQuick);
 function renderTaskThumbs() {
   $('#taskThumbs').innerHTML = taskCtx.imgs.map(x => `<div class="thumb sm">${x.data ? `<img src="${x.data}" alt="">` : ''}<button class="rm" type="button" data-rm="${x.id}" aria-label="Quitar imagen">${ic('x')}</button></div>`).join('');
 }
@@ -1435,6 +1528,7 @@ $('#taskForm').plazo.addEventListener('input', e => {
   const ap = taskCtx?.st.apertura; const d = parseN(e.target.value);
   e.target.classList.toggle('is-bad', !!e.target.value.trim() && d == null);
   if (d != null && ap) $('#taskForm').limite.value = addDays(ap, -d);
+  syncQuick();
 });
 $('#taskForm').limite.addEventListener('input', e => {
   const ap = taskCtx?.st.apertura; if (ap) $('#taskForm').plazo.value = nTxt(nOf(e.target.value, ap));
