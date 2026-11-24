@@ -4,7 +4,9 @@ Cada versión publicada tiene su etiqueta (`vX.Y.Z`) y su release en GitHub con 
 
 Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El texto de esa sección se usa como notas del release.
 
-## [Sin publicar]
+## [1.3.0] - 2026-11-24
+
+Versión para celular: app instalable que abre sin internet, barra inferior, cámara y dictado, inicio renovado y tiendas en 3D.
 
 - **App instalable**: se puede agregar a la pantalla de inicio del celular con su ícono y **abre sin internet** (el avance ya se guarda en el teléfono).
 - **Barra inferior en celular**: Tiendas, **Mi plataforma** (abre directo tu check list en la próxima apertura), **Calendario** (el de la próxima apertura) y **Más** (nombre, nueva tienda, plantillas, respaldos, tema, ayuda e instalar).
