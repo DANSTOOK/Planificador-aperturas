@@ -578,6 +578,7 @@ const ICONS = {
   camera: '<path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3v10.5H4z"/><circle cx="12" cy="13.5" r="3.4"/>',
   mic: '<rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5"/>',
   filter: '<path d="M4 6h16M7 12h10M10 18h4"/>',
+  cube: '<path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/>',
   lock: '<rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
   mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4.5 7 7.5 6 7.5-6"/>',
   list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r=".9" fill="currentColor"/><circle cx="4.8" cy="12" r=".9" fill="currentColor"/><circle cx="4.8" cy="17.5" r=".9" fill="currentColor"/>',
@@ -768,7 +769,10 @@ function viewStore(st) {
   return `
   ${storeNav(st)}
   <section class="sv-hero" data-plaza="${esc(st.plaza || '')}">
-    <img class="sv-img" src="assets/tienda.png" alt="">
+    <button class="sv-3d" type="button" data-action="view-3d" title="Ver la tienda en 3D" aria-label="Ver la tienda en 3D">
+      <img class="sv-img" src="assets/tienda.png" alt="">
+      <span class="sv-3d-badge">${ic('cube')}Ver en 3D</span>
+    </button>
     <div class="sv-main">
       <div class="sv-title">
         <h1>${esc(st.nombre)}</h1><span class="cr-chip">CR ${esc(st.cr)}</span>${st.plaza ? `<span class="plaza-chip">Plaza ${esc(st.plaza)}${st.formato ? ` · ${esc(st.formato)}` : ''}</span>` : ''}
@@ -1265,6 +1269,7 @@ main.addEventListener('click', async e => {
       log(st, p.pid, `Quitó el subdepartamento ${sb.nombre}`); return commit();
     }
     case 'new-store': return openStoreDlg();
+    case 'view-3d': return open3D(st);
     case 'edit-store': return openStoreDlg(st);
     case 'home-filter': ui.homeFilter = el.dataset.v; return render();
     case 'home-month': ui.homeMonth = el.dataset.v; return render();
@@ -2068,6 +2073,23 @@ document.addEventListener('click', e => {
   $$('details.menu[open]').forEach(d => { if (!d.contains(e.target) || e.target.closest('.menu-item')) d.open = false; });
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') $$('details.menu[open]').forEach(d => { d.open = false; }); });
+
+/* ---------- Tienda en 3D (visor oficial de Sketchfab; el modelo no se descarga) ---------- */
+const MODEL_3D = 'a22bbbbbe79c45638d1a990d1036ebc1';
+function open3D(st) {
+  const dark = document.documentElement.dataset.theme === 'dark' || (!document.documentElement.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+  $('#v3dTitle').textContent = st ? st.nombre : 'Tienda OXXO';
+  $('#v3dSub').textContent = st ? [st.plaza && `Plaza ${st.plaza}`, st.apertura && `Abre ${fmtDate(st.apertura)}`].filter(Boolean).join(' · ') : '';
+  const fr = $('#v3dFrame');
+  if (!navigator.onLine) { $('#v3dOff').hidden = false; fr.hidden = true; }
+  else {
+    $('#v3dOff').hidden = true; fr.hidden = false; $('#v3dLoad').hidden = false;
+    fr.onload = () => { $('#v3dLoad').hidden = true; };
+    fr.src = `https://sketchfab.com/models/${MODEL_3D}/embed?autostart=1&preload=1&transparent=1&ui_theme=${dark ? 'dark' : 'light'}&ui_infos=0&ui_controls=1&ui_stop=0&ui_inspector=0&ui_settings=0&ui_help=0&ui_vr=0&ui_ar=0&ui_annotations=0&dnt=1`;
+  }
+  $('#v3dDlg').showModal();
+}
+$('#v3dDlg').addEventListener('close', () => { $('#v3dFrame').src = 'about:blank'; });
 
 /* ---------- Celular: barra inferior, Más, instalar y dictado ---------- */
 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition || null;

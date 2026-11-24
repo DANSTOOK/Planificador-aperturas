@@ -259,6 +259,20 @@
     </form>
   </dialog>
 
+  <!-- Tienda en 3D -->
+  <dialog id="v3dDlg" class="dlg dlg-3d" aria-labelledby="v3dTitle">
+    <form method="dialog">
+      <header class="dlg-head"><div><h2 id="v3dTitle">Tienda OXXO</h2><p class="dlg-lead" id="v3dSub"></p></div><button class="x" value="cancel" aria-label="Cerrar"><span data-ic="x"></span></button></header>
+      <div class="v3d-stage">
+        <iframe id="v3dFrame" title="Tienda OXXO en 3D" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+        <div class="v3d-load" id="v3dLoad"><span class="spin"></span>Cargando la tienda en 3D…</div>
+        <div class="v3d-off" id="v3dOff" hidden><img src="assets/tienda.png" alt=""><p>Para ver la tienda en 3D necesitas conexión a internet.</p></div>
+      </div>
+      <p class="v3d-hint">Arrastra para girarla · pellizca o usa la rueda para acercar</p>
+      <p class="v3d-credit">Modelo 3D: <a href="https://sketchfab.com/3d-models/oxxo-store-3d-model-by-chicalimodz-a22bbbbbe79c45638d1a990d1036ebc1" target="_blank" rel="noopener">“OXXO Store 3D Model”</a> de <a href="https://sketchfab.com/chicalimodz" target="_blank" rel="noopener">ChicaliModz</a> en Sketchfab</p>
+    </form>
+  </dialog>
+
   <div class="saved-pill" id="savedPill" aria-hidden="true"><span data-ic="check"></span>Guardado</div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="version.js"></script>
