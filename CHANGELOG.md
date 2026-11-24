@@ -14,6 +14,7 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 - Aviso discreto **“Guardado”** después de cada cambio, estados vacíos más claros y más contraste en tema oscuro en celular.
 - El nombre ya es opcional al elegir tu plataforma; solo se pide para comentar.
 - **Tiendas en 3D**: las tarjetas de tienda muestran una tienda OXXO en 3D que gira al pasar el cursor, y en cada tienda “Ver en 3D” la abre en grande para girarla y acercarla. Funciona sin internet; en celular las tarjetas usan la imagen para ir rápido. Modelo “OXXO” de ForgotMyPassword (Sketchfab, licencia CC BY 4.0).
+- Los modelos 3D ya cargados se reutilizan al filtrar o buscar (no vuelven a aparecer poco a poco), las tarjetas llenan todo el ancho de la pantalla y, en celular, “Resumen por correo” ya no tapa la tienda 3D.
 
 ## [1.2.0] - 2026-11-23
 

@@ -478,7 +478,9 @@ function render() {
   else if (r.view !== 'home') { location.replace('#/'); return; }
   else html = viewHome();
   const y = window.scrollY;
+  const pool = keepModels(main);
   main.innerHTML = html;
+  reuseModels(main, pool);
   document.title = title;
   renderSidebar(r);
   hydrate(main);
@@ -1435,7 +1437,7 @@ main.addEventListener('submit', async e => {
 });
 
 main.addEventListener('input', e => {
-  if (e.target.id === 'q') { ui.q = e.target.value; $('#homeCards').innerHTML = homeCards(); const fr = $('#fResult'); if (fr) fr.innerHTML = homeResult(); }
+  if (e.target.id === 'q') { ui.q = e.target.value; const hc = $('#homeCards'); const pool = keepModels(hc); hc.innerHTML = homeCards(); reuseModels(hc, pool); const fr = $('#fResult'); if (fr) fr.innerHTML = homeResult(); }
 });
 main.addEventListener('paste', async e => {
   const ta = e.target.closest('.composer textarea'); if (!ta) return;
@@ -2086,8 +2088,20 @@ function open3D(st) {
   $('#v3dDlg').showModal();
   mv.cameraOrbit = '-25deg 75deg auto'; mv.jumpCameraToGoal?.();
 }
+/* Al volver a pintar la pantalla se reutilizan los modelos ya cargados (no se cargan de nuevo) */
+const MV_POOL = [];
+function keepModels(root) { root.querySelectorAll('model-viewer.mv.is-ready').forEach(v => { if (!MV_POOL.includes(v)) MV_POOL.push(v); }); MV_POOL.splice(0, Math.max(0, MV_POOL.length - 30)); return MV_POOL; }
+function reuseModels(root, pool) {
+  if (!pool.length) return;
+  root.querySelectorAll('model-viewer.mv:not(.is-ready)').forEach(nuevo => {
+    const i = pool.findIndex(v => v.className.replace(' is-ready', '') === nuevo.className); if (i < 0) return;
+    const v = pool.splice(i, 1)[0];
+    v.removeAttribute('auto-rotate'); v.cameraOrbit = nuevo.getAttribute('camera-orbit'); v.jumpCameraToGoal?.();
+    nuevo.replaceWith(v);
+  });
+}
 /* El modelo aparece suave cuando ya cargó (sin destello de la imagen anterior) */
-document.addEventListener('load', e => { if (e.target.matches?.('model-viewer.mv')) e.target.classList.add('is-ready'); }, true);
+document.addEventListener('load', e => { if (e.target.matches?.('model-viewer.mv')) { e.target.classList.add('is-ready'); setTimeout(() => document.documentElement.classList.add('mv-warm'), 500); } }, true);
 document.addEventListener('error', e => { if (e.target.matches?.('model-viewer.mv')) e.target.closest('.tile-ic')?.classList.add('mv-failed'); }, true);
 /* Doble toque o doble clic: regresar a la vista inicial */
 $('#v3dModel').addEventListener('dblclick', e => { e.currentTarget.cameraOrbit = '-25deg 75deg auto'; e.currentTarget.fieldOfView = 'auto'; });
