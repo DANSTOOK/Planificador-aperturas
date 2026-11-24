@@ -1435,3 +1435,13 @@ a.sl-row:hover .chev { transform: translateX(3px); color: var(--ink); }
 .sc-plat.is-locked svg { color: var(--muted); }
 .sc-plat.is-locked:hover { background: none; }
 .locked-panel .empty-ic { color: var(--muted); }
+
+/* Responsable de la plataforma (sin subdepartamentos) */
+.plat-owner { margin: -4px 0 14px; }
+.plat-owner .owner-card { margin-top: 0; max-width: 560px; }
+.ms-owner { display: inline-flex; align-items: center; gap: 7px; min-height: 30px; padding: 2px 10px 2px 3px; margin-left: -3px; border: 1px solid transparent; border-radius: 99px; background: none; color: var(--ink); font-size: 15px; cursor: pointer; max-width: 100%; }
+.ms-owner b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-owner:hover { border-color: var(--line-2); background: var(--surface-2); }
+.ms-owner.is-empty { padding-left: 8px; border: 1px dashed var(--line-2); color: var(--ink-2); font-size: 13px; font-weight: 600; }
+.ms-owner.is-empty svg { width: 14px; height: 14px; }
+.ms-owner .oc-av.sm { background: var(--c, var(--accent)); }

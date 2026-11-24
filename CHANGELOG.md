@@ -15,6 +15,7 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 - **Navegación de la tienda más clara**: botón “Volver a …” arriba, ruta Tiendas › Tienda › Plataforma y pestañas fijas con Resumen y cada plataforma (ícono y avance) para cambiar de sección sin perderse.
 - **Barra lateral más limpia**: ya no muestra todas las tiendas; cuando estás en una tienda aparece “Estás en” con acceso a cada plataforma, y la lista de tiendas queda en una pestaña plegable con buscador.
 - **Por ahora solo cuentan TI y Comercial**: Conservación (Mtto) y Administrativo aparecen en gris con candado (“Próximamente”) en todas las aperturas y no influyen en el % de la tienda, los bloqueos, el resumen ni el correo. Sus pasos se conservan para cuando se habiliten.
+- Las plataformas **sin subdepartamentos** (como TI) también tienen su tarjeta de **Responsable** (nombre, correo y teléfono opcionales), con sugerencias y opción de asignarlo en las demás tiendas. La celda “Responsable” de cada plataforma se toca para asignarlo.
 
 ## [1.1.0] - 2026-11-23
 

@@ -920,7 +920,7 @@ function viewPlat(st, p) {
       <div class="ms-cell ms-act"><button class="btn btn-primary btn-sm" type="button" data-action="edit-plat">Listo</button></div>`
     : `
       <div class="ms-cell"><span class="kpi-l">Ingreso</span><span class="ms-v">${p.ingreso ? `${fmtDate(p.ingreso)} ${nChip(p.ingreso, st.apertura)}` : '—'}</span></div>
-      <div class="ms-cell"><span class="kpi-l">Responsable</span><span class="ms-v">${esc(p.responsable) || '—'}</span></div>
+      <div class="ms-cell"><span class="kpi-l">Responsable</span><button type="button" class="ms-owner ${p.responsable ? '' : 'is-empty'}" data-action="edit-owner" data-plat="1" title="${p.responsable ? 'Cambiar responsable' : 'Asignar responsable'}">${p.responsable ? `<span class="oc-av sm">${esc(initials(p.responsable))}</span><b>${esc(p.responsable)}</b>` : `${ic('plus')}Asignar`}</button></div>
       <div class="ms-cell"><span class="kpi-l">Apertura</span><span class="ms-v">${fmtDate(st.apertura)}${st.apertura ? ` <span class="n-chip today">Hoy ${nTxt(nOf(todayISO(), st.apertura))}</span>` : ''}</span></div>
       <div class="ms-cell ms-act"><button class="btn btn-ghost btn-sm" type="button" data-action="edit-plat">${ic('edit')}Editar</button></div>`}
   </section>
@@ -928,6 +928,7 @@ function viewPlat(st, p) {
     <div class="callout-head">${ic('alert')}<b>${bloq.length === 1 ? '1 paso bloqueado' : `${bloq.length} pasos bloqueados`}</b><span>Necesitan apoyo para avanzar</span></div>
     <ul>${bloq.map(k => { const c = [...k.historial].reverse().find(h => h.tipo === 'comentario' && h.texto); return `<li><button type="button" data-action="goto-task" data-id="${esc(k.id)}"><span class="cl-title">${esc(k.titulo)}</span><span class="cl-note">${c ? `${esc(c.autor.split(' · ')[0])}: ${esc(trunc(c.texto, 150))}` : 'Sin comentario: ábrelo y explica qué falta.'}</span>${ic('chevron', 'chev')}</button></li>`; }).join('')}</ul>
   </section>` : ''}
+  ${!multi ? `<section class="plat-owner" style="--c:${safeColor(p.color)}">${ownerCard(p, true)}</section>` : ''}
   ${tip('plat3', 'Toca el círculo de un paso para marcarlo como terminado. Toca el texto del paso para cambiar su estatus, comentar o subir fotos.')}
   ${multi ? `<section class="sub-pick" style="--c:${safeColor(p.color)}">
     <p class="sp-h"><b>Subdepartamentos</b><span>Elige uno para ver solo su check list</span></p>
@@ -974,20 +975,24 @@ function subContact(sb) {
   ].filter(Boolean).join('');
 }
 /* Tarjeta "¿Quién atiende este check list?" en la banda del subdepartamento */
-function ownerCard(sb) {
+function ownerCard(sb, plat = false) {
+  const pa = plat ? ' data-plat="1"' : '';
   if (!sb.responsable) return `<div class="owner-card is-empty">
       <span class="oc-av">${ic('user')}</span>
       <span class="oc-txt"><small>Responsable</small><b>Sin asignar</b><span class="oc-sub">¿Quién atiende este check list?</span></span>
-      <button class="btn btn-primary btn-sm oc-btn" type="button" data-action="edit-owner">${ic('plus')}Asignar responsable</button>
+      <button class="btn btn-primary btn-sm oc-btn" type="button" data-action="edit-owner"${pa}>${ic('plus')}Asignar responsable</button>
     </div>`;
   return `<div class="owner-card">
       <span class="oc-av">${esc(initials(sb.responsable))}</span>
       <span class="oc-txt"><small>Responsable</small><b>${esc(sb.responsable)}</b>${sb.correo || sb.telefono ? `<span class="oc-links">${subContact(sb)}</span>` : '<span class="oc-sub">Sin correo ni teléfono</span>'}</span>
-      <button class="btn btn-ghost btn-sm oc-btn" type="button" data-action="edit-owner" aria-label="Cambiar responsable de ${esc(sb.nombre)}">${ic('edit')}Cambiar</button>
+      <button class="btn btn-ghost btn-sm oc-btn" type="button" data-action="edit-owner"${pa} aria-label="Cambiar responsable de ${esc(sb.nombre)}">${ic('edit')}Cambiar</button>
     </div>`;
 }
 /* Personas ya usadas para el mismo subdepartamento (en otras tiendas o en la plantilla) */
-function ownerSuggestions(sid) {
+/* El mismo subdepartamento (o la misma plataforma) en otra tienda */
+const ownerTwin = (t, p, sb) => { const q = getPlat(t, p.pid); return !q ? null : sb === p ? q : q.subs.find(x => x.id === sb.id); };
+function ownerSuggestions(sid, pid = '') {
+  if (pid) { const seen = new Map(); S.tiendas.forEach(t => { const x = t.plataformas.find(q => q.pid === pid); const n = (x?.responsable || '').trim(); if (n && !seen.has(norm(n))) seen.set(norm(n), { responsable: n, correo: x.correo || '', telefono: x.telefono || '' }); }); return [...seen.values()]; }
   const seen = new Map();
   const add = x => { const n = (x?.responsable || '').trim(); if (!n) return; const key = norm(n); const prev = seen.get(key); seen.set(key, { responsable: n, correo: x.correo || prev?.correo || '', telefono: x.telefono || prev?.telefono || '' }); };
   S.catalogo.forEach(c => (c.subs || []).filter(x => x.id === sid).forEach(add));
@@ -1000,10 +1005,10 @@ function openOwnerDlg(st, p, sb) {
   const f = $('#ownerForm'); f.reset();
   $('#ownerDlg').style.setProperty('--c', safeColor(p.color));
   $('#ownerTitle').textContent = `¿Quién atiende ${sb.nombre}?`;
-  $('#ownerLead').textContent = `${st.nombre} · ${p.nombre}${sb.rol ? ` · Rol: ${sb.rol}` : ''}`;
+  $('#ownerLead').textContent = sb === p ? `${st.nombre} · Toda la plataforma` : `${st.nombre} · ${p.nombre}${sb.rol ? ` · Rol: ${sb.rol}` : ''}`;
   f.responsable.value = sb.responsable || ''; f.correo.value = sb.correo || ''; f.telefono.value = sb.telefono || '';
   const me = Pref.get('ap-user').trim();
-  const sug = ownerSuggestions(sb.id);
+  const sug = sb === p ? ownerSuggestions('', p.pid) : ownerSuggestions(sb.id);
   if (me && !sug.some(x => norm(x.responsable) === norm(me))) sug.unshift({ responsable: me, correo: '', telefono: '', yo: true });
   $('#ownerSugBox').hidden = !sug.length;
   $('#ownerSug').innerHTML = sug.map((x, i) => `<button type="button" class="person-chip" data-i="${i}" aria-pressed="${norm(x.responsable) === norm(sb.responsable)}"><span class="oc-av sm">${esc(initials(x.responsable))}</span><span><b>${esc(x.responsable)}${x.yo ? ' (yo)' : ''}</b>${x.correo || x.telefono ? `<small>${esc(x.correo || x.telefono)}</small>` : ''}</span></button>`).join('');
@@ -1013,7 +1018,7 @@ function openOwnerDlg(st, p, sb) {
     f.responsable.value = x.responsable; f.correo.value = x.correo; f.telefono.value = x.telefono;
     $$('#ownerSug .person-chip').forEach(c => c.setAttribute('aria-pressed', c === b)); syncOwner();
   };
-  const otras = S.tiendas.filter(t => t !== st).map(t => getPlat(t, p.pid)?.subs.find(x => x.id === sb.id)).filter(x => x && !x.responsable).length;
+  const otras = S.tiendas.filter(t => t !== st).map(t => ownerTwin(t, p, sb)).filter(x => x && !x.responsable).length;
   $('#ownerAllLine').hidden = !otras;
   $('#ownerAllLabel').textContent = `Asignarlo también en ${plural(otras, 'otra tienda', 'otras tiendas')} donde ${sb.nombre} no tiene responsable`;
   f.todas.checked = false;
@@ -1036,7 +1041,7 @@ $('#ownerForm').addEventListener('submit', e => {
   Object.assign(sb, data, { editado: Date.now() });
   log(st, p.pid, v === 'clear' ? `Quitó el responsable de ${sb.nombre}` : `Asignó a ${data.responsable} como responsable de ${sb.nombre}`);
   let n = 0;
-  if (v === 'ok' && f.todas.checked) S.tiendas.forEach(t => { if (t === st) return; const x = getPlat(t, p.pid)?.subs.find(y => y.id === sb.id); if (x && !x.responsable) { Object.assign(x, data, { editado: Date.now() }); log(t, p.pid, `Asignó a ${data.responsable} como responsable de ${sb.nombre}`); n++; } });
+  if (v === 'ok' && f.todas.checked) S.tiendas.forEach(t => { if (t === st) return; const x = ownerTwin(t, p, sb); if (x && !x.responsable) { Object.assign(x, data, { editado: Date.now() }); log(t, p.pid, `Asignó a ${data.responsable} como responsable de ${sb.nombre}`); n++; } });
   commit();
   toast(v === 'clear' ? 'Responsable quitado' : `${data.responsable} quedó como responsable de ${sb.nombre}${n ? ` en esta y ${plural(n, 'otra tienda', 'otras tiendas')}` : ''}`);
 });
@@ -1222,7 +1227,7 @@ main.addEventListener('click', async e => {
   switch (a) {
     case 'new-sub': return openSubDlg(st, p);
     case 'edit-sub': return openSubDlg(st, p, sb);
-    case 'edit-owner': return sb && openOwnerDlg(st, p, sb);
+    case 'edit-owner': return el.dataset.plat ? openOwnerDlg(st, p, p) : sb && openOwnerDlg(st, p, sb);
     case 'del-sub': {
       const ks = subTasks(p, sb.id);
       const v = await ask('Eliminar subdepartamento', `${sb.nombre} tiene ${plural(ks.length, 'paso', 'pasos')}. Puedes mover sus pasos a “General de ${p.nombre}” o eliminarlos junto con sus comentarios e imágenes.`,
