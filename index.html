@@ -6,6 +6,34 @@
   <meta name="color-scheme" content="light dark" />
   <title>Aperturas | Check list por plataforma</title>
   <script>try{const t=localStorage.getItem('ap-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+  <script>
+    /* Soporte: ?limpiar borra la copia guardada del sitio en este equipo (no borra el avance) */
+    (function () {
+      if (!/[?&]limpiar\b/.test(location.search)) return;
+      var tareas = [];
+      if ('serviceWorker' in navigator) tareas.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+      if (window.caches) tareas.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+      Promise.all(tareas).catch(function () {}).then(function () { location.replace(location.pathname); });
+    })();
+    /* Si algo falla al abrir, se muestra en pantalla (en lugar de quedar en blanco) */
+    (function () {
+      var shown = false, t0 = Date.now();
+      function show(msg) {
+        if (shown) return; shown = true;
+        var box = function () {
+          var d = document.createElement('div');
+          d.setAttribute('role', 'alert');
+          d.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;padding:14px 16px;border-radius:12px;background:#b91c1c;color:#fff;font:14px/1.4 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.35)';
+          d.innerHTML = '<b>La app no pudo abrir bien.</b><br>Toca <a href="?limpiar" style="color:#fff;text-decoration:underline">aquí para reparar</a> (tu avance no se borra). Si sigue, manda captura de este mensaje.<br><small style="opacity:.85">' + String(msg).replace(/[<>&]/g, '') + ' · ' + navigator.userAgent.replace(/[<>&]/g, '').slice(0, 120) + '</small>';
+          document.body.appendChild(d);
+        };
+        if (document.body) box(); else document.addEventListener('DOMContentLoaded', box);
+      }
+      window.addEventListener('error', function (e) { if (Date.now() - t0 > 8000) return; if (e.filename && !/app\.js|version\.js|base\.js/.test(e.filename)) return; show((e.message || 'Error') + (e.lineno ? ' (línea ' + e.lineno + ')' : '')); });
+      window.addEventListener('unhandledrejection', function (e) { var m = e.reason && (e.reason.message || e.reason); if (m && /indexedDB|IDB|QuotaExceeded/i.test(String(m))) show(m); });
+      window.addEventListener('load', function () { setTimeout(function () { if (!document.querySelector('#main') || !document.querySelector('#main').children.length) show('La pantalla quedó vacía'); }, 4000); });
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
