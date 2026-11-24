@@ -4,7 +4,9 @@ Cada versión publicada tiene su etiqueta (`vX.Y.Z`) y su release en GitHub con 
 
 Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El texto de esa sección se usa como notas del release.
 
-## [Sin publicar]
+## [1.2.0] - 2026-11-23
+
+Responsables por área, check list de Ejecución Comercial, edición y navegación más sencillas, y avance enfocado en TI y Comercial.
 
 - Check list de **Ejecución Comercial** (8 pasos con su plazo N-# y responsable de cada paso).
 - Cada subdepartamento tiene **a quién le pertenece**: nombre y, si se quiere, correo y teléfono (se pueden tocar para escribir o llamar). Lo agrega cada área con “Agregar responsable”.
