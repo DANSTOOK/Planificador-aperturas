@@ -44,7 +44,7 @@ const PALETTE = ['#137b5f', '#2563eb', '#c2410c', '#7c3aed', '#0891b2', '#b91c1c
 /* Plantillas de ejemplo: se editan en la vista Plantillas */
 /* Cada plataforma tiene pasos generales (plantilla) y, si se requiere,
    subdepartamentos con su rol y su propio check list (subs). */
-const CATALOG_VERSION = 9;
+const CATALOG_VERSION = 10;
 /* Check list de Procesos Comerciales (Comercial). Fuente: "Check List Procesos Comerciales" (aperturas POS). */
 const PROCESOS_STEPS = [
   { titulo: 'Reenvío de catálogo completo', descripcion: 'Se comparte el folio a TI para validar la recepción correcta de los documentos.' },
@@ -106,6 +106,17 @@ const TI_STEPS = [
   'Validación de activaciones Spin',
   'Validación y reenvío de promociones y precios'
 ];
+/* Check list de Ejecución Comercial (Comercial). dias = N-# (días antes de la apertura). */
+const EJECUCION_STEPS = [
+  { titulo: 'Sembrar la tienda en base al layout', responsable: 'Luis Carrillo', dias: 35, descripcion: 'Área: Comercial Plaza Este. GC y CF van con OS.' },
+  { titulo: 'Sembrado de mobiliario adicional', responsable: 'Luis Carrillo', dias: 35, descripcion: 'Área: Comercial Plaza Este. Para que llegue la mercancía correcta de CEDIS.' },
+  { titulo: 'Solicitar al prestador la instalación de banners', responsable: 'Vale Avilez', dias: 20, descripcion: 'Área: Hab. Comerciales. Una vez identificados los tamaños de los banners, solicitar al prestador la instalación.' },
+  { titulo: 'Pedir a Administrativo colocar la tienda como operativa', responsable: 'Administrativo', dias: 20, descripcion: 'Lo solicita Comercial Plaza Este una vez que OS confirme el sembrado.' },
+  { titulo: 'Validar catálogos de proveedores top y que aparezca la variedad completa', responsable: 'Luis, Edgar, Charly/Dany', dias: 10, descripcion: 'Área: Procesos Comerciales y TI.' },
+  { titulo: 'Armado de tienda con Raúl Escudero y caja kit de apertura', responsable: 'Vale Avilez', dias: 10, descripcion: 'Área: Hab. Comerciales. La caja kit incluye señalizaciones, despachador de salsa, etc.' },
+  { titulo: 'Revisar el catálogo que generó la tienda vía CEDIS', responsable: 'Sadot', dias: 10, descripcion: 'Área: Abasto. Sadot comparte el catálogo que generó la tienda vía CEDIS para detectar artículos top relevantes faltantes.' },
+  { titulo: 'Visitar la tienda en la entrega con Raúl Escudero', responsable: 'Luis Carrillo', dias: 8, descripcion: 'Área: Comercial Plaza Este. Validar mobiliario faltante: parrillas, góndolas, etc.' },
+];
 /* Food Service (Comercial). dias = días antes de la apertura (N-5 = 5 días antes). */
 const FV_SUB = { id: 'com-fv', nombre: 'Food Service', rol: 'Equipo FV', plantilla: [
   { titulo: 'Habilitación de termos y utensilios FV (membranas, condimenteros, portavasos, etc.)', responsable: 'Equipo FV', dias: 5 },
@@ -118,7 +129,7 @@ const DEFAULT_CATALOG = [
   { id: 'com', nombre: 'Comercial', color: '#be185d', plantilla: ['Surtido inicial definido para la tienda'], subs: [
     { id: 'com-precios', nombre: 'Precios y Promociones', rol: 'Analista Precios y Promociones', plantilla: PP_STEPS },
     { id: 'com-abasto', nombre: 'Seguimiento Abasto', rol: 'Analista Seguimiento Abasto', plantilla: ABASTO_STEPS },
-    { id: 'com-ejecucion', nombre: 'Ejecución Comercial', rol: 'Coordinador Ejecución Comercial', plantilla: [] },
+    { id: 'com-ejecucion', nombre: 'Ejecución Comercial', rol: 'Coordinador Ejecución Comercial', plantilla: EJECUCION_STEPS },
     { id: 'com-mercadeo', nombre: 'Mercadeo', rol: 'Practicante Mercadeo', plantilla: [] },
     { id: 'com-procesos', nombre: 'Procesos Comerciales', rol: '', plantilla: PROCESOS_STEPS },
     FV_SUB,
@@ -250,7 +261,7 @@ function lineToTpl(line) {
   return responsable || dias != null ? { titulo, responsable, dias } : titulo;
 }
 function newSub(cs, plantilla = true) {
-  return { id: cs.id || uid('s'), nombre: cs.nombre, rol: cs.rol || '', responsable: cs.responsable || '', editado: Date.now(), _tasks: plantilla ? (cs.plantilla || []) : [] };
+  return { id: cs.id || uid('s'), nombre: cs.nombre, rol: cs.rol || '', responsable: cs.responsable || '', correo: cs.correo || '', telefono: cs.telefono || '', editado: Date.now(), _tasks: plantilla ? (cs.plantilla || []) : [] };
 }
 function newStorePlat(cat, { ingreso = '', responsable = '', plantilla = true, apertura = '' } = {}) {
   const p = { pid: cat.id, nombre: cat.nombre, color: cat.color, ingreso, responsable, editado: Date.now(), subs: [], tasks: plantilla ? (cat.plantilla || []).map(t => taskFromTpl(t, apertura)) : [] };
@@ -273,7 +284,7 @@ function normalizeStore(st) {
     p.tasks.forEach(k => { k.imagenes ||= []; k.historial ||= []; if (!STATUS[k.estado]) k.estado = 'pendiente'; if (k.sub && !ids.has(k.sub)) k.sub = ''; k.sub ||= ''; });
   });
 }
-function normalizeCatalog(c) { c.plantilla ||= []; c.subs ||= []; c.subs.forEach(s => { s.id ||= uid('s'); s.rol ||= ''; s.plantilla ||= []; }); return c; }
+function normalizeCatalog(c) { c.plantilla ||= []; c.subs ||= []; c.subs.forEach(s => { s.id ||= uid('s'); s.rol ||= ''; s.responsable ||= ''; s.correo ||= ''; s.telefono ||= ''; s.plantilla ||= []; }); return c; }
 /* ---------- Base del equipo (data/base.js) ---------- */
 // Fechas clave del cronograma de cada tienda, en el orden en que suelen ocurrir
 const HITOS = [
@@ -528,6 +539,7 @@ const ICONS = {
   truck: '<path d="M3 6.5h11v9H3zM14 9.5h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17" cy="17.5" r="1.7"/>',
   clip: '<path d="m19.5 11.5-7.6 7.6a4.6 4.6 0 0 1-6.5-6.5l7.6-7.6a3.1 3.1 0 0 1 4.4 4.4l-7.6 7.6a1.5 1.5 0 0 1-2.2-2.2l7-7"/>',
   check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  phone: '<path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A16 16 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/>',
   mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4.5 7 7.5 6 7.5-6"/>',
   list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r=".9" fill="currentColor"/><circle cx="4.8" cy="12" r=".9" fill="currentColor"/><circle cx="4.8" cy="17.5" r=".9" fill="currentColor"/>',
   expand: '<path d="M8 9.5 12 5.5l4 4M8 14.5l4 4 4-4"/>',
@@ -875,7 +887,7 @@ function viewPlat(st, p) {
       const sb = p.subs.find(x => x.id === sid); const x = stats(subTasks(p, sid)); const on = sid === selSid;
       return `<button type="button" role="tab" aria-selected="${on}" class="sub-tile ${on ? 'is-sel' : ''}" data-action="sel-sub" data-sid="${esc(sid)}">
         <span class="sbt-name">${sb ? esc(sb.nombre) : 'Pasos generales'}</span>
-        <span class="sbt-rol">${sb ? (sb.rol ? esc(sb.rol) : '&nbsp;') : 'Toda la plataforma'}</span>
+        <span class="sbt-rol" title="${sb ? esc([sb.responsable, sb.rol].filter(Boolean).join(' · ')) : ''}">${sb ? (sb.responsable ? `${ic('user')}<b>${esc(sb.responsable)}</b>` : (sb.rol ? esc(sb.rol) : '&nbsp;')) : 'Toda la plataforma'}</span>
         <span class="sbt-prog">${x.aplic ? `<span class="num">${x.pct}%</span>${bar(x.pct)}` : '<span class="muted">Sin pasos</span>'}</span>
         <span class="sbt-count">${x.aplic ? `${x.completado} de ${plural(x.aplic, 'paso', 'pasos')}` : ''}${on ? '<b class="sbt-on">Viendo</b>' : ''}</span>
         ${x.bloqueado ? `<span class="flag sbt-flag">${ic('alert')}${x.bloqueado}</span>` : ''}
@@ -885,7 +897,8 @@ function viewPlat(st, p) {
     <div class="sbn-text">
       <span class="sbn-kicker">${ic('list')}Estás viendo el check list de</span>
       <h2>${sb ? esc(sb.nombre) : `Pasos generales de ${esc(p.nombre)}`}</h2>
-      <p>${sb ? (sb.rol ? `${ic('user')}${esc(sb.rol)}` : 'Sin rol asignado') : 'Pasos de toda la plataforma'}${sb?.responsable ? ` · ${esc(sb.responsable)}` : ''}</p>
+      <p>${sb ? (sb.responsable || sb.rol ? `${ic('user')}${sb.responsable ? `<b>${esc(sb.responsable)}</b>` : ''}${sb.responsable && sb.rol ? ' · ' : ''}${esc(sb.rol)}` : '') : 'Pasos de toda la plataforma'}${sb && !sb.responsable ? ` <button class="link-btn sbn-own" type="button" data-action="edit-sub" data-sub-id="${esc(sb.id)}">${ic('plus')}Agregar responsable</button>` : ''}</p>
+      ${sb && (sb.correo || sb.telefono) ? `<p class="sbn-contact">${subContact(sb)}</p>` : ''}
     </div>
     <div class="sbn-prog"><span class="sbn-pct">${x.pct}<small>%</small></span><div>${bar(x.pct)}<span>${x.completado} de ${plural(x.aplic, 'paso terminado', 'pasos terminados')}</span></div></div>
     ${sb ? `<div class="grp-actions"><button class="icon-btn" type="button" data-action="edit-sub" data-sub-id="${esc(sb.id)}" title="Editar subdepartamento" aria-label="Editar subdepartamento">${ic('edit')}</button><button class="icon-btn danger" type="button" data-action="del-sub" title="Eliminar subdepartamento" aria-label="Eliminar subdepartamento">${ic('trash')}</button></div>` : ''}
@@ -903,6 +916,14 @@ function viewPlat(st, p) {
     ${['completado', 'proceso', 'pendiente', 'na'].map(e => `<button class="btn btn-sm bb-st" type="button" data-action="bulk-status" data-v="${e}" ${ui.sel.size ? '' : 'disabled'}>${stIcon(e)}${STATUS[e].label}</button>`).join('')}
     <button class="icon-btn" type="button" data-action="sel-mode" aria-label="Terminar selección" title="Terminar selección">${ic('x')}</button>
   </div>` : ''}`;
+}
+/* Contacto del responsable de un subdepartamento: nombre, correo y teléfono (enlaces) */
+function subContact(sb) {
+  const tel = String(sb.telefono || '').replace(/[^0-9+]/g, '');
+  return [
+    sb.correo ? `<a class="sc-link" href="mailto:${esc(sb.correo)}" title="Escribir a ${esc(sb.correo)}">${ic('mail')}${esc(sb.correo)}</a>` : '',
+    tel ? `<a class="sc-link" href="tel:${esc(tel)}" title="Llamar">${ic('phone')}${esc(sb.telefono)}</a>` : '',
+  ].filter(Boolean).join('');
 }
 function canLoadTpl(p) { const c = S.catalogo.find(x => x.id === p.pid); return !!c && (c.plantilla.length || c.subs.length); }
 function taskGroup(st, p, sid, items, multi, noHead = false) {
@@ -946,7 +967,7 @@ function taskItem(st, p, k, n) {
         <span class="task-text">
           <span class="task-title">${esc(k.titulo)}</span>
           ${meta ? `<span class="task-meta">${meta}</span>` : ''}
-          ${!open && last && k.estado === 'bloqueado' ? `<span class="task-last">${esc(last.autor.split(' · ')[0])}: ${esc(trunc(last.texto || 'adjuntó una foto', 120))}</span>` : ''}
+          ${!open && last && !['completado', 'na'].includes(k.estado) ? `<span class="task-last">${ic('comment')}<b>${esc(last.autor.split(' · ')[0])}:</b> ${esc(trunc(last.texto || 'adjuntó una foto', 140))}<em>${rel(last.fecha)}</em></span>` : ''}
         </span>
         <span class="task-side">
           ${isNext ? '<span class="next">Siguiente</span>' : ''}
@@ -1033,6 +1054,9 @@ function viewTemplates() {
             <div class="tpl-sub-head">
               <input class="tpl-sub-name" value="${esc(s.nombre)}" data-change="tsub-name" aria-label="Nombre del subdepartamento" placeholder="Nombre">
               <input class="tpl-sub-rol" value="${esc(s.rol)}" data-change="tsub-rol" aria-label="Rol" placeholder="Rol que lo atiende">
+              <input class="tpl-sub-rol" value="${esc(s.responsable || '')}" data-change="tsub-resp" aria-label="Responsable" placeholder="Nombre del responsable">
+              <input class="tpl-sub-rol" type="email" value="${esc(s.correo || '')}" data-change="tsub-mail" aria-label="Correo del responsable" placeholder="Correo (opcional)">
+              <input class="tpl-sub-rol" type="tel" value="${esc(s.telefono || '')}" data-change="tsub-tel" aria-label="Teléfono del responsable" placeholder="Teléfono (opcional)">
               <button class="icon-btn danger" type="button" data-action="del-tsub" title="Quitar subdepartamento" aria-label="Quitar subdepartamento">${ic('x')}</button>
             </div>
             <textarea data-change="tsub-steps" rows="3" placeholder="Pasos de ${esc(s.nombre)}, uno por línea" aria-label="Pasos de ${esc(s.nombre)}">${esc(s.plantilla.map(tplToLine).join('\n'))}</textarea>
@@ -1214,6 +1238,9 @@ main.addEventListener('change', async e => {
   if (ts) {
     if (a === 'tsub-name') { const v = el.value.trim(); if (!v) { el.value = ts.nombre; return; } ts.nombre = v; }
     if (a === 'tsub-rol') ts.rol = el.value.trim();
+    if (a === 'tsub-resp') ts.responsable = el.value.trim();
+    if (a === 'tsub-mail') ts.correo = el.value.trim();
+    if (a === 'tsub-tel') ts.telefono = el.value.trim();
     if (a === 'tsub-steps') ts.plantilla = keepDesc(ts.plantilla, lines(el.value).map(lineToTpl));
   }
   commit();
@@ -1441,7 +1468,7 @@ function openSubDlg(st, p, sb = null) {
   subCtx = { st, p, sb, cat };
   const f = $('#subForm'); f.reset();
   $('#subDlgTitle').textContent = sb ? `Editar ${sb.nombre}` : `Nuevo subdepartamento en ${p.nombre}`;
-  f.nombre.value = sb?.nombre || ''; f.rol.value = sb?.rol || ''; f.responsable.value = sb?.responsable || '';
+  f.nombre.value = sb?.nombre || ''; f.rol.value = sb?.rol || ''; f.responsable.value = sb?.responsable || ''; f.correo.value = sb?.correo || ''; f.telefono.value = sb?.telefono || '';
   $('#subOptions').innerHTML = (cat?.subs || []).filter(cs => !p.subs.some(x => x.id === cs.id)).map(cs => `<option value="${esc(cs.nombre)}">`).join('');
   $('#subSaveLabel').textContent = `Guardarlo en la plantilla de ${p.nombre} para las próximas tiendas`;
   $('#subSaveLine').hidden = !!sb || !cat;
@@ -1457,7 +1484,7 @@ function syncSubTpl() {
   $('#subTplLine').hidden = !(m && m.plantilla.length);
   if (m) {
     $('#subTplLabel').textContent = `Cargar sus ${plural(m.plantilla.length, 'paso', 'pasos')} de la plantilla`;
-    const f = $('#subForm'); if (!f.rol.value) f.rol.value = m.rol || '';
+    const f = $('#subForm'); if (!f.rol.value) f.rol.value = m.rol || ''; ['responsable', 'correo', 'telefono'].forEach(k => { if (!f[k].value) f[k].value = m[k] || ''; });
     $('#subSaveLine').hidden = true;
   } else if (!subCtx.sb && subCtx.cat) $('#subSaveLine').hidden = false;
 }
@@ -1465,7 +1492,7 @@ $('#subForm').nombre.addEventListener('input', syncSubTpl);
 $('#subForm').addEventListener('submit', e => {
   if (e.submitter?.value !== 'ok') return;
   const f = e.target; const { st, p, sb, cat } = subCtx;
-  const data = { nombre: f.nombre.value.trim(), rol: f.rol.value.trim(), responsable: f.responsable.value.trim() };
+  const data = { nombre: f.nombre.value.trim(), rol: f.rol.value.trim(), responsable: f.responsable.value.trim(), correo: f.correo.value.trim(), telefono: f.telefono.value.trim() };
   if (p.subs.some(x => x !== sb && norm(x.nombre) === norm(data.nombre))) { e.preventDefault(); toast(`${p.nombre} ya tiene un subdepartamento llamado ${data.nombre}`, true); return; }
   if (sb) {
     Object.assign(sb, data, { editado: Date.now() });
@@ -1473,10 +1500,10 @@ $('#subForm').addEventListener('submit', e => {
   } else {
     const m = subTplMatch();
     let cs;
-    if (m) cs = { ...m, rol: data.rol, responsable: data.responsable };
+    if (m) cs = { ...m, ...data, nombre: m.nombre };
     else {
       cs = { id: uid('s'), ...data, plantilla: [] };
-      if (cat && f.guardar.checked) { cat.subs.push({ id: cs.id, nombre: cs.nombre, rol: cs.rol, plantilla: [] }); }
+      if (cat && f.guardar.checked) { cat.subs.push({ id: cs.id, nombre: cs.nombre, rol: cs.rol, responsable: cs.responsable, correo: cs.correo, telefono: cs.telefono, plantilla: [] }); }
     }
     const s = addSubTo(p, cs, !!m && f.cargar.checked, st.apertura);
     p.editado = Date.now();
@@ -1867,7 +1894,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') $$('details.
 $('#newStoreSide').addEventListener('click', () => openStoreDlg());
 $('#helpBtn').addEventListener('click', openHelp);
 $('#helpDlg').addEventListener('close', () => {
-  if (!Pref.get('ap-help-seen')) { Pref.set('ap-help-seen', '1'); if (!Pref.get('ap-user').trim()) openUserDlg('Para empezar, escribe tu nombre y elige tu plataforma. Así tu equipo sabrá quién marcó o comentó cada paso.'); }
+  if (!Pref.get('ap-help-seen')) Pref.set('ap-help-seen', '1');
 });
 $('#userBtn').addEventListener('click', () => openUserDlg());
 $('#exportAll').addEventListener('click', () => exportData(S.tiendas, `aperturas_respaldo_${todayISO()}.json`));
@@ -1976,6 +2003,22 @@ window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.s
       if (nuevos.length) t.actividad.unshift({ fecha: Date.now(), autor: 'Sistema', pid: 'com', texto: 'Cargó el check list de Procesos Comerciales' });
     });
     s.version = 9;
+  }
+  if ((s.version || 1) < 10) {
+    // Ejecución Comercial: su check list
+    const com = (s.catalogo || []).find(c => c.id === 'com');
+    const ej = com?.subs?.find(x => x.id === 'com-ejecucion'); if (ej) ej.plantilla = structuredClone(EJECUCION_STEPS);
+    (s.tiendas || []).forEach(t => {
+      normalizeStore(t);
+      const p = t.plataformas.find(x => x.pid === 'com');
+      if (!p) return;
+      if (!p.subs.some(x => x.id === 'com-ejecucion')) return;
+      const have = new Set(subTasks(p, 'com-ejecucion').map(k => k.titulo));
+      const nuevos = EJECUCION_STEPS.filter(x => !have.has(x.titulo));
+      nuevos.forEach(x => p.tasks.push(taskFromTpl(x, t.apertura, { sub: 'com-ejecucion' })));
+      if (nuevos.length) t.actividad.unshift({ fecha: Date.now(), autor: 'Sistema', pid: 'com', texto: 'Cargó el check list de Ejecución Comercial' });
+    });
+    s.version = 10;
   }
   S = s;
   if (!Array.isArray(S.catalogo)) S.catalogo = structuredClone(DEFAULT_CATALOG);

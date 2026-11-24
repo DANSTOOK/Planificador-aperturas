@@ -751,7 +751,7 @@ a.store-tile.is-off:hover { filter: none; opacity: 1; }
 .sbn-kicker { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--c); }
 .sbn-kicker .ic { width: 14px; height: 14px; }
 .sub-banner h2 { font-size: 21px; font-weight: 700; letter-spacing: -.02em; margin-top: 3px; }
-.sub-banner p { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--ink-2); margin-top: 3px; }
+.sub-banner p { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; font-size: 13px; color: var(--ink-2); margin-top: 3px; }
 .sub-banner p .ic { width: 14px; height: 14px; color: var(--muted); }
 .sbn-prog { display: flex; align-items: center; gap: 12px; }
 .sbn-pct { font-size: 28px; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
@@ -1193,7 +1193,7 @@ a.store-tile:hover .tile-ic img { animation: store-float 2.4s ease-in-out infini
 .cal-ev.ev-open { background: color-mix(in srgb, var(--st-block) 88%, #000); }
 @media (max-width: 560px) {
   .sub-banner .sbn-kicker .ic { display: none; }
-  .sub-banner p { display: none; }
+  .sub-banner p { font-size: 12.5px; }
   .meta-strip .ms-prog { min-width: 180px; }
 }
 
@@ -1252,3 +1252,21 @@ a.sl-row:hover .chev { transform: translateX(3px); color: var(--ink); }
   .bulk-bar { bottom: 8px; }
   .bb-sep { display: none; }
 }
+
+/* Responsable del subdepartamento en su tarjeta */
+.sbt-rol svg { width: 12px; height: 12px; vertical-align: -2px; margin-right: 4px; }
+.sbt-rol b { font-weight: 600; color: var(--ink-2); }
+.sbn-text p b { font-weight: 600; }
+.owner-box { border: 1px solid var(--line); border-radius: var(--r-sm, 8px); padding: 10px 12px 4px; margin: 4px 0 10px; }
+.owner-box legend { font-weight: 600; font-size: 13px; padding: 0 6px; }
+.owner-box .dlg-note { margin-top: 0; }
+.field .opt { font-weight: 400; color: var(--muted); }
+.sbn-own { font-size: 12.5px; margin-left: 6px; vertical-align: baseline; }
+.sbn-contact { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 4px; }
+.sc-link { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; font-size: 12.5px; color: var(--ink-2); text-decoration: none; }
+.sc-link:hover { color: var(--c, var(--accent)); text-decoration: underline; }
+.sc-link svg { width: 14px; height: 14px; }
+.task-last { display: block; }
+.task-last svg { width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; }
+.task-last b { font-weight: 600; }
+.task-last em { font-style: normal; color: var(--muted); margin-left: 6px; font-size: 11.5px; }

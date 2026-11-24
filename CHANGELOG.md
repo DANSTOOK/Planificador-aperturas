@@ -4,6 +4,13 @@ Cada versión publicada tiene su etiqueta (`vX.Y.Z`) y su release en GitHub con 
 
 Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El texto de esa sección se usa como notas del release.
 
+## [Sin publicar]
+
+- Check list de **Ejecución Comercial** (8 pasos con su plazo N-# y responsable de cada paso).
+- Cada subdepartamento tiene **a quién le pertenece**: nombre y, si se quiere, correo y teléfono (se pueden tocar para escribir o llamar). Lo agrega cada área con “Agregar responsable”.
+- El **último comentario** de cada paso pendiente se ve en la lista sin abrirlo, para que todos sepan qué falta y qué se va a hacer.
+- Ya no se pide el nombre al abrir la app; se pide solo al comentar.
+
 ## [1.1.0] - 2026-11-23
 
 Versión para pruebas con usuarios de la Región Tijuana: 4 plazas y 24 tiendas, check lists reales de TI, Precios y Promociones, Seguimiento Abasto, Procesos Comerciales y Food Service, nuevo diseño, resumen por correo y sitio publicado en GitHub Pages.

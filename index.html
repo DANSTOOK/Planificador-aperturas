@@ -119,10 +119,16 @@
       <div class="dlg-body">
         <p class="dlg-note" id="subNote">Un subdepartamento es un área dentro de la plataforma (por ejemplo, dentro de Comercial: Precios). Tiene su propio check list y su propio avance.</p>
         <label class="field">Nombre del subdepartamento<input name="nombre" required list="subOptions" placeholder="Ej. Precios y promociones" autocomplete="off"><datalist id="subOptions"></datalist></label>
-        <div class="grid-2">
-          <label class="field">Rol que lo atiende<input name="rol" placeholder="Ej. Analista comercial" autocomplete="off"></label>
-          <label class="field">Nombre del responsable<input name="responsable" placeholder="Opcional" autocomplete="off"></label>
-        </div>
+        <label class="field">Rol que lo atiende<input name="rol" placeholder="Ej. Analista comercial" autocomplete="off"></label>
+        <fieldset class="owner-box">
+          <legend>¿A quién le pertenece?</legend>
+          <p class="dlg-note">Con el nombre basta. El correo y el teléfono son opcionales y sirven para que las otras áreas lo contacten.</p>
+          <label class="field">Nombre del responsable<input name="responsable" placeholder="Ej. Luis Carrillo" autocomplete="name"></label>
+          <div class="grid-2">
+            <label class="field">Correo <span class="opt">(opcional)</span><input name="correo" type="email" placeholder="nombre@oxxo.com" autocomplete="off"></label>
+            <label class="field">Teléfono <span class="opt">(opcional)</span><input name="telefono" type="tel" placeholder="Ej. 664 123 4567" autocomplete="off"></label>
+          </div>
+        </fieldset>
         <label class="check-line" id="subTplLine"><input type="checkbox" name="cargar" checked> <span id="subTplLabel">Cargar los pasos de la plantilla</span></label>
         <label class="check-line" id="subSaveLine"><input type="checkbox" name="guardar" checked> <span id="subSaveLabel">Guardarlo en la plantilla para las próximas tiendas</span></label>
       </div>
