@@ -1721,3 +1721,8 @@ model-viewer.mv:not(:defined) { background: none; }
   .sv-hero .sv-actions .btn-primary { flex: 1; justify-content: center; }
   .sv-hero .sv-3d { justify-self: center; margin: -6px auto 4px; }
 }
+/* La tarjeta crece con su contenido: la tienda 3D grande ya no tapa avance ni apertura */
+@media (min-width: 601px) {
+  .store-tile { aspect-ratio: auto !important; height: auto; }
+  .store-tile .tile-stats { margin-top: auto; }
+}
