@@ -10,7 +10,7 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 - La primera vez que cada navegador abre esta versión, el avance que ya tenía se junta con la base (sin duplicar pasos).
 - Indicador bajo el nombre de la app: “En línea · compartido”, “Sin señal · se guarda al volver” o error. Sin señal se sigue trabajando y se sube al volver.
 - Las fotos y las plantillas siguen guardándose solo en cada equipo.
-- Carpeta  con el SQL de la base, las plantillas CSV y los scripts de acceso.
+- Carpeta `supabase/` con el SQL de la base, las plantillas CSV y los scripts de acceso.
 
 ## [1.3.0] - 2026-11-24
 
