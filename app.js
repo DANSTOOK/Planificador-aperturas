@@ -44,7 +44,7 @@ const PALETTE = ['#137b5f', '#2563eb', '#c2410c', '#7c3aed', '#0891b2', '#b91c1c
 /* Plantillas de ejemplo: se editan en la vista Plantillas */
 /* Cada plataforma tiene pasos generales (plantilla) y, si se requiere,
    subdepartamentos con su rol y su propio check list (subs). */
-const CATALOG_VERSION = 10;
+const CATALOG_VERSION = 11;
 /* Check list de Procesos Comerciales (Comercial). Fuente: "Check List Procesos Comerciales" (aperturas POS). */
 const PROCESOS_STEPS = [
   { titulo: 'Reenvío de catálogo completo', descripcion: 'Se comparte el folio a TI para validar la recepción correcta de los documentos.' },
@@ -123,6 +123,8 @@ const FV_SUB = { id: 'com-fv', nombre: 'Food Service', rol: 'Equipo FV', plantil
   { titulo: 'Validar que las recetas de las bebidas estén activas y descarguen el agua que utiliza la tienda para evitar merma de agua en tienda', responsable: 'Equipo FV', dias: 2 },
   { titulo: 'Validar con Caffenio las máquinas con las que empezará la tienda a vender', responsable: 'Equipo FV/Caffenio', dias: 10 },
 ] };
+/* Mercadeo incluye el check list de Food Venience (antes subdepartamento aparte: Food Service) */
+const MERCADEO_FV = 'Mercadeo · Food Venience';
 const DEFAULT_CATALOG = [
   { id: 'mtto', nombre: 'Conservación (Mtto)', color: '#a16207', plantilla: ['Refrigeradores y enfriadores instalados y probados', 'Aire acondicionado funcionando', 'Iluminación interior y exterior', 'Instalación eléctrica y regulador revisados', 'Instalación hidráulica sin fugas'], subs: [] },
   { id: 'adm', nombre: 'Administrativo', color: '#7c3aed', plantilla: ['Alta de la tienda (CR) en sistemas administrativos', 'Fondo de caja asignado', 'Alta del personal en nómina', 'Documentación y permisos en tienda'], subs: [] },
@@ -130,9 +132,8 @@ const DEFAULT_CATALOG = [
     { id: 'com-precios', nombre: 'Precios y Promociones', rol: 'Analista Precios y Promociones', plantilla: PP_STEPS },
     { id: 'com-abasto', nombre: 'Seguimiento Abasto', rol: 'Analista Seguimiento Abasto', plantilla: ABASTO_STEPS },
     { id: 'com-ejecucion', nombre: 'Ejecución Comercial', rol: 'Coordinador Ejecución Comercial', plantilla: EJECUCION_STEPS },
-    { id: 'com-mercadeo', nombre: 'Mercadeo', rol: 'Practicante Mercadeo', plantilla: [] },
+    { id: 'com-mercadeo', nombre: MERCADEO_FV, rol: 'Practicante Mercadeo', plantilla: FV_SUB.plantilla },
     { id: 'com-procesos', nombre: 'Procesos Comerciales', rol: '', plantilla: PROCESOS_STEPS },
-    FV_SUB,
   ] },
   { id: 'ti', nombre: 'TI', color: '#2563eb', plantilla: TI_STEPS, subs: [] },
 ];
@@ -2310,6 +2311,26 @@ window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.s
       if (nuevos.length) t.actividad.unshift({ fecha: Date.now(), autor: 'Sistema', pid: 'com', texto: 'Cargó el check list de Ejecución Comercial' });
     });
     s.version = 10;
+  }
+  if ((s.version || 1) < 11) {
+    // Food Venience pasa a Mercadeo: sus pasos se mueven y desaparece el subdepartamento Food Service
+    const com = (s.catalogo || []).find(c => c.id === 'com');
+    if (com) {
+      const me = com.subs?.find(x => x.id === 'com-mercadeo');
+      if (me) { me.nombre = MERCADEO_FV; if (!me.plantilla?.length) me.plantilla = structuredClone(FV_SUB.plantilla); }
+      com.subs = (com.subs || []).filter(x => x.id !== FV_SUB.id);
+    }
+    (s.tiendas || []).forEach(t => {
+      normalizeStore(t);
+      const p = t.plataformas.find(x => x.pid === 'com');
+      if (!p) return;
+      const me = p.subs.find(x => x.id === 'com-mercadeo');
+      if (!me) return;
+      me.nombre = MERCADEO_FV;
+      p.tasks.forEach(k => { if (k.sub === FV_SUB.id) k.sub = 'com-mercadeo'; });
+      p.subs = p.subs.filter(x => x.id !== FV_SUB.id);
+    });
+    s.version = 11;
   }
   S = s;
   if (!Array.isArray(S.catalogo)) S.catalogo = structuredClone(DEFAULT_CATALOG);
