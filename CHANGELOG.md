@@ -11,6 +11,7 @@ Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El 
 - Indicador bajo el nombre de la app: “En línea · compartido”, “Sin señal · se guarda al volver” o error. Sin señal se sigue trabajando y se sube al volver.
 - Las fotos y las plantillas siguen guardándose solo en cada equipo.
 - **Mercadeo · Food Venience**: el check list de Food Venience (habilitación de termos y utensilios, recetas de bebidas, máquinas con Caffenio) ahora vive en Mercadeo; el subdepartamento Food Service separado desaparece sin perder avance.
+- **Respaldo diario automático** de la base (1:00 a. m.) en la rama `respaldos`, con los últimos 90 días; se restaura desde Actions → “Restaurar respaldo” eligiendo la fecha.
 - Carpeta `supabase/` con el SQL de la base, las plantillas CSV y los scripts de acceso.
 
 ## [1.3.0] - 2026-11-24

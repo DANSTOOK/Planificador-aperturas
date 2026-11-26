@@ -1,0 +1,48 @@
+name: Restaurar respaldo
+
+# Vuelve a subir a Supabase el respaldo de una fecha (rama "respaldos").
+# Lo que exista se sobrescribe con lo del respaldo; lo creado después no se borra.
+on:
+  workflow_dispatch:
+    inputs:
+      fecha:
+        description: 'Fecha del respaldo (AAAA-MM-DD). Las disponibles están en la rama "respaldos".'
+        required: true
+        type: string
+      confirmar:
+        description: 'Escribe RESTAURAR para confirmar'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: respaldo
+  cancel-in-progress: false
+
+env:
+  SUPABASE_URL: https://ccdjdbxlazypcbxzniqn.supabase.co
+  SUPABASE_KEY: ${{ secrets.SUPABASE_RESTORE_KEY || 'sb_publishable_3myypMHc2f9Dl8hlI_1Ung_z4AqH2KJ' }}
+
+jobs:
+  restaurar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validar
+        run: |
+          [ "${{ inputs.confirmar }}" = "RESTAURAR" ] || { echo "::error::Escribe RESTAURAR para confirmar"; exit 1; }
+          echo "${{ inputs.fecha }}" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' || { echo "::error::Usa el formato AAAA-MM-DD"; exit 1; }
+      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          ref: respaldos
+          path: respaldos
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Restaurar
+        run: |
+          [ -d "respaldos/${{ inputs.fecha }}" ] || { echo "::error::No hay respaldo de esa fecha"; ls respaldos; exit 1; }
+          node scripts/restaurar.mjs "respaldos/${{ inputs.fecha }}"
+          echo "### Restaurado el respaldo ${{ inputs.fecha }}" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,58 @@
+name: Respaldo diario de la base
+
+# Copia las 5 tablas de Supabase a la rama "respaldos" (una carpeta por día).
+# Corre solo cada día a la 1:00 a. m. de Tijuana y también con "Run workflow".
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: respaldo
+  cancel-in-progress: false
+
+env:
+  SUPABASE_URL: https://ccdjdbxlazypcbxzniqn.supabase.co
+  # Llave pública (la misma que usa el sitio). Si después se cierra el acceso,
+  # crea el secreto SUPABASE_BACKUP_KEY con una llave con permiso de lectura.
+  SUPABASE_KEY: ${{ secrets.SUPABASE_BACKUP_KEY || 'sb_publishable_3myypMHc2f9Dl8hlI_1Ung_z4AqH2KJ' }}
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Descargar la base
+        run: |
+          FECHA=$(TZ=America/Tijuana date +%F)
+          echo "FECHA=$FECHA" >> "$GITHUB_ENV"
+          node scripts/respaldo.mjs "/tmp/respaldo/$FECHA"
+      - name: Guardar en la rama respaldos
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin respaldos >/dev/null; then
+            git fetch --depth=1 origin respaldos
+            git switch -c respaldos FETCH_HEAD
+          else
+            git switch --orphan respaldos
+            git rm -rf --quiet . || true
+            printf '# Respaldos de la base\n\nUna carpeta por día (AAAA-MM-DD) con las 5 tablas en JSON. Para restaurar: Actions → "Restaurar respaldo".\n' > README.md
+          fi
+          rm -rf "$FECHA" && mkdir -p "$FECHA"
+          cp /tmp/respaldo/"$FECHA"/*.json "$FECHA"/
+          # Se guardan los últimos 90 días
+          ls -d 20??-??-?? 2>/dev/null | sort | head -n -90 | xargs -r git rm -rq
+          git add -A
+          git commit -q -m "Respaldo $FECHA" || echo "Sin cambios"
+          git push -q origin respaldos
+      - name: Resumen
+        run: |
+          echo "### Respaldo $FECHA" >> "$GITHUB_STEP_SUMMARY"
+          cat "/tmp/respaldo/$FECHA/resumen.json" >> "$GITHUB_STEP_SUMMARY"
