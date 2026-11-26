@@ -1,0 +1,97 @@
+id,tienda_cr,pid,nombre,color,ingreso,responsable,correo,telefono,bloqueada
+502I8-mtto,502I8,mtto,Conservación (Mtto),#a16207,,,,,true
+502I8-adm,502I8,adm,Administrativo,#7c3aed,,,,,true
+502I8-com,502I8,com,Comercial,#be185d,,,,,false
+502I8-ti,502I8,ti,TI,#2563eb,,,,,false
+503IQ-mtto,503IQ,mtto,Conservación (Mtto),#a16207,,,,,true
+503IQ-adm,503IQ,adm,Administrativo,#7c3aed,,,,,true
+503IQ-com,503IQ,com,Comercial,#be185d,,,,,false
+503IQ-ti,503IQ,ti,TI,#2563eb,,,,,false
+50D2U-mtto,50D2U,mtto,Conservación (Mtto),#a16207,,,,,true
+50D2U-adm,50D2U,adm,Administrativo,#7c3aed,,,,,true
+50D2U-com,50D2U,com,Comercial,#be185d,,,,,false
+50D2U-ti,50D2U,ti,TI,#2563eb,,,,,false
+50CS9-mtto,50CS9,mtto,Conservación (Mtto),#a16207,,,,,true
+50CS9-adm,50CS9,adm,Administrativo,#7c3aed,,,,,true
+50CS9-com,50CS9,com,Comercial,#be185d,,,,,false
+50CS9-ti,50CS9,ti,TI,#2563eb,,,,,false
+507OA-mtto,507OA,mtto,Conservación (Mtto),#a16207,2026-11-23,,,,true
+507OA-adm,507OA,adm,Administrativo,#7c3aed,2026-11-27,,,,true
+507OA-com,507OA,com,Comercial,#be185d,2026-11-12,,,,false
+507OA-ti,507OA,ti,TI,#2563eb,2026-11-12,,,,false
+500FJ-mtto,500FJ,mtto,Conservación (Mtto),#a16207,2026-12-18,,,,true
+500FJ-adm,500FJ,adm,Administrativo,#7c3aed,2027-01-01,,,,true
+500FJ-com,500FJ,com,Comercial,#be185d,2026-12-16,,,,false
+500FJ-ti,500FJ,ti,TI,#2563eb,2026-12-16,,,,false
+5020N-mtto,5020N,mtto,Conservación (Mtto),#a16207,,,,,true
+5020N-adm,5020N,adm,Administrativo,#7c3aed,,,,,true
+5020N-com,5020N,com,Comercial,#be185d,,,,,false
+5020N-ti,5020N,ti,TI,#2563eb,,,,,false
+502A7-mtto,502A7,mtto,Conservación (Mtto),#a16207,2026-11-02,,,,true
+502A7-adm,502A7,adm,Administrativo,#7c3aed,2026-11-06,,,,true
+502A7-com,502A7,com,Comercial,#be185d,2026-10-28,,,,false
+502A7-ti,502A7,ti,TI,#2563eb,2026-10-28,,,,false
+506V9-mtto,506V9,mtto,Conservación (Mtto),#a16207,2026-11-09,,,,true
+506V9-adm,506V9,adm,Administrativo,#7c3aed,2026-11-15,,,,true
+506V9-com,506V9,com,Comercial,#be185d,2026-11-07,,,,false
+506V9-ti,506V9,ti,TI,#2563eb,2026-11-07,,,,false
+500Y6-mtto,500Y6,mtto,Conservación (Mtto),#a16207,2026-11-25,,,,true
+500Y6-adm,500Y6,adm,Administrativo,#7c3aed,2026-11-27,,,,true
+500Y6-com,500Y6,com,Comercial,#be185d,2026-11-23,,,,false
+500Y6-ti,500Y6,ti,TI,#2563eb,2026-11-23,,,,false
+50Z45-mtto,50Z45,mtto,Conservación (Mtto),#a16207,2027-01-04,,,,true
+50Z45-adm,50Z45,adm,Administrativo,#7c3aed,2027-01-08,,,,true
+50Z45-com,50Z45,com,Comercial,#be185d,2026-12-30,,,,false
+50Z45-ti,50Z45,ti,TI,#2563eb,2026-12-30,,,,false
+50W65-mtto,50W65,mtto,Conservación (Mtto),#a16207,,,,,true
+50W65-adm,50W65,adm,Administrativo,#7c3aed,,,,,true
+50W65-com,50W65,com,Comercial,#be185d,,,,,false
+50W65-ti,50W65,ti,TI,#2563eb,,,,,false
+50OD3-mtto,50OD3,mtto,Conservación (Mtto),#a16207,,,,,true
+50OD3-adm,50OD3,adm,Administrativo,#7c3aed,,,,,true
+50OD3-com,50OD3,com,Comercial,#be185d,,,,,false
+50OD3-ti,50OD3,ti,TI,#2563eb,,,,,false
+5086T-mtto,5086T,mtto,Conservación (Mtto),#a16207,2026-11-03,,,,true
+5086T-adm,5086T,adm,Administrativo,#7c3aed,2026-11-08,,,,true
+5086T-com,5086T,com,Comercial,#be185d,2026-11-02,,,,false
+5086T-ti,5086T,ti,TI,#2563eb,2026-11-02,,,,false
+502FA-mtto,502FA,mtto,Conservación (Mtto),#a16207,2026-11-06,,,,true
+502FA-adm,502FA,adm,Administrativo,#7c3aed,2026-11-10,,,,true
+502FA-com,502FA,com,Comercial,#be185d,2026-11-04,,,,false
+502FA-ti,502FA,ti,TI,#2563eb,2026-11-04,,,,false
+509F6-mtto,509F6,mtto,Conservación (Mtto),#a16207,2026-11-06,,,,true
+509F6-adm,509F6,adm,Administrativo,#7c3aed,2026-11-10,,,,true
+509F6-com,509F6,com,Comercial,#be185d,2026-11-03,,,,false
+509F6-ti,509F6,ti,TI,#2563eb,2026-11-03,,,,false
+50N0Z-mtto,50N0Z,mtto,Conservación (Mtto),#a16207,2026-11-10,,,,true
+50N0Z-adm,50N0Z,adm,Administrativo,#7c3aed,2026-11-15,,,,true
+50N0Z-com,50N0Z,com,Comercial,#be185d,2026-11-07,,,,false
+50N0Z-ti,50N0Z,ti,TI,#2563eb,2026-11-07,,,,false
+50G4Z-mtto,50G4Z,mtto,Conservación (Mtto),#a16207,2026-11-23,,,,true
+50G4Z-adm,50G4Z,adm,Administrativo,#7c3aed,2026-11-27,,,,true
+50G4Z-com,50G4Z,com,Comercial,#be185d,2026-11-20,,,,false
+50G4Z-ti,50G4Z,ti,TI,#2563eb,2026-11-20,,,,false
+5056M-mtto,5056M,mtto,Conservación (Mtto),#a16207,2026-11-30,,,,true
+5056M-adm,5056M,adm,Administrativo,#7c3aed,2027-01-01,,,,true
+5056M-com,5056M,com,Comercial,#be185d,2026-11-27,,,,false
+5056M-ti,5056M,ti,TI,#2563eb,2026-11-27,,,,false
+5039V-mtto,5039V,mtto,Conservación (Mtto),#a16207,2027-02-06,,,,true
+5039V-adm,5039V,adm,Administrativo,#7c3aed,2027-02-12,,,,true
+5039V-com,5039V,com,Comercial,#be185d,2027-02-04,,,,false
+5039V-ti,5039V,ti,TI,#2563eb,2027-02-04,,,,false
+50A1I-mtto,50A1I,mtto,Conservación (Mtto),#a16207,,,,,true
+50A1I-adm,50A1I,adm,Administrativo,#7c3aed,,,,,true
+50A1I-com,50A1I,com,Comercial,#be185d,,,,,false
+50A1I-ti,50A1I,ti,TI,#2563eb,,,,,false
+50GK6-mtto,50GK6,mtto,Conservación (Mtto),#a16207,2026-11-10,,,,true
+50GK6-adm,50GK6,adm,Administrativo,#7c3aed,2026-11-15,,,,true
+50GK6-com,50GK6,com,Comercial,#be185d,2026-10-12,,,,false
+50GK6-ti,50GK6,ti,TI,#2563eb,2026-10-12,,,,false
+50T1O-mtto,50T1O,mtto,Conservación (Mtto),#a16207,2026-11-11,,,,true
+50T1O-adm,50T1O,adm,Administrativo,#7c3aed,2026-11-16,,,,true
+50T1O-com,50T1O,com,Comercial,#be185d,2026-11-08,,,,false
+50T1O-ti,50T1O,ti,TI,#2563eb,2026-11-08,,,,false
+50P6K-mtto,50P6K,mtto,Conservación (Mtto),#a16207,2026-11-20,,,,true
+50P6K-adm,50P6K,adm,Administrativo,#7c3aed,2026-11-24,,,,true
+50P6K-com,50P6K,com,Comercial,#be185d,2026-11-17,,,,false
+50P6K-ti,50P6K,ti,TI,#2563eb,2026-11-17,,,,false
