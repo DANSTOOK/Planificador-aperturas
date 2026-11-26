@@ -49,6 +49,7 @@
   <div class="app">
     <aside class="sidebar">
       <a class="brand" href="#/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand-text">Aperturas<small>Check list de plataformas</small></span></a>
+      <div class="sync-pill" id="syncPill" data-state="local" role="status"><i></i><span>Solo en este equipo</span></div>
 
       <nav class="nav-list" aria-label="Secciones">
         <a class="nav" data-nav="home" href="#/"><span data-ic="store"></span><span class="nav-text">Tiendas</span><b id="countStores"></b></a>
@@ -304,6 +305,8 @@
   <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
   <script src="version.js"></script>
   <script src="data/base.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="app.js"></script>
+  <script src="sync.js"></script>
 </body>
 </html>

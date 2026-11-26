@@ -4,6 +4,14 @@ Cada versión publicada tiene su etiqueta (`vX.Y.Z`) y su release en GitHub con 
 
 Formato: la sección de cada versión empieza con `## [X.Y.Z] - AAAA-MM-DD`. El texto de esa sección se usa como notas del release.
 
+## [Sin publicar]
+
+- **Avance compartido en tiempo real (Supabase)**: tiendas, plataformas, subdepartamentos, pasos, responsables y comentarios se guardan en una base compartida. Lo que marca una persona aparece en segundos en las pantallas de las demás.
+- La primera vez que cada navegador abre esta versión, el avance que ya tenía se junta con la base (sin duplicar pasos).
+- Indicador bajo el nombre de la app: “En línea · compartido”, “Sin señal · se guarda al volver” o error. Sin señal se sigue trabajando y se sube al volver.
+- Las fotos y las plantillas siguen guardándose solo en cada equipo.
+- Carpeta  con el SQL de la base, las plantillas CSV y los scripts de acceso.
+
 ## [1.3.0] - 2026-11-24
 
 Versión para celular: app instalable que abre sin internet, barra inferior, cámara y dictado, inicio renovado y tiendas en 3D.

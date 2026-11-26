@@ -215,7 +215,7 @@ const ui = { selMode: false, sel: new Set(), tipsSeen: new Set(), plaza: '', hom
 let saveTimer = 0;
 function save() {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => DB.set('kv', 'state', S).then(savedPing).catch(() => toast('No se pudieron guardar los cambios', true)), 60);
+  saveTimer = setTimeout(() => { DB.set('kv', 'state', S).then(savedPing).catch(() => toast('No se pudieron guardar los cambios', true)); window.APSync?.push(); }, 60);
 }
 function commit() { save(); render(); }
 /* Aviso discreto "Guardado" después de cada cambio */
@@ -2325,6 +2325,7 @@ window.addEventListener('pagehide', () => { clearTimeout(saveTimer); if (S) DB.s
   if (!DB.persistent) toast('Este navegador no permite guardar imágenes; exporta un respaldo antes de cerrar.', true);
   navigator.storage?.persist?.().catch(() => {});
   ui.booted = true;
+  window.APSync?.start(); // avance compartido (Supabase)
   // App instalable y sin internet (en el sitio publicado; en local solo con ?sw)
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || new URLSearchParams(location.search).has('sw'))) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
