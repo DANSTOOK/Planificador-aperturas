@@ -1,0 +1,417 @@
+[
+ {
+  "cr": "500FJ",
+  "nombre": "OXXO Prologis Alamar",
+  "plaza": "Tijuana Este",
+  "formato": "Nicho",
+  "apertura": "2027-01-04",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-12-17",
+   "rhCedis": "2026-12-28",
+   "sembrado": "2026-11-30",
+   "inicioObra": "2026-09-28",
+   "contratoLuz": "2026-12-25",
+   "entregaMtto": "2026-12-18",
+   "plaqueoFondo": "2027-01-01",
+   "carpetaPermisos": "2026-12-28",
+   "puestaOperativa": "2026-12-15",
+   "mercadeoSistemas": "2026-12-16"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "500Y6",
+  "nombre": "OXXO Stryker",
+  "plaza": "Tijuana Centro",
+  "formato": "Nicho",
+  "apertura": "2026-11-30",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-11-24",
+   "rhCedis": "2026-11-26",
+   "sembrado": "2026-10-26",
+   "inicioObra": "2026-10-06",
+   "contratoLuz": "2026-11-20",
+   "entregaMtto": "2026-11-25",
+   "plaqueoFondo": "2026-11-27",
+   "carpetaPermisos": "2026-11-23",
+   "puestaOperativa": "2026-11-10",
+   "mercadeoSistemas": "2026-11-23"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "5020N",
+  "nombre": "OXXO Tutuli",
+  "plaza": "Tijuana Centro",
+  "formato": "i78",
+  "apertura": "2026-10-13",
+  "notas": null,
+  "hitos": null,
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "502A7",
+  "nombre": "OXXO Termales",
+  "plaza": "Tijuana Centro",
+  "formato": "Tradicional",
+  "apertura": "2026-11-09",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-10-31",
+   "rhCedis": "2026-11-03",
+   "sembrado": "2026-10-05",
+   "inicioObra": "2026-09-01",
+   "contratoLuz": "2026-10-29",
+   "entregaMtto": "2026-11-02",
+   "plaqueoFondo": "2026-11-06",
+   "carpetaPermisos": "2026-11-02",
+   "puestaOperativa": "2026-10-22",
+   "mercadeoSistemas": "2026-10-28"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "502FA",
+  "nombre": "OXXO Avenida B",
+  "plaza": "Ensenada",
+  "formato": "Tradicional",
+  "apertura": "2026-11-11",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-10-28",
+   "rhCedis": "2026-11-07",
+   "sembrado": "2026-10-07",
+   "inicioObra": "2026-08-06",
+   "contratoLuz": "2026-10-31",
+   "entregaMtto": "2026-11-06",
+   "plaqueoFondo": "2026-11-10",
+   "carpetaPermisos": "2026-11-04",
+   "puestaOperativa": "2026-10-22",
+   "mercadeoSistemas": "2026-11-04"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "502I8",
+  "nombre": "OXXO City Point",
+  "plaza": "Tijuana Este",
+  "formato": "Nicho",
+  "apertura": "2026-10-05",
+  "notas": null,
+  "hitos": null,
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "5039V",
+  "nombre": "OXXO Tixkokob",
+  "plaza": "Ensenada",
+  "formato": "i78",
+  "apertura": "2027-02-15",
+  "notas": null,
+  "hitos": {
+   "finObra": "2027-02-05",
+   "rhCedis": "2027-02-08",
+   "sembrado": "2027-01-11",
+   "inicioObra": "2026-10-28",
+   "contratoLuz": "2027-02-05",
+   "entregaMtto": "2027-02-06",
+   "plaqueoFondo": "2027-02-12",
+   "carpetaPermisos": "2027-02-08",
+   "puestaOperativa": "2027-01-26",
+   "mercadeoSistemas": "2027-02-04"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "503IQ",
+  "nombre": "OXXO Papaloapan",
+  "plaza": "Tijuana Este",
+  "formato": "i78",
+  "apertura": "2026-10-27",
+  "notas": null,
+  "hitos": null,
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "5056M",
+  "nombre": "OXXO Oslo",
+  "plaza": "Ensenada",
+  "formato": "Tradicional",
+  "apertura": "2027-01-04",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-11-27",
+   "rhCedis": "2026-12-28",
+   "sembrado": "2026-11-30",
+   "inicioObra": "2026-09-23",
+   "contratoLuz": "2026-12-25",
+   "entregaMtto": "2026-11-30",
+   "plaqueoFondo": "2027-01-01",
+   "carpetaPermisos": "2026-12-28",
+   "puestaOperativa": "2026-12-15",
+   "mercadeoSistemas": "2026-11-27"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "506V9",
+  "nombre": "OXXO Food Court",
+  "plaza": "Tijuana Centro",
+  "formato": "Nicho",
+  "apertura": "2026-11-16",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-11-07",
+   "rhCedis": "2026-11-11",
+   "sembrado": "2026-10-12",
+   "inicioObra": "2026-09-18",
+   "contratoLuz": "2026-11-05",
+   "entregaMtto": "2026-11-09",
+   "plaqueoFondo": "2026-11-15",
+   "carpetaPermisos": "2026-11-09",
+   "puestaOperativa": "2026-10-27",
+   "mercadeoSistemas": "2026-11-07"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "507OA",
+  "nombre": "OXXO Mallorca",
+  "plaza": "Tijuana Este",
+  "formato": "Nicho",
+  "apertura": "2026-11-30",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-11-08",
+   "rhCedis": "2026-11-26",
+   "sembrado": "2026-10-26",
+   "inicioObra": "2026-08-10",
+   "contratoLuz": "2026-11-09",
+   "entregaMtto": "2026-11-23",
+   "plaqueoFondo": "2026-11-27",
+   "carpetaPermisos": "2026-11-23",
+   "puestaOperativa": "2026-11-10",
+   "mercadeoSistemas": "2026-11-12"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "5086T",
+  "nombre": "OXXO Elpidio",
+  "plaza": "Ensenada",
+  "formato": "Tradicional",
+  "apertura": "2026-11-09",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-10-27",
+   "rhCedis": "2026-11-05",
+   "sembrado": "2026-10-05",
+   "inicioObra": "2026-08-06",
+   "contratoLuz": "2026-10-29",
+   "entregaMtto": "2026-11-03",
+   "plaqueoFondo": "2026-11-08",
+   "carpetaPermisos": "2026-11-02",
+   "puestaOperativa": "2026-10-20",
+   "mercadeoSistemas": "2026-11-02"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "509F6",
+  "nombre": "OXXO Piñas",
+  "plaza": "Ensenada",
+  "formato": "Tradicional",
+  "apertura": "2026-11-13",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-10-23",
+   "rhCedis": "2026-11-09",
+   "sembrado": "2026-10-09",
+   "inicioObra": "2026-07-15",
+   "contratoLuz": "2026-11-03",
+   "entregaMtto": "2026-11-06",
+   "plaqueoFondo": "2026-11-10",
+   "carpetaPermisos": "2026-11-06",
+   "mercadeoSistemas": "2026-11-03"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "50A1I",
+  "nombre": "OXXO Paseo Chapultepec",
+  "plaza": "Playas",
+  "formato": "Nicho",
+  "apertura": "2026-10-16",
+  "notas": null,
+  "hitos": null,
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "50CS9",
+  "nombre": "OXXO Alegranza",
+  "plaza": "Tijuana Este",
+  "formato": "i78",
+  "apertura": "2026-11-02",
+  "notas": null,
+  "hitos": null,
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "50D2U",
+  "nombre": "OXXO Ameyalli",
+  "plaza": "Tijuana Este",
+  "formato": "i78",
+  "apertura": "2026-10-31",
+  "notas": null,
+  "hitos": null,
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "50G4Z",
+  "nombre": "OXXO Plaza Mare",
+  "plaza": "Ensenada",
+  "formato": "Nicho",
+  "apertura": "2026-11-30",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-11-20",
+   "rhCedis": "2026-11-25",
+   "sembrado": "2026-10-26",
+   "inicioObra": "2026-08-31",
+   "contratoLuz": "2026-11-19",
+   "entregaMtto": "2026-11-23",
+   "plaqueoFondo": "2026-11-27",
+   "carpetaPermisos": "2026-11-23",
+   "puestaOperativa": "2026-11-10",
+   "mercadeoSistemas": "2026-11-20"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "50GK6",
+  "nombre": "OXXO Emeterio",
+  "plaza": "Playas",
+  "formato": "Tradicional",
+  "apertura": "2026-11-16",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-10-23",
+   "rhCedis": "2026-11-12",
+   "sembrado": "2026-10-17",
+   "inicioObra": "2026-08-24",
+   "contratoLuz": "2026-11-04",
+   "entregaMtto": "2026-11-10",
+   "plaqueoFondo": "2026-11-15",
+   "carpetaPermisos": "2026-11-08",
+   "puestaOperativa": "2026-10-28",
+   "mercadeoSistemas": "2026-10-12"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "50N0Z",
+  "nombre": "OXXO Minas de Sabino",
+  "plaza": "Ensenada",
+  "formato": "Tradicional",
+  "apertura": "2026-11-16",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-10-28",
+   "rhCedis": "2026-11-12",
+   "sembrado": "2026-10-12",
+   "inicioObra": "2026-05-21",
+   "contratoLuz": "2026-11-04",
+   "entregaMtto": "2026-11-10",
+   "plaqueoFondo": "2026-11-15",
+   "carpetaPermisos": "2026-11-09",
+   "puestaOperativa": "2026-10-29",
+   "mercadeoSistemas": "2026-11-07"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "50OD3",
+  "nombre": "OXXO Gamiz",
+  "plaza": "Ensenada",
+  "formato": "Tradicional",
+  "apertura": "2026-10-31",
+  "notas": null,
+  "hitos": null,
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "50P6K",
+  "nombre": "OXXO Altaplus",
+  "plaza": "Playas",
+  "formato": "Tradicional",
+  "apertura": "2026-11-27",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-11-11",
+   "rhCedis": "2026-11-23",
+   "sembrado": "2026-10-23",
+   "inicioObra": "2026-08-26",
+   "contratoLuz": "2026-11-17",
+   "entregaMtto": "2026-11-20",
+   "plaqueoFondo": "2026-11-24",
+   "carpetaPermisos": "2026-11-20",
+   "puestaOperativa": "2026-11-07",
+   "mercadeoSistemas": "2026-11-17"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "50T1O",
+  "nombre": "OXXO Astoria",
+  "plaza": "Playas",
+  "formato": "Tradicional",
+  "apertura": "2026-11-17",
+  "notas": null,
+  "hitos": {
+   "finObra": "2026-11-05",
+   "rhCedis": "2026-11-13",
+   "sembrado": "2026-10-27",
+   "inicioObra": "2026-08-26",
+   "contratoLuz": "2026-11-06",
+   "entregaMtto": "2026-11-11",
+   "plaqueoFondo": "2026-11-16",
+   "carpetaPermisos": "2026-11-10",
+   "puestaOperativa": "2026-10-28",
+   "mercadeoSistemas": "2026-11-08"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "50W65",
+  "nombre": "OXXO Tuxtla Gutiérrez",
+  "plaza": "Ensenada",
+  "formato": "Tradicional",
+  "apertura": "2026-10-09",
+  "notas": null,
+  "hitos": null,
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ },
+ {
+  "cr": "50Z45",
+  "nombre": "OXXO Prologis Fase II",
+  "plaza": "Tijuana Centro",
+  "formato": "Nicho",
+  "apertura": "2027-01-11",
+  "notas": null,
+  "hitos": {
+   "finObra": "2027-01-03",
+   "rhCedis": "2027-01-06",
+   "sembrado": "2026-12-07",
+   "inicioObra": "2026-09-04",
+   "contratoLuz": "2027-01-01",
+   "entregaMtto": "2027-01-04",
+   "plaqueoFondo": "2027-01-08",
+   "carpetaPermisos": "2027-01-04",
+   "puestaOperativa": "2026-12-22",
+   "mercadeoSistemas": "2026-12-30"
+  },
+  "actualizado": "2026-11-26T22:16:50.994542+00:00"
+ }
+]
